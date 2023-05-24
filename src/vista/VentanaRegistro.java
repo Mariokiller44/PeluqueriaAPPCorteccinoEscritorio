@@ -8,6 +8,8 @@ import controlador.ConexionBD;
 import java.sql.*;
 import java.awt.Color;
 import java.awt.HeadlessException;
+import java.awt.Image;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.logging.Level;
@@ -71,6 +73,12 @@ public class VentanaRegistro extends javax.swing.JFrame {
                 }
             }
         });
+    }
+
+    @Override
+    public Image getIconImage() {
+        Image retValue = Toolkit.getDefaultToolkit().getImage("./src/images/iconoDeAppEscritorio.png");
+        return retValue;
     }
 
     /**
@@ -628,7 +636,7 @@ public class VentanaRegistro extends javax.swing.JFrame {
             psUsuario.setString(6, textoContrasenia.getText().toString());
             psUsuario.setString(7, "Cliente");
             psUsuario.executeUpdate();
-        } catch(NullPointerException npe){
+        } catch (NullPointerException npe) {
             JOptionPane.showMessageDialog(null, "Error intentando conectar a la base de datos");
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(null, "Parece que hubo un problema al registrarse");

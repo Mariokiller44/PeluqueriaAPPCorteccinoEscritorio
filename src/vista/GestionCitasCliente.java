@@ -22,6 +22,8 @@ import javax.swing.JPanel;
 import com.toedter.calendar.*;
 import controlador.ConsultasCliente;
 import java.awt.HeadlessException;
+import java.awt.Image;
+import java.awt.Toolkit;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.*;
@@ -44,7 +46,7 @@ public class GestionCitasCliente extends javax.swing.JFrame {
     private String servicio, nombre, descripcion;
     private String fecha;
     private int id;
-    private String[] columnas = {"Fecha", "Hora", "Servicio", "Precio", "Empleado"};
+    private String[] columnas = {"Fecha", "Hora", "Servicio", "Precio", "Cliente"};
     private String hora;
     private JComboBox comboBox;
     private ArrayList<String> listaDatos = new ArrayList<>();
@@ -60,14 +62,22 @@ public class GestionCitasCliente extends javax.swing.JFrame {
     private JComboBox<Cita> comboBoxDatos;
     private ConsultasCliente consultas = new ConsultasCliente();
     private VentanaCliente vc;
+    private String tipoUsu;
 
     public JTable getTabla() {
         return tabla;
     }
 
-
     public void setTabla(JTable tabla) {
         this.tabla = tabla;
+    }
+
+    public String getTipoUsu() {
+        return tipoUsu;
+    }
+
+    public void setTipoUsu(String tipoUsu) {
+        this.tipoUsu = tipoUsu;
     }
 
     /**
@@ -75,6 +85,7 @@ public class GestionCitasCliente extends javax.swing.JFrame {
      */
     public GestionCitasCliente() {
         initComponents();
+        setIconImage(getIconImage());
         comprobarTabla();
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -82,11 +93,17 @@ public class GestionCitasCliente extends javax.swing.JFrame {
         modificarDiseño();
     }
 
+    @Override
+    public Image getIconImage() {
+        Image retValue = Toolkit.getDefaultToolkit().getImage("./src/images/iconoDeAppEscritorio.png");
+        return retValue;
+    }
+
     public void comprobarTabla() {
-        if (tabla.getRowCount()>0) {
+        if (tabla.getRowCount() > 0) {
             DefaultTableModel model = (DefaultTableModel) tabla.getModel();
             model.setRowCount(0);
-        }else{
+        } else {
             llenarTabla();
         }
     }
@@ -270,42 +287,42 @@ public class GestionCitasCliente extends javax.swing.JFrame {
         // Crear el ComboBox y cargar las filas de la tabla
         ArrayList<Cita> datosTabla = consultas.consultarCitas(id);
         comboBoxDatos = new JComboBox<>(datosTabla.toArray(new Cita[0]));
-        String[] opciones = {"Servicio","Fecha","Hora"};
-        comboBox=new JComboBox(opciones);
+        String[] opciones = {"Servicio", "Fecha", "Hora"};
+        comboBox = new JComboBox(opciones);
         if (datosTabla == null) {
             JOptionPane.showMessageDialog(null, "No hay ninguna cita que modificar. No existen citas");
         } else {
-            int option = JOptionPane.showOptionDialog(null,comboBoxDatos,"Seleccione una cita",JOptionPane.OK_OPTION,JOptionPane.PLAIN_MESSAGE,null,null,null);
+            int option = JOptionPane.showOptionDialog(null, comboBoxDatos, "Seleccione una cita", JOptionPane.OK_OPTION, JOptionPane.PLAIN_MESSAGE, null, null, null);
             // Realizar la acción correspondiente según la selección del usuario
-            if (option==JOptionPane.OK_OPTION) {
+            if (option == JOptionPane.OK_OPTION) {
                 Cita citaSeleccionada = (Cita) comboBoxDatos.getSelectedItem();
                 int decisionServ = JOptionPane.showConfirmDialog(null, comboBox, "¿Que desea modificar?", JOptionPane.OK_OPTION);
                 if (decisionServ == JOptionPane.OK_OPTION) {
                     try {
-                        String eleccion=comboBox.getSelectedItem().toString();
+                        String eleccion = comboBox.getSelectedItem().toString();
                         switch (eleccion) {
                             case "Servicio":
                                 modificarServicio(citaSeleccionada);
-                                llenarTablaCliente(id);
+                                llenarTablaHorario(id);
                                 break;
                             case "Fecha":
                                 modificarServicioFecha(citaSeleccionada);
-                                llenarTablaCliente(id);
+                                llenarTablaHorario(id);
                                 break;
                             case "Hora":
                                 modificarServicioHora(citaSeleccionada);
-                                llenarTablaCliente(id);
+                                llenarTablaHorario(id);
                                 break;
                             default:
                                 JOptionPane.showMessageDialog(null, "Seleccione una opcion");
                         }
                         servicioCitado = comboBox.getSelectedItem().toString();
-                        
+
                         nuevoServicioCitado = comboBox.getSelectedItem().toString();
                     } catch (SQLException ex) {
                         JOptionPane.showMessageDialog(null, "Error intentando mostrar la tabla");
                     }
-                    
+
                 }
             }
             /**/
@@ -315,22 +332,22 @@ public class GestionCitasCliente extends javax.swing.JFrame {
 
     private void modificarServicioFecha(Cita citaSeleccionada) throws HeadlessException {
         DatePicker nuevaFecha = new DatePicker();
-        JOptionPane.showConfirmDialog(null, nuevaFecha,"Introduce nueva fecha",JOptionPane.OK_OPTION);
-        String fechaActualizada=nuevaFecha.getDate().toString();
-        int idCita=citaSeleccionada.getId();
-        consultas.modificarServicioPorFecha(fechaActualizada,idCita);
+        JOptionPane.showConfirmDialog(null, nuevaFecha, "Introduce nueva fecha", JOptionPane.OK_OPTION);
+        String fechaActualizada = nuevaFecha.getDate().toString();
+        int idCita = citaSeleccionada.getId();
+        consultas.modificarServicioPorFecha(fechaActualizada, idCita);
     }
 
     private void modificarServicio(Cita citaSeleccionada) throws HeadlessException {
         try {
-            ArrayList<String> listaServ=consultas.serviciosBD();
-            JComboBox comboboxServ=new JComboBox(listaServ.toArray());
-            JOptionPane.showConfirmDialog(null, comboboxServ,"Seleccione nuevo servicio",JOptionPane.OK_OPTION);
-            String nuevoS=comboboxServ.getSelectedItem().toString();
-            int idS=consultas.cogerIdServicio(nuevoS);
-            String fechaS=citaSeleccionada.getFecha();
+            ArrayList<String> listaServ = consultas.serviciosBD();
+            JComboBox comboboxServ = new JComboBox(listaServ.toArray());
+            JOptionPane.showConfirmDialog(null, comboboxServ, "Seleccione nuevo servicio", JOptionPane.OK_OPTION);
+            String nuevoS = comboboxServ.getSelectedItem().toString();
+            int idS = consultas.cogerIdServicio(nuevoS);
+            String fechaS = citaSeleccionada.getFecha();
             consultas.modificarServicio(idS, fechaS);
-            llenarTablaCliente(id);
+            llenarTablaHorario(id);
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(null, "Error al mostrar los datos");
         }
@@ -428,6 +445,7 @@ public class GestionCitasCliente extends javax.swing.JFrame {
         vc = new VentanaCliente();
         vaciarTabla();
         dispose();
+        vc.setTipoUsu(tipoUsu);
         vc.setVisible(true);
     }//GEN-LAST:event_btnSalirActionPerformed
 
@@ -435,20 +453,20 @@ public class GestionCitasCliente extends javax.swing.JFrame {
         // TODO add your handling code here:
         ArrayList<Cita> datosTabla = consultas.consultarCitas(id);
         comboBoxDatos = new JComboBox<>(datosTabla.toArray(new Cita[0]));
-        String[] opciones = {"Servicio","Fecha","Hora"};
-        comboBox=new JComboBox(opciones);
+        String[] opciones = {"Servicio", "Fecha", "Hora"};
+        comboBox = new JComboBox(opciones);
         if (datosTabla == null) {
             JOptionPane.showMessageDialog(null, "No hay ninguna cita que borrar. No existen citas");
         } else {
-            int option2 = JOptionPane.showOptionDialog(null,comboBoxDatos,"Seleccione una cita para borrar",JOptionPane.OK_OPTION,JOptionPane.PLAIN_MESSAGE,null,null,null);
+            int option2 = JOptionPane.showOptionDialog(null, comboBoxDatos, "Seleccione una cita para borrar", JOptionPane.OK_OPTION, JOptionPane.PLAIN_MESSAGE, null, null, null);
             // Realizar la acción correspondiente según la selección del usuario
-            if (option2==JOptionPane.OK_OPTION) {
+            if (option2 == JOptionPane.OK_OPTION) {
                 Cita citaSeleccionada = (Cita) comboBoxDatos.getSelectedItem();
-                int confirmacion=JOptionPane.showConfirmDialog(null, "¿Está seguro de que desea borrar la cita seleccionada?","Borrar cita",JOptionPane.OK_CANCEL_OPTION);
-                if (confirmacion==JOptionPane.OK_OPTION) {
+                int confirmacion = JOptionPane.showConfirmDialog(null, "¿Está seguro de que desea borrar la cita seleccionada?", "Borrar cita", JOptionPane.OK_CANCEL_OPTION);
+                if (confirmacion == JOptionPane.OK_OPTION) {
                     try {
                         consultas.borrarCita(citaSeleccionada);
-                        llenarTablaCliente(id);
+                        llenarTablaHorario(id);
                     } catch (SQLException ex) {
                         JOptionPane.showMessageDialog(null, "Error al mostrar las citas");
                     }
@@ -526,8 +544,8 @@ public class GestionCitasCliente extends javax.swing.JFrame {
     void llenarTabla() {
         try {
             int idC = id;
-            if (idC != 0) {
-                llenarTablaCliente(idC);
+            if (idC != 0 && !tipoUsu.equals("Administrador")) {
+                llenarTablaHorario(idC);
             } else {
                 llenarTablaTodosLosClientes();
             }
@@ -539,7 +557,7 @@ public class GestionCitasCliente extends javax.swing.JFrame {
     }
 
     private void llenarTablaTodosLosClientes() throws SQLException {
-        DefaultTableModel modeloGeneral = new DefaultTableModel(columnas, 0){
+        DefaultTableModel modeloGeneral = new DefaultTableModel(columnas, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false; // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
@@ -548,8 +566,7 @@ public class GestionCitasCliente extends javax.swing.JFrame {
 
         conexion = realizarConexion();
         String mostrarTodas = "SELECT horario.fecha_es as fecha, horario.hora_es as hora, servicios.descripcion, servicios.precio,CONCAT(usuario.nombre, ' ', usuario.apellidos) AS empleado\n"
-                + "FROM cita JOIN horario ON cita.id_horario = horario.ID JOIN personal ON horario.id_personal = personal.id JOIN usuario ON personal.id = usuario.id JOIN servicios ON horario.id_servicio = servicios.id\n"
-                + "WHERE cita.id_cliente = (id_cliente);"; // Ejecutar la consulta y agregar los resultados al modelo
+                + "FROM cita JOIN horario ON cita.id_horario = horario.ID JOIN personal ON horario.id_personal = personal.id JOIN usuario ON personal.id = usuario.id JOIN servicios ON horario.id_servicio = servicios.id;"; // Ejecutar la consulta y agregar los resultados al modelo
         Statement statement = con.createStatement();
         ResultSet resultado = statement.executeQuery(mostrarTodas);
         while (resultado.next()) {
@@ -565,14 +582,40 @@ public class GestionCitasCliente extends javax.swing.JFrame {
         tabla.setCellSelectionEnabled(false);
     }
 
-    private void llenarTablaCliente(int idC) throws SQLException {
+    private void llenarTablaHorario(int idPersonal) throws SQLException {
+        DefaultTableModel modelo = new DefaultTableModel(columnas, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
 
-        DefaultTableModel modelo = new DefaultTableModel(columnas, 0){
+        conexion = realizarConexion();
+        String mostrarHorarioPersonal = "SELECT horario.fecha_es as fecha, horario.hora_es as hora, servicios.descripcion, servicios.precio, CONCAT(usuario.nombre, ' ', usuario.apellidos) AS cliente FROM horario JOIN personal ON horario.id_personal = personal.id JOIN cita ON horario.id = cita.ID_HORARIO JOIN usuario ON cita.ID_CLIENTE=usuario.ID JOIN servicios ON horario.id_servicio = servicios.id WHERE personal.id = ?";
+        PreparedStatement stmt = con.prepareStatement(mostrarHorarioPersonal);
+        stmt.setInt(1, idPersonal);
+        ResultSet resultado = stmt.executeQuery();
+        while (resultado.next()) {
+            String fecha = resultado.getString("fecha");
+            String hora = resultado.getString("hora");
+            String descripcion = resultado.getString("descripcion");
+            String precio = resultado.getString("precio");
+            String cliente = resultado.getString("cliente");
+            String[] fila = {fecha, hora, descripcion, precio, cliente};
+            modelo.addRow(fila);
+        }
+        tabla.setModel(modelo);
+        tabla.setCellSelectionEnabled(false);
+    }
+
+    /*private void llenarTablaCliente(int idC) throws SQLException {
+
+        DefaultTableModel modelo = new DefaultTableModel(columnas, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false; // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
             }
-            
+
         };
 
         conexion = realizarConexion();
@@ -593,7 +636,7 @@ public class GestionCitasCliente extends javax.swing.JFrame {
         }
         tabla.setModel(modelo);
         tabla.setCellSelectionEnabled(false);
-    }
+    }*/
 
     private ConexionBD realizarConexion() {
         ConexionBD conexion = new ConexionBD("admin", "123pelu");
@@ -612,10 +655,10 @@ public class GestionCitasCliente extends javax.swing.JFrame {
 
     private void modificarServicioHora(Cita citaSeleccionada) {
         TimePicker nuevaFecha = new TimePicker();
-        JOptionPane.showConfirmDialog(null, nuevaFecha,"Introduce nueva hora",JOptionPane.OK_OPTION);
-        String horaActualizada=nuevaFecha.getTime().toString();
-        int idCita=citaSeleccionada.getId();
-        consultas.modificarServicioPorHora(horaActualizada,idCita);
+        JOptionPane.showConfirmDialog(null, nuevaFecha, "Introduce nueva hora", JOptionPane.OK_OPTION);
+        String horaActualizada = nuevaFecha.getTime().toString();
+        int idCita = citaSeleccionada.getId();
+        consultas.modificarServicioPorHora(horaActualizada, idCita);
     }
 
 }

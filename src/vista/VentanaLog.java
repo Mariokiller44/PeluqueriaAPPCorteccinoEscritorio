@@ -6,6 +6,8 @@ package vista;
 
 import controlador.ConexionBD;
 import java.awt.Color;
+import java.awt.Image;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
@@ -30,13 +32,15 @@ public class VentanaLog extends javax.swing.JFrame {
     private Connection con;
     private Logger logger;
     public int id;
-
+    private String tipoUsu;
+    
     public VentanaLog() {
         initComponents();
+        setIconImage(getIconImage());
         colocarImagenes();
         setLocationRelativeTo(null);
         setResizable(false);
-
+        
         jCheckBox1.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -48,7 +52,13 @@ public class VentanaLog extends javax.swing.JFrame {
             }
         });
     }
-
+    
+    @Override
+    public Image getIconImage() {
+        Image retValue = Toolkit.getDefaultToolkit().getImage("./src/images/iconoDeAppEscritorio.png");
+        return retValue;
+    }
+    
     private void colocarImagenes() {
         jLabel1.setIcon(new ImageIcon("./src/images/tijera.png"));
         jLabel2.setIcon(new ImageIcon("./src/images/iconoPeluqueria.png"));
@@ -400,7 +410,7 @@ public class VentanaLog extends javax.swing.JFrame {
 
     private void botonAceptarKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_botonAceptarKeyTyped
         char cTeclapresionada = evt.getKeyChar();
-
+        
         if (cTeclapresionada == KeyEvent.VK_ENTER) {
             botonAceptar.doClick();
         }
@@ -408,7 +418,7 @@ public class VentanaLog extends javax.swing.JFrame {
 
     private void textoUsuarioKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_textoUsuarioKeyTyped
         char cTeclapresionada = evt.getKeyChar();
-
+        
         if (cTeclapresionada == KeyEvent.VK_ENTER) {
             botonAceptar.doClick();
         }
@@ -417,7 +427,7 @@ public class VentanaLog extends javax.swing.JFrame {
 
     private void textoContraseniaKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_textoContraseniaKeyTyped
         char cTeclapresionada = evt.getKeyChar();
-
+        
         if (cTeclapresionada == KeyEvent.VK_ENTER) {
             botonAceptar.doClick();
         }
@@ -507,36 +517,53 @@ public class VentanaLog extends javax.swing.JFrame {
             } else {
                 setId(resul.getInt("id"));
                 JOptionPane.showMessageDialog(null, "Bienvenido " + resul.getString("nombre"));
-                String tipoUsu=resul.getString("tipo_de_usuario");
-                if (tipoUsu.contains("Cliente")) {
-                    dispose();
-                    VentanaCliente vc = new VentanaCliente();
-                    vc.setValor(id);
-                    vc.setVisible(true);
-                }else{
-                    JOptionPane.showMessageDialog(null, "Aún no está disponible la ventana para personal");
+                tipoUsu = resul.getString("tipo_de_usuario");
+                try {
+                    if (tipoUsu.contains("Personal")) {
+                        dispose();
+                        VentanaCliente vc = new VentanaCliente();
+                        vc.setValor(id);
+                        vc.setTipoUsu(resul.getString("Nombre"));
+                        vc.setVisible(true);
+                    } else {
+                        throw new ClassCastException("Esta aplicación solo la puede utilizar el personal. Pruebe nuestra aplicación Android");
+                    }
+                } catch (ClassCastException cse) {
+                    JOptionPane.showMessageDialog(null, cse.getMessage());
                 }
+                
             }
             conexion.cerrarConnection();
-
-        }catch(NullPointerException npe){
+            
+        } catch (NullPointerException npe) {
             JOptionPane.showMessageDialog(null, "Error intentando conectar a la base de datos");
-        }  catch (SQLException ex) {
+        } catch (SQLException ex) {
             JOptionPane.showMessageDialog(null, "Hubo un problema con la base de datos.");
         }
     }
-
+    
     private void irARegistro() {
         dispose();
         VentanaRegistro vr = new VentanaRegistro();
         vr.setVisible(true);
     }
-    
+
     //Getter y setter del atributo id
     public int getId() {
         return id;
     }
+
     public void setId(int id) {
         this.id = id;
     }
+
+    public String getTipoUsu() {
+        return tipoUsu;
+    }
+
+    public void setTipoUsu(String tipoUsu) {
+        this.tipoUsu = tipoUsu;
+    }
+    
+    
 }

@@ -11,8 +11,10 @@ import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.HeadlessException;
+import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -58,6 +60,7 @@ public class VentanaCliente extends javax.swing.JFrame {
     private JPanel panelSustituto;
     private ConsultasCliente consultas;
     private Usuario usu;
+    private String tipoUsu;
 
     public int getId() {
         return id;
@@ -67,8 +70,18 @@ public class VentanaCliente extends javax.swing.JFrame {
         this.id = id;
     }
 
+    public String getTipoUsu() {
+        return tipoUsu;
+    }
+
+    public void setTipoUsu(String tipoUsu) {
+        this.tipoUsu = tipoUsu;
+    }
+    
+
     public VentanaCliente() {
         initComponents();
+        setIconImage(getIconImage());
         jMenu1.setIcon(new ImageIcon("./src/images/home.png"));
         jMenu2.setIcon(new ImageIcon("./src/images/cita.png"));
 //        mostrarPanelSustituto();
@@ -77,6 +90,12 @@ public class VentanaCliente extends javax.swing.JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setResizable(false);
+    }
+
+    @Override
+    public Image getIconImage() {
+        Image retValue = Toolkit.getDefaultToolkit().getImage("./src/images/iconoDeAppEscritorio.png");
+        return retValue;
     }
 
     public void setValor(int valor) {
@@ -137,9 +156,9 @@ public class VentanaCliente extends javax.swing.JFrame {
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 1013, Short.MAX_VALUE)
+            .addGap(0, 1045, Short.MAX_VALUE)
             .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 1013, Short.MAX_VALUE))
+                .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 1045, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -236,12 +255,10 @@ public class VentanaCliente extends javax.swing.JFrame {
         panelOpcionesLayout.setHorizontalGroup(
             panelOpcionesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelOpcionesLayout.createSequentialGroup()
-                .addContainerGap()
+                .addGap(56, 56, 56)
                 .addGroup(panelOpcionesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(menuConsultas, javax.swing.GroupLayout.DEFAULT_SIZE, 189, Short.MAX_VALUE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelOpcionesLayout.createSequentialGroup()
-                        .addComponent(cerrarSesion, javax.swing.GroupLayout.DEFAULT_SIZE, 177, Short.MAX_VALUE)
-                        .addContainerGap())))
+                    .addComponent(cerrarSesion, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
         );
         panelOpcionesLayout.setVerticalGroup(
             panelOpcionesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -263,7 +280,7 @@ public class VentanaCliente extends javax.swing.JFrame {
         jPanel5.setLayout(jPanel5Layout);
         jPanel5Layout.setHorizontalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 1013, Short.MAX_VALUE)
+            .addGap(0, 1045, Short.MAX_VALUE)
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -361,7 +378,7 @@ public class VentanaCliente extends javax.swing.JFrame {
         if (menuConsultas.getText().contains("Consultar citas") && !cerrarSesion.getText().contains("-> Cerrar sesión")) {
         } else {
             menuConsultas.setText("-> Consultar citas");
-            cerrarSesion.setText(" ");
+            cerrarSesion.setText("-> Consultar productos");
         }
         mostrarPanelOculto();
     }//GEN-LAST:event_jMenu2MouseClicked
@@ -397,6 +414,7 @@ public class VentanaCliente extends javax.swing.JFrame {
             dispose();
             GestionCitasCliente gc = new GestionCitasCliente();
             gc.setValor(id);
+            gc.setTipoUsu(tipoUsu);
             gc.comprobarTabla();
             gc.setVisible(true);
         } else {
@@ -504,6 +522,13 @@ public class VentanaCliente extends javax.swing.JFrame {
                 VentanaLog vl = new VentanaLog();
                 vl.setVisible(true);
             }
+        } else {
+            JOptionPane.showMessageDialog(null, "Abriendo el menu de productos...");
+            dispose();
+            GestionProductosVentana gpv = new GestionProductosVentana();
+            gpv.setTipoUsu(tipoUsu);
+            gpv.aniadirmenuPopUp();
+            gpv.setVisible(true);
         }
     }//GEN-LAST:event_cerrarSesionMouseClicked
 
