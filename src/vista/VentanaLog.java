@@ -2,7 +2,13 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
+/**
+ * Paquete vista 
+ */
 package vista;
+/**
+ * Importaciones
+ */
 
 import controlador.ConexionBD;
 import java.awt.Color;
@@ -10,31 +16,32 @@ import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.*;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseListener;
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 import javax.swing.ImageIcon;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.sql.*;
 
 /**
- *
- * @author Administrador
+ * @version 1.0
+ * @author Mario Escribano Rejas
+ * @since 29/05/2023
+ * Clase VentanaLog que muestra la pantalla de inicio de la aplicacion
  */
-public class VentanaLog extends javax.swing.JFrame {
 
-    /**
-     * Creates new form VentanaLog
-     */
+public class VentanaLog extends javax.swing.JFrame {
+/**
+ * Clase VentanaLog que determina la ventana de logueo de la aplicacion
+ */
     private ConexionBD conexion;
     private Connection con;
     private Logger logger;
@@ -46,8 +53,12 @@ public class VentanaLog extends javax.swing.JFrame {
     private static final String BACKUP_FOLDER = "";
     private static String folderpath = "src" + "\\bd";
     private static String savepath;
+    /**
+     * Atributos necesarios
+     * Constructor de la clase 
+     */
     public VentanaLog() {
-        // Registrar el método para que se ejecute cuando se cierre la aplicación
+        
         Runtime.getRuntime().addShutdownHook(new Thread(VentanaLog::realizarCopiaDeSeguridad));
         initComponents();
         setIconImage(getIconImage());
@@ -87,7 +98,6 @@ public class VentanaLog extends javax.swing.JFrame {
             // Ejecutar el comando en el sistema operativo
             Process proceso = Runtime.getRuntime().exec(execudecmd);
             int resultado=proceso.waitFor();
-
             if (resultado == 0) {
                 JOptionPane.showMessageDialog(null,"Copia de seguridad creada correctamente: " + rutaArchivoBackup);
             } else {
