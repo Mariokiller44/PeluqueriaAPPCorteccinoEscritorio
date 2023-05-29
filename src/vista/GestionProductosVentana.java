@@ -6,9 +6,9 @@ package vista;
 
 /**
  *
- * @author mescr
+ * @author Mario Clase GestionProductosVentana el cual es una ventana para
+ * gestionar los productos
  */
-import controlador.ConexionBD;
 import controlador.ConsultasPersonal;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -16,43 +16,65 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
 import style.GestionDeProductos;
 
 public class GestionProductosVentana extends JFrame {
 
+    /**
+     * Declaracion de atributos
+     */
     private JTable productosTable;
     private DefaultTableModel tableModel;
     private ConsultasPersonal consultas;
     private Connection con;
     private String tipoUsu;
     private JPopupMenu popupMenu = new JPopupMenu();
-    ;
-    private final JButton cargarButton;
     private final JButton agregarButton;
     private final JButton eliminarButton;
     private final JButton salirButton;
     private int id;
 
+    /**
+     * Este método devuelve el valor de la variable id.
+     *
+     * @return El valor de la variable id.
+     */
     public int getId() {
         return id;
     }
 
+    /**
+     * Este método establece el valor de la variable id.
+     *
+     * @param id El nuevo valor de la variable id.
+     */
     public void setId(int id) {
         this.id = id;
     }
 
+    /**
+     * Este método devuelve el valor de la variable tipoUsu.
+     *
+     * @return El valor de la variable tipoUsu.
+     */
     public String getTipoUsu() {
         return tipoUsu;
     }
 
+    /**
+     * Este método establece el valor de la variable tipoUsu.
+     *
+     * @param tipoUsu El nuevo valor de la variable tipoUsu.
+     */
     public void setTipoUsu(String tipoUsu) {
         this.tipoUsu = tipoUsu;
     }
 
+    /**
+     *
+     */
     public GestionProductosVentana() {
         setTitle("Gestión de Productos");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -78,11 +100,6 @@ public class GestionProductosVentana extends JFrame {
         renderer.setHorizontalAlignment(JLabel.CENTER);
         renderer.setFont(new Font("Arial", Font.BOLD, 14));
 
-        cargarButton = new JButton("Cargar productos");
-        cargarButton.addActionListener(e -> cargarProductos());
-        cargarButton.setBackground(new Color(42, 89, 42)); // Establecer color de fondo del botón
-        cargarButton.setForeground(Color.WHITE); // Establecer color de texto del botón
-
         agregarButton = new JButton("Agregar producto");
         agregarButton.addActionListener(e -> agregarProducto());
         agregarButton.setBackground(new Color(42, 89, 42)); // Establecer color de fondo del botón
@@ -100,7 +117,6 @@ public class GestionProductosVentana extends JFrame {
 
         JPanel buttonPanel = new JPanel();
         buttonPanel.setBackground(new Color(42, 89, 42)); // Establecer color de fondo del panel
-        buttonPanel.add(cargarButton);
         buttonPanel.add(agregarButton);
         buttonPanel.add(eliminarButton);
         buttonPanel.add(salirButton);
@@ -117,19 +133,28 @@ public class GestionProductosVentana extends JFrame {
                 aniadirmenuPopUp();
             }
         }
+        cargarProductos();
     }
 
+    /**
+     * Este método añade un menú emergente a la tabla de productos.
+     */
     public void aniadirmenuPopUp() {
         // Crear el menú emergente "modificarCantidad"
         if (popupMenu.getComponentCount() == 0) {
+            // Crear el elemento de menú "Modificar Cantidad"
             JMenuItem modificarCantidadItem = new JMenuItem("Modificar Cantidad");
             modificarCantidadItem.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
+                    // Obtener la fila seleccionada en la tabla
                     int filaSeleccionada = productosTable.getSelectedRow();
                     if (filaSeleccionada != -1) {
+                        // Obtener el nombre y la cantidad actual del producto seleccionado
                         String nombreProducto = (String) tableModel.getValueAt(filaSeleccionada, 0);
                         String cantidadActualStr = String.valueOf(tableModel.getValueAt(filaSeleccionada, 1));
+
+                        // Mostrar un cuadro de diálogo para ingresar la nueva cantidad
                         String nuevaCantidadStr = JOptionPane.showInputDialog("Ingrese la nueva cantidad para el producto \"" + nombreProducto + "\":", cantidadActualStr);
                         if (nuevaCantidadStr != null) {
                             try {
@@ -138,6 +163,7 @@ public class GestionProductosVentana extends JFrame {
                                 if (nuevaCantidad < 0) {
                                     throw new NumberFormatException("No se puede insertar una cantidad menor a 0");
                                 } else {
+                                    // Actualizar la cantidad en la tabla y en la base de datos
                                     tableModel.setValueAt(nuevaCantidadStr, filaSeleccionada, 1);
                                     int idProducto = obtenerIdProducto(nombreProducto);
                                     actualizarStockProducto(idProducto, nuevaCantidad);
@@ -151,18 +177,25 @@ public class GestionProductosVentana extends JFrame {
                 }
             });
 
+            // Agregar el elemento de menú al menú emergente
             popupMenu.add(modificarCantidadItem);
         } else if (popupMenu.getComponentCount() == 1) {
+            // Crear el elemento de menú "Modificar Nombre"
             JMenuItem modificarNombre = new JMenuItem("Modificar Nombre");
             modificarNombre.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
+                    // Obtener la fila seleccionada en la tabla
                     int filaSeleccionada = productosTable.getSelectedRow();
                     if (filaSeleccionada != -1) {
+                        // Obtener el nombre del producto seleccionado
                         String nombreProducto = (String) tableModel.getValueAt(filaSeleccionada, 0);
+
+                        // Mostrar un cuadro de diálogo para ingresar el nuevo nombre
                         String nuevoNombre = JOptionPane.showInputDialog("Ingrese el nuevo nombre del producto: ");
                         if (nuevoNombre != null) {
                             if (esNombreValido(nuevoNombre)) {
+                                // Actualizar el nombre en la tabla y en la base de datos
                                 tableModel.setValueAt(nuevoNombre, filaSeleccionada, 0);
                                 int idProducto = obtenerIdProducto(nombreProducto);
                                 actualizarNombreProducto(idProducto, nuevoNombre);
@@ -173,21 +206,40 @@ public class GestionProductosVentana extends JFrame {
                     }
                 }
             });
+
+            // Obtener el tipo de usuario
             tipoUsu = getTipoUsu();
             if (tipoUsu.equals("Administrador")) {
+                // Agregar el elemento de menú al menú emergente si el tipo de usuario es "Administrador"
                 popupMenu.add(modificarNombre);
             }
         }
+
+        // Asignar el menú emergente a la tabla de productos
         productosTable.setComponentPopupMenu(popupMenu);
     }
 
+    /**
+     * Este método devuelve la imagen del ícono de la aplicación.
+     *
+     * @return La imagen del ícono de la aplicación.
+     */
     @Override
     public Image getIconImage() {
+        // Obtener la imagen del ícono de la aplicación
         Image retValue = Toolkit.getDefaultToolkit().getImage("./src/images/iconoDeAppEscritorio.png");
         return retValue;
     }
 
+    /**
+     * Este método verifica si un nombre es válido, es decir, si no contiene
+     * números.
+     *
+     * @param nuevoNombre El nombre a verificar.
+     * @return true si el nombre es válido, false si contiene números.
+     */
     private boolean esNombreValido(String nuevoNombre) {
+        // Verificar si el nombre contiene números
         for (char c : nuevoNombre.toCharArray()) {
             if (Character.isDigit(c)) {
                 return false;
@@ -196,6 +248,12 @@ public class GestionProductosVentana extends JFrame {
         return true;
     }
 
+    /**
+     * Este método obtiene el ID de un producto dado su nombre.
+     *
+     * @param nombreProducto El nombre del producto.
+     * @return El ID del producto.
+     */
     private int obtenerIdProducto(String nombreProducto) {
         int retorno = 0;
         try {
@@ -214,6 +272,12 @@ public class GestionProductosVentana extends JFrame {
         return retorno;
     }
 
+    /**
+     * Actualiza el nombre de un producto en la base de datos.
+     *
+     * @param idProducto El ID del producto a actualizar.
+     * @param nuevoNombre El nuevo nombre del producto.
+     */
     private void actualizarNombreProducto(int idProducto, String nuevoNombre) {
         consultas.realizarConexion();
         con = consultas.getCon();
@@ -223,13 +287,19 @@ public class GestionProductosVentana extends JFrame {
             stmt.setString(1, nuevoNombre);
             stmt.setInt(2, idProducto);
             stmt.executeUpdate();
-            JOptionPane.showMessageDialog(this, "Stock actualizado correctamente");
+            JOptionPane.showMessageDialog(this, "Nombre actualizado correctamente");
         } catch (SQLException e) {
             e.getMessage();
-            JOptionPane.showMessageDialog(this, "Error al actualizar el stock del producto", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Error al actualizar el nombre del producto", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
+    /**
+     * Actualiza el stock de un producto en la base de datos.
+     *
+     * @param idProducto El ID del producto a actualizar.
+     * @param nuevaCantidad La nueva cantidad de stock del producto.
+     */
     private void actualizarStockProducto(int idProducto, int nuevaCantidad) {
         consultas.realizarConexion();
         con = consultas.getCon();
@@ -248,6 +318,9 @@ public class GestionProductosVentana extends JFrame {
         }
     }
 
+    /**
+     * Carga los productos desde la base de datos y los muestra en la tabla.
+     */
     private void cargarProductos() {
         // Limpia la tabla antes de cargar los productos
         tableModel.setRowCount(0);
@@ -277,6 +350,9 @@ public class GestionProductosVentana extends JFrame {
         }
     }
 
+    /**
+     * Agrega un nuevo producto a la tabla y a la base de datos.
+     */
     private void agregarProducto() {
         String nombre = JOptionPane.showInputDialog(this, "Ingrese el nombre del producto:");
         if (nombre != null && !nombre.isEmpty()) {
@@ -302,6 +378,9 @@ public class GestionProductosVentana extends JFrame {
         }
     }
 
+    /**
+     * Elimina un producto de la tabla y de la base de datos.
+     */
     private void eliminarProducto() {
         int selectedRow = productosTable.getSelectedRow();
         if (selectedRow != -1) {
@@ -327,8 +406,11 @@ public class GestionProductosVentana extends JFrame {
         }
     }
 
+    /**
+     * Cierra la ventana actual y vuelve a la ventana principal.
+     */
     private void salir() {
-        int decision = JOptionPane.showConfirmDialog(null, "¿Estas seguro de que quieres salir del menu?", "Salir", JOptionPane.YES_NO_CANCEL_OPTION);
+        int decision = JOptionPane.showConfirmDialog(null, "¿Estás seguro de que quieres salir del menú?", "Salir", JOptionPane.YES_NO_CANCEL_OPTION);
         if (decision == JOptionPane.YES_OPTION) {
             dispose();
             VentanaPrincipal vc = new VentanaPrincipal();
@@ -338,12 +420,17 @@ public class GestionProductosVentana extends JFrame {
         }
     }
 
+    /**
+     * Método de entrada principal del programa.
+     *
+     * @param args Los argumentos de la línea de comandos.
+     */
     public static void main(String[] args) {
         try {
             GestionDeProductos.registerCustomDefaultsSource("style");
             UIManager.setLookAndFeel(new GestionDeProductos());
         } catch (UnsupportedLookAndFeelException ex) {
-            JOptionPane.showMessageDialog(null, "Error tratando de cargar el tema");
+            JOptionPane.showMessageDialog(null, "Error al cargar el tema");
         }
         SwingUtilities.invokeLater(() -> {
             GestionProductosVentana ventana = new GestionProductosVentana();
@@ -351,6 +438,10 @@ public class GestionProductosVentana extends JFrame {
         });
     }
 
+    /**
+     * Comprueba el tipo de usuario y habilita/deshabilita los botones según
+     * corresponda.
+     */
     private void comprobarTipoUsuario() {
         if (!tipoUsu.equals("Administrador")) {
             agregarButton.setEnabled(false);
@@ -360,4 +451,5 @@ public class GestionProductosVentana extends JFrame {
             eliminarButton.setEnabled(true);
         }
     }
+
 }
