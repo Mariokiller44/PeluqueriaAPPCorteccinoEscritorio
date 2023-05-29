@@ -11,41 +11,69 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import modelo.Cita;
+import modelo.Horario;
+import modelo.Personal;
+import modelo.Servicio;
 import modelo.Usuario;
 
 /**
  *
  * @author Administrador
  */
-public class ConsultasCliente {
+public class ConsultasPersonal {
 
     private Connection con;
 
-    public ArrayList<Cita> consultarCitas(int id) {
-        ArrayList<Cita> result = new ArrayList<>();
-        Cita cita = null;
+    public ArrayList<String> obtenerHorariosConCita(int id) {
+        ArrayList<String> horariosConCita = new ArrayList<>();
         try {
             realizarConexion();
-            String mostrarCitas = "SELECT horario.id,horario.fecha_es as fecha, horario.hora_es as hora, servicios.descripcion, servicios.precio,CONCAT(usuario.nombre, ' ', usuario.apellidos) AS empleado\n"
-                    + "FROM cita JOIN horario ON cita.id_horario = horario.ID JOIN personal ON horario.id_personal = personal.id JOIN usuario ON personal.id = usuario.id JOIN servicios ON horario.id_servicio = servicios.id\n"
-                    + "WHERE cita.id_cliente = ?;";
+            String mostrarCitas = "SELECT cita.id, horario.fecha_es AS fecha, horario.hora_es AS hora, servicios.descripcion, servicios.precio, CONCAT(usuario.nombre, ' ', usuario.apellidos) AS cliente FROM horario JOIN personal ON horario.id_personal = personal.id JOIN servicios ON horario.id_servicio = servicios.id LEFT JOIN cita ON horario.id = cita.ID_HORARIO LEFT JOIN usuario ON cita.ID_CLIENTE = usuario.ID WHERE personal.id = ? AND cita.id IS NOT NULL;";
             PreparedStatement stmt = con.prepareStatement(mostrarCitas);
             stmt.setInt(1, id);
             ResultSet resultado = stmt.executeQuery();
             while (resultado.next()) {
-                int idCita = resultado.getInt("id");
                 String fecha = resultado.getString("fecha");
                 String hora = resultado.getString("hora");
                 String descripcion = resultado.getString("descripcion");
                 String precio = resultado.getString("precio");
-                String empleado = resultado.getString("empleado");
-                cita = new Cita(idCita, fecha, hora, descripcion, precio, empleado);
-                result.add(cita);
+                String cliente = resultado.getString("cliente");
+                String horarioConCita = "Fecha: " + fecha + ", Hora: " + hora + ", Descripción: " + descripcion + ", Precio: " + precio + ", Cliente: " + cliente;
+                horariosConCita.add(horarioConCita);
             }
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(null, "No se pudo hacer la consulta");
         }
-        return result;
+        return horariosConCita;
+    }
+
+    public ArrayList<Horario> consultarHorarios(int idCliente) {
+        ArrayList<Horario> horarios = new ArrayList<>();
+        try {
+            realizarConexion();
+            String sql = "SELECT horario.id, horario.fecha_es AS fecha, horario.hora_es AS hora, servicios.descripcion, servicios.precio, CONCAT(usuario.nombre, ' ', usuario.apellidos) AS empleado\n"
+                    + "FROM horario\n"
+                    + "LEFT JOIN cita ON horario.id = cita.id_horario\n"
+                    + "LEFT JOIN usuario ON cita.id_cliente = usuario.id\n"
+                    + "JOIN servicios ON horario.id_servicio = servicios.id\n"
+                    + "WHERE cita.id_cliente = ? OR cita.id_cliente IS NULL;";
+            PreparedStatement stmt = con.prepareStatement(sql);
+            stmt.setInt(1, idCliente);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String fecha = rs.getString("fecha");
+                String hora = rs.getString("hora");
+                String descripcion = rs.getString("descripcion");
+                String precio = rs.getString("precio");
+                String empleado = rs.getString("empleado");
+                Horario horario = new Horario(id, fecha, hora, descripcion, precio, empleado);
+                horarios.add(horario);
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "No se pudo hacer la consulta de horarios");
+        }
+        return horarios;
     }
 
     public Cita actualizarCita(Cita citaAnt, Cita citaNueva) {
@@ -100,16 +128,18 @@ public class ConsultasCliente {
         return id;
     }
 
-    public void modificarServicio(int id, String fecha) {
+    public void modificarServicio(int id, int fecha) {
         try {
             realizarConexion();
-            String actualizacion = "UPDATE HORARIO SET ID_SERVICIO=? WHERE fecha LIKE ?";
+            String actualizacion = "UPDATE HORARIO SET ID_SERVICIO=? WHERE ID LIKE ?";
             PreparedStatement ps = con.prepareStatement(actualizacion);
             ps.setInt(1, id);
-            ps.setString(2, fecha);
+            ps.setInt(2, fecha);
             int result = ps.executeUpdate();
             if (result == 0) {
                 JOptionPane.showMessageDialog(null, "No se ha podido modificar el servicio, vuelva a intentarlo");
+            } else {
+                JOptionPane.showMessageDialog(null, "Servicio modificado exitosamente");
             }
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(null, "Error intentando modificar el servicio");
@@ -126,6 +156,24 @@ public class ConsultasCliente {
             int result = ps.executeUpdate();
             if (result == 0) {
                 JOptionPane.showMessageDialog(null, "No se ha podido modificar la fecha, vuelva a intentarlo");
+            } else {
+                JOptionPane.showMessageDialog(null, "Fecha modificada exitosamente");
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Error intentando modificar el servicio");
+        }
+    }
+
+    public void modificarServicioPorPrecio(int idCita, double precio) {
+        try {
+            realizarConexion();
+            String actualizacion = "UPDATE horario SET precio = ? WHERE id = ?";
+            PreparedStatement ps = con.prepareStatement(actualizacion);
+            ps.setDouble(1, precio);
+            ps.setInt(2, idCita);
+            int result = ps.executeUpdate();
+            if (result == 0) {
+                JOptionPane.showMessageDialog(null, "No se ha podido modificar el precio, vuelva a intentarlo");
             }
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(null, "Error intentando modificar el servicio");
@@ -142,6 +190,7 @@ public class ConsultasCliente {
             int result = ps.executeUpdate();
             if (result == 0) {
                 JOptionPane.showMessageDialog(null, "No se ha podido modificar la fecha, vuelva a intentarlo");
+                JOptionPane.showMessageDialog(null, "Hora modificada exitosamente");
             }
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(null, "Error intentando modificar el servicio");
@@ -152,22 +201,6 @@ public class ConsultasCliente {
         ConexionBD conexion = new ConexionBD("admin", "123pelu");
         con = conexion.getConnection();
         return conexion;
-    }
-
-    public void borrarCita(Cita citaSeleccionada) {
-        try {
-            realizarConexion();
-            String borrado = "DELETE FROM HORARIO WHERE ID=?";
-            PreparedStatement psBorrado = con.prepareStatement(borrado);
-            psBorrado.setInt(1, citaSeleccionada.getId());
-            int resultado = psBorrado.executeUpdate();
-            if (resultado == 0) {
-                JOptionPane.showMessageDialog(null, "No se ha podido borrar la cita, vuelva a intentarlo");
-            }
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(null, "Problemas al borrar la cita. Intentelo de nuevo");
-        }
-
     }
 
     public Connection getCon() {
@@ -259,7 +292,7 @@ public class ConsultasCliente {
                         }
                         break;
                     default:
-                        JOptionPane.showMessageDialog(null,"Selección inválida");
+                        JOptionPane.showMessageDialog(null, "Selección inválida");
                         break;
                 }
             } catch (SQLException ex) {
@@ -270,4 +303,124 @@ public class ConsultasCliente {
 
     }
 
+    public void modificarHorarioPorFechaHora(String fecha, String hora, int idHorario) {
+        try {
+            String sql = "UPDATE horario SET fecha = ?, hora = ? WHERE id = ?";
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setString(1, fecha);
+            ps.setString(2, hora);
+            ps.setInt(3, idHorario);
+            ps.executeUpdate();
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Error al modificar el horario por fecha y hora");
+        }
+    }
+
+    public void modificarHorarioPorServicio(int idHorario, int idServicio) {
+        try {
+            String sql = "UPDATE horario SET id_servicio = ? WHERE id = ?";
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setInt(1, idServicio);
+            ps.setInt(2, idHorario);
+            ps.executeUpdate();
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Error al modificar el horario por servicio");
+        }
+    }
+
+    public ArrayList<Usuario> obtenerListaEmpleados() {
+        ArrayList<Usuario> resul = new ArrayList<>();
+        try {
+            realizarConexion();
+
+            String sql = "SELECT ID,NOMBRE,APELLIDOS FROM USUARIO WHERE NOMBRE!='ADMINISTRADOR' AND TIPO_DE_USUARIO LIKE 'PERSONAL'";
+            PreparedStatement ps = con.prepareStatement(sql);
+            ResultSet res = ps.executeQuery();
+            while (res.next()) {
+                int id = res.getInt("id");
+                String nombre = res.getString("nombre");
+                String apellidos = res.getString("apellidos");
+                Usuario usu = new Usuario(id, nombre, apellidos);
+                resul.add(usu);
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Error al coger los servicios");
+        }
+        return resul;
+    }
+
+    public ArrayList<Servicio> obtenerListaServicios() {
+        ArrayList<Servicio> servicios = new ArrayList<>();
+
+        try {
+            // Consulta para obtener la lista de servicios
+            realizarConexion();
+            Statement statement = con.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM servicios");
+
+            // Recorrer el resultado y crear objetos Servicio
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String descripcion = resultSet.getString("descripcion");
+
+                Servicio servicio = new Servicio(id, descripcion);
+                servicios.add(servicio);
+            }
+
+            resultSet.close();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return servicios;
+    }
+
+    public Usuario obtenerEmpleadoPorNombre(String nombre, String apellidos) {
+        Usuario empleado = null;
+
+        try {
+            // Consultar la base de datos para obtener el empleado por nombre y apellidos
+            realizarConexion();
+            PreparedStatement statement = con.prepareStatement("SELECT id, nombre, apellidos FROM usuario WHERE nombre = ? AND apellidos = ?");
+            statement.setString(1, nombre);
+            statement.setString(2, apellidos);
+
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String nombreUsuario = resultSet.getString("nombre");
+                String apellidosUsuario = resultSet.getString("apellidos");
+
+                // Crear el objeto Usuario con los datos obtenidos de la base de datos
+                empleado = new Usuario(id, nombreUsuario, apellidosUsuario);
+            }
+
+            resultSet.close();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return empleado;
+    }
+
+    public int obtenerIdUsuario(String nombreC, String apellidoC) {
+        int id = -1;
+        realizarConexion();
+        try {
+            PreparedStatement pstmt = con.prepareStatement("SELECT id FROM usuario WHERE nombre=? AND apellidos=?");
+            pstmt.setString(1, nombreC);
+            pstmt.setString(2, apellidoC);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    id = rs.getInt("id");
+                }
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Error en la búsqueda");
+        }
+        return id;
+    }
 }

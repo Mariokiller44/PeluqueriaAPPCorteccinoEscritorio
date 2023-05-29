@@ -5,7 +5,7 @@
 package vista;
 
 import com.github.lgooddatepicker.components.DatePicker;
-import controlador.ConsultasCliente;
+import controlador.ConsultasPersonal;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
@@ -49,7 +49,7 @@ import modelo.Usuario;
  *
  * @author mescr
  */
-public class VentanaCliente extends javax.swing.JFrame {
+public class VentanaPrincipal extends javax.swing.JFrame {
 
     /**
      * Creates new form VentanaCliente
@@ -58,7 +58,7 @@ public class VentanaCliente extends javax.swing.JFrame {
     private int posicionFinal;
     private Timer animacion;
     private JPanel panelSustituto;
-    private ConsultasCliente consultas;
+    private ConsultasPersonal consultas;
     private Usuario usu;
     private String tipoUsu;
 
@@ -79,17 +79,21 @@ public class VentanaCliente extends javax.swing.JFrame {
     }
     
 
-    public VentanaCliente() {
+    public VentanaPrincipal() {
         initComponents();
         setIconImage(getIconImage());
         jMenu1.setIcon(new ImageIcon("./src/images/home.png"));
         jMenu2.setIcon(new ImageIcon("./src/images/cita.png"));
 //        mostrarPanelSustituto();
+        tipoUsu=getTipoUsu();
         vaciarPanelOpciones();
         panelOpciones.setVisible(true);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setResizable(false);
+        if (tipoUsu!=null) {
+            tipoUsu=getTipoUsu();
+        }
     }
 
     @Override
@@ -412,9 +416,10 @@ public class VentanaCliente extends javax.swing.JFrame {
         if (menuConsultas.getText().contains("Consultar citas")) {
             JOptionPane.showMessageDialog(null, "Abriendo el menu de consultas");
             dispose();
-            GestionCitasCliente gc = new GestionCitasCliente();
+            GestionCitasVentana gc = new GestionCitasVentana();
             gc.setValor(id);
             gc.setTipoUsu(tipoUsu);
+            gc.modificarDiseño();
             gc.comprobarTabla();
             gc.setVisible(true);
         } else {
@@ -424,7 +429,7 @@ public class VentanaCliente extends javax.swing.JFrame {
     }//GEN-LAST:event_menuConsultasMouseClicked
 
     private void mostrarTablaDatos() throws HeadlessException {
-        consultas = new ConsultasCliente();
+        consultas = new ConsultasPersonal();
         // Nombres de las columnas
         String[] columnNames = {"Nombre", "Apellidos", "Telefono", "Email", "Cuenta", "Contrasenia"};
         DefaultTableModel modelo = new DefaultTableModel(columnNames, 0) {
@@ -526,6 +531,7 @@ public class VentanaCliente extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(null, "Abriendo el menu de productos...");
             dispose();
             GestionProductosVentana gpv = new GestionProductosVentana();
+            gpv.setId(id);
             gpv.setTipoUsu(tipoUsu);
             gpv.aniadirmenuPopUp();
             gpv.setVisible(true);
@@ -559,20 +565,21 @@ public class VentanaCliente extends javax.swing.JFrame {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(VentanaCliente.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(VentanaPrincipal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(VentanaCliente.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(VentanaPrincipal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(VentanaCliente.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(VentanaPrincipal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(VentanaCliente.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(VentanaPrincipal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
         //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new VentanaCliente().setVisible(true);
+                new VentanaPrincipal().setVisible(true);
             }
         });
     }

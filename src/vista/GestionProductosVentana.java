@@ -9,7 +9,7 @@ package vista;
  * @author mescr
  */
 import controlador.ConexionBD;
-import controlador.ConsultasCliente;
+import controlador.ConsultasPersonal;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -26,14 +26,24 @@ public class GestionProductosVentana extends JFrame {
 
     private JTable productosTable;
     private DefaultTableModel tableModel;
-    private ConsultasCliente consultas;
+    private ConsultasPersonal consultas;
     private Connection con;
     private String tipoUsu;
-    private JPopupMenu popupMenu=new JPopupMenu();;
+    private JPopupMenu popupMenu = new JPopupMenu();
+    ;
     private final JButton cargarButton;
     private final JButton agregarButton;
     private final JButton eliminarButton;
     private final JButton salirButton;
+    private int id;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public String getTipoUsu() {
         return tipoUsu;
@@ -101,8 +111,12 @@ public class GestionProductosVentana extends JFrame {
 
         pack();
         setLocationRelativeTo(null); // Mostrar la ventana en el centro de la pantalla
-        aniadirmenuPopUp();
-        comprobarTipoUsuario();
+        if (tipoUsu != null) {
+            if (!tipoUsu.isEmpty()) {
+                comprobarTipoUsuario();
+                aniadirmenuPopUp();
+            }
+        }
     }
 
     public void aniadirmenuPopUp() {
@@ -138,7 +152,7 @@ public class GestionProductosVentana extends JFrame {
             });
 
             popupMenu.add(modificarCantidadItem);
-        } else if(popupMenu.getComponentCount()==1){
+        } else if (popupMenu.getComponentCount() == 1) {
             JMenuItem modificarNombre = new JMenuItem("Modificar Nombre");
             modificarNombre.addActionListener(new ActionListener() {
                 @Override
@@ -237,7 +251,7 @@ public class GestionProductosVentana extends JFrame {
     private void cargarProductos() {
         // Limpia la tabla antes de cargar los productos
         tableModel.setRowCount(0);
-        consultas = new ConsultasCliente();
+        consultas = new ConsultasPersonal();
         try {
             // Conexión a la base de datos
             consultas.realizarConexion();
@@ -317,7 +331,8 @@ public class GestionProductosVentana extends JFrame {
         int decision = JOptionPane.showConfirmDialog(null, "¿Estas seguro de que quieres salir del menu?", "Salir", JOptionPane.YES_NO_CANCEL_OPTION);
         if (decision == JOptionPane.YES_OPTION) {
             dispose();
-            VentanaCliente vc = new VentanaCliente();
+            VentanaPrincipal vc = new VentanaPrincipal();
+            vc.setId(id);
             vc.setTipoUsu(tipoUsu);
             vc.setVisible(true);
         }
@@ -340,7 +355,7 @@ public class GestionProductosVentana extends JFrame {
         if (!tipoUsu.equals("Administrador")) {
             agregarButton.setEnabled(false);
             eliminarButton.setEnabled(false);
-        }else{
+        } else {
             agregarButton.setEnabled(true);
             eliminarButton.setEnabled(true);
         }

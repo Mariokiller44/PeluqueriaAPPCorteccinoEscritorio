@@ -544,7 +544,7 @@ public class VentanaRegistro extends javax.swing.JFrame {
                     try {
                         insertarUsuarioCliente();
                         insertarCliente();
-                        JOptionPane.showMessageDialog(null, "Cliente registrado", "Insercion completada", JOptionPane.DEFAULT_OPTION);
+                        JOptionPane.showMessageDialog(null, "Cliente registrado, inicie sesión en nuestra aplicacion Android", "Insercion completada", JOptionPane.DEFAULT_OPTION);
                         VentanaLog vl = new VentanaLog();
                         vl.setVisible(true);
                         dispose();

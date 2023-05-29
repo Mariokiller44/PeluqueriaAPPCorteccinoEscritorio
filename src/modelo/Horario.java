@@ -11,67 +11,61 @@ import java.util.*;
  *
  * @author Administrador
  */
+
 public class Horario {
-    private int id,id_personal,id_servicio;
-    private LocalDate fecha;
-    private LocalTime hora;
+    private int id;
+    private String fecha;
+    private String hora;
+    private String descripcion;
+    private String precio;
+    private String empleado;
 
-    public Horario() {
-    }
-
-    public Horario(int id, int id_personal, int id_servicio, LocalDate fecha, LocalTime hora) {
+    public Horario(int id, String fecha, String hora, String descripcion, String precio, String empleado) {
         this.id = id;
-        this.id_personal = id_personal;
-        this.id_servicio = id_servicio;
         this.fecha = fecha;
         this.hora = hora;
+        this.descripcion = descripcion;
+        this.precio = precio;
+        this.empleado = empleado;
     }
-
-
+    
+    public Horario(int id,String fecha,String hora,String descripcion){
+        this.id = id;
+        this.fecha = fecha;
+        this.hora = hora;
+        this.descripcion = descripcion;
+    }
+    public Horario(int id,String empleado){
+        this.id=id;
+        this.empleado=empleado;
+    }
     public int getId() {
         return id;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public int getId_personal() {
-        return id_personal;
-    }
-
-    public void setId_personal(int id_personal) {
-        this.id_personal = id_personal;
-    }
-
-    public int getId_servicio() {
-        return id_servicio;
-    }
-
-    public void setId_servicio(int id_servicio) {
-        this.id_servicio = id_servicio;
-    }
-
-    public LocalDate getFecha() {
+    public String getFecha() {
         return fecha;
     }
 
-    public void setFecha(LocalDate fecha) {
-        this.fecha = fecha;
-    }
-
-    public LocalTime getHora() {
+    public String getHora() {
         return hora;
     }
 
-    public void setHora(LocalTime hora) {
-        this.hora = hora;
+    public String getDescripcion() {
+        return descripcion;
+    }
+
+    public String getPrecio() {
+        return precio;
+    }
+
+    public String getEmpleado() {
+        return empleado;
     }
 
     @Override
     public String toString() {
-        return "Horario " + id + ", personal:" + id_personal + ", servicio=" + id_servicio + ", fecha:" + fecha + ", hora:" + hora;
+        return "fecha: " + fecha + ", hora: " + hora + ", descripcion: " + descripcion + ", precio: " + precio + ", empleado:" + empleado;
     }
-    
     
 }

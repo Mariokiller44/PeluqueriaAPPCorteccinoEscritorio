@@ -13,11 +13,18 @@ import java.awt.event.ActionListener;
 import java.sql.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseListener;
+import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 import javax.swing.ImageIcon;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  *
@@ -33,14 +40,21 @@ public class VentanaLog extends javax.swing.JFrame {
     private Logger logger;
     public int id;
     private String tipoUsu;
-    
+    private static final String DATABASE_NAME = "bd_alcorteccino";
+    private static final String DATABASE_USERNAME = "admin";
+    private static final String DATABASE_PASSWORD = "123pelu";
+    private static final String BACKUP_FOLDER = "";
+    private static String folderpath = "src" + "\\bd";
+    private static String savepath;
     public VentanaLog() {
+        // Registrar el método para que se ejecute cuando se cierre la aplicación
+        Runtime.getRuntime().addShutdownHook(new Thread(VentanaLog::realizarCopiaDeSeguridad));
         initComponents();
         setIconImage(getIconImage());
         colocarImagenes();
         setLocationRelativeTo(null);
         setResizable(false);
-        
+
         jCheckBox1.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -52,13 +66,44 @@ public class VentanaLog extends javax.swing.JFrame {
             }
         });
     }
-    
+
+    private static void realizarCopiaDeSeguridad() {
+        // Obtener la fecha actual
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MMdd_HH-mm-ss");
+        String fechaActual = dateFormat.format(new Date());
+
+        // Nombre del archivo de copia de seguridad
+        String nombreArchivoBackup = DATABASE_NAME + "_"+fechaActual;
+        savepath= "\"" + folderpath + "\\" + "" + nombreArchivoBackup +".sql\"";
+        String execudecmd = "mysqldump -u" + DATABASE_USERNAME + " -p" + DATABASE_PASSWORD + " --database " + DATABASE_NAME + " -r " + savepath;
+
+        // Ruta completa del archivo de copia de seguridad
+        String rutaArchivoBackup = BACKUP_FOLDER + nombreArchivoBackup;
+
+        try {
+            // Comando para realizar la copia de seguridad
+            String comando = "mysql --user=" + DATABASE_USERNAME + " --password=" + DATABASE_PASSWORD + " " + DATABASE_NAME + " > " + rutaArchivoBackup;
+            //mysqldump --user=admin --password=1234pelu bd_alcorteccino > C:\Users\mescr\OneDrive\Documentos\NetBeansProjects\ProyectoFinalJunioAlCorteccino\ProyectoAl-Corteccino\src\bd
+            // Ejecutar el comando en el sistema operativo
+            Process proceso = Runtime.getRuntime().exec(execudecmd);
+            int resultado=proceso.waitFor();
+
+            if (resultado == 0) {
+                JOptionPane.showMessageDialog(null,"Copia de seguridad creada correctamente: " + rutaArchivoBackup);
+            } else {
+                
+            }
+        } catch (IOException | InterruptedException e) {
+            System.err.println("Error al crear la copia de seguridad: " + e.getMessage());
+        }
+    }
+
     @Override
     public Image getIconImage() {
         Image retValue = Toolkit.getDefaultToolkit().getImage("./src/images/iconoDeAppEscritorio.png");
         return retValue;
     }
-    
+
     private void colocarImagenes() {
         jLabel1.setIcon(new ImageIcon("./src/images/tijera.png"));
         jLabel2.setIcon(new ImageIcon("./src/images/iconoPeluqueria.png"));
@@ -410,7 +455,7 @@ public class VentanaLog extends javax.swing.JFrame {
 
     private void botonAceptarKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_botonAceptarKeyTyped
         char cTeclapresionada = evt.getKeyChar();
-        
+
         if (cTeclapresionada == KeyEvent.VK_ENTER) {
             botonAceptar.doClick();
         }
@@ -418,7 +463,7 @@ public class VentanaLog extends javax.swing.JFrame {
 
     private void textoUsuarioKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_textoUsuarioKeyTyped
         char cTeclapresionada = evt.getKeyChar();
-        
+
         if (cTeclapresionada == KeyEvent.VK_ENTER) {
             botonAceptar.doClick();
         }
@@ -427,7 +472,7 @@ public class VentanaLog extends javax.swing.JFrame {
 
     private void textoContraseniaKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_textoContraseniaKeyTyped
         char cTeclapresionada = evt.getKeyChar();
-        
+
         if (cTeclapresionada == KeyEvent.VK_ENTER) {
             botonAceptar.doClick();
         }
@@ -505,43 +550,61 @@ public class VentanaLog extends javax.swing.JFrame {
             String contrasenia = textoContrasenia.getText();
             conexion = new ConexionBD(usuario, contrasenia);
             con = conexion.getConnection();
-            String sql = "SELECT * FROM usuario WHERE CUENTA LIKE ? AND CONTRASENIA LIKE ?";
-            PreparedStatement stmt = con.prepareStatement(sql);
-            stmt.setString(1, usuario);
-            stmt.setString(2, contrasenia);
-            ResultSet resul = stmt.executeQuery();
-            if (!resul.next()) {
-                JOptionPane.showMessageDialog(null, "Usuario o contraseña no validos");
-                textoContrasenia.setText("");
-                textoUsuario.setText("");
-            } else {
-                setId(resul.getInt("id"));
-                JOptionPane.showMessageDialog(null, "Bienvenido " + resul.getString("nombre"));
-                tipoUsu = resul.getString("tipo_de_usuario");
-                try {
-                    if (tipoUsu.contains("Personal")) {
-                        dispose();
-                        VentanaCliente vc = new VentanaCliente();
-                        vc.setValor(id);
-                        vc.setTipoUsu(resul.getString("Nombre"));
-                        vc.setVisible(true);
-                    } else {
-                        throw new ClassCastException("Esta aplicación solo la puede utilizar el personal. Pruebe nuestra aplicación Android");
+            String passwd = obtenerContrasenia(usuario);
+            String contraseniaMD5 = calcularMD5(contrasenia);
+            if (contraseniaMD5.contains(passwd)) {
+                String sql = "SELECT * FROM usuario WHERE CUENTA LIKE ? AND CONTRASENIA LIKE ?";
+                PreparedStatement stmt = con.prepareStatement(sql);
+                stmt.setString(1, usuario);
+                stmt.setString(2, contraseniaMD5);
+                ResultSet resul = stmt.executeQuery();
+                if (!resul.next()) {
+                    JOptionPane.showMessageDialog(null, "Usuario o contraseña no validos");
+                    textoContrasenia.setText("");
+                    textoUsuario.setText("");
+                } else {
+                    setId(resul.getInt("id"));
+                    JOptionPane.showMessageDialog(null, "Bienvenido " + resul.getString("nombre"));
+                    tipoUsu = resul.getString("tipo_de_usuario");
+                    try {
+                        if (tipoUsu.contains("Personal")) {
+                            dispose();
+                            VentanaPrincipal vc = new VentanaPrincipal();
+                            vc.setValor(id);
+                            vc.setTipoUsu(resul.getString("Nombre"));
+                            vc.setVisible(true);
+                        } else {
+                            throw new ClassCastException("Esta aplicación solo la puede utilizar el personal. Pruebe nuestra aplicación Android");
+                        }
+                    } catch (ClassCastException cse) {
+                        JOptionPane.showMessageDialog(null, cse.getMessage());
                     }
-                } catch (ClassCastException cse) {
-                    JOptionPane.showMessageDialog(null, cse.getMessage());
+
                 }
-                
+                conexion.cerrarConnection();
             }
-            conexion.cerrarConnection();
-            
+
         } catch (NullPointerException npe) {
             JOptionPane.showMessageDialog(null, "Error intentando conectar a la base de datos");
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(null, "Hubo un problema con la base de datos.");
+        } catch (NoSuchAlgorithmException ex) {
+            JOptionPane.showMessageDialog(null, "Falló la comprobación de contraseña");
         }
     }
-    
+
+    public String calcularMD5(String texto) throws NoSuchAlgorithmException {
+        MessageDigest md = MessageDigest.getInstance("MD5");
+        byte[] hashBytes = md.digest(texto.getBytes());
+
+        StringBuilder sb = new StringBuilder();
+        for (byte b : hashBytes) {
+            sb.append(String.format("%02x", b));
+        }
+
+        return sb.toString();
+    }
+
     private void irARegistro() {
         dispose();
         VentanaRegistro vr = new VentanaRegistro();
@@ -564,6 +627,23 @@ public class VentanaLog extends javax.swing.JFrame {
     public void setTipoUsu(String tipoUsu) {
         this.tipoUsu = tipoUsu;
     }
-    
-    
+
+    private String obtenerContrasenia(String usuario) {
+        String contrasenia = null;
+        try {
+            conexion = new ConexionBD("usuario", "passwd");
+            con = conexion.getConnection();
+            String sql = "SELECT CONTRASENIA FROM USUARIO WHERE CUENTA LIKE ?";
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setString(1, usuario);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                contrasenia = rs.getString("contrasenia");
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Error en la conexion.");
+        }
+        return contrasenia;
+    }
+
 }

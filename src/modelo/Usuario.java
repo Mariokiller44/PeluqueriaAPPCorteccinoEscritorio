@@ -35,6 +35,12 @@ public class Usuario {
         this.cuenta = cuenta;
         this.contrasenia = contrasenia;
     }
+
+    public Usuario(int id, String nombre, String apellidos) {
+        this.id = id;
+        this.nombre = nombre;
+        this.apellidos = apellidos;
+    }
     
 
     public int getId() {
@@ -103,6 +109,6 @@ public class Usuario {
 
     @Override
     public String toString() {
-        return "id:" + id + ", telefono:" + telefono + ", nombre:" + nombre + ", apellidos:" + apellidos + ", email:" + email + ", cuenta:" + cuenta + ", contrasenia:" + contrasenia + ", tipo_de_usuario:" + tipo_de_usuario;
+        return "id:" + id + ", nombre:" + nombre + ", apellidos:" + apellidos;
     }
 }
