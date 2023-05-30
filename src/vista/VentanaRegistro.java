@@ -33,7 +33,7 @@ public class VentanaRegistro extends javax.swing.JFrame {
         buttonGroup1 = new ButtonGroup();
         buttonGroup1.add(botonCliente);
         buttonGroup1.add(botonEmpleado);
-
+        setTitle("Registro");
         setLocationRelativeTo(null);
         checkBoxContrasenia.addActionListener(new ActionListener() {
             @Override

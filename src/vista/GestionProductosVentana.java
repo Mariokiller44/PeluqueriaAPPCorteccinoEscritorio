@@ -22,7 +22,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
 import style.GestionDeProductos;
 
-public class GestionProductosVentana extends JFrame {
+public class GestionProductosVentana extends javax.swing.JFrame {
 
     /**
      * Declaracion de atributos
@@ -33,9 +33,9 @@ public class GestionProductosVentana extends JFrame {
     private Connection con;
     private String tipoUsu;
     private JPopupMenu popupMenu = new JPopupMenu();
-    private final JButton agregarButton;
-    private final JButton eliminarButton;
-    private final JButton salirButton;
+    private JButton agregarButton;
+    private JButton eliminarButton;
+    private JButton salirButton;
     private VentanaPrincipal ventanaPrincipal;
     private int id;
 
@@ -88,60 +88,12 @@ public class GestionProductosVentana extends JFrame {
      * Constructor de la clase GestionProductosVentana.
      */
     public GestionProductosVentana() {
+        initComponents();
         setTitle("Gestión de Productos"); // Establecer el título de la ventana
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE); // Configurar el comportamiento al cerrar la ventana
         setIconImage(getIconImage()); // Establecer la imagen del ícono de la ventana
         setResizable(false); // Deshabilitar la capacidad de redimensionar la ventana
 
-        // Crear el modelo de la tabla y la tabla con el modelo
-        tableModel = new DefaultTableModel(new Object[]{"Nombre", "Cantidad"}, 0);
-        productosTable = new JTable(tableModel) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false; // No permitir la edición de celdas en la tabla
-            }
-        };
-
-        // Crear un panel de desplazamiento para la tabla
-        JScrollPane scrollPane = new JScrollPane(productosTable);
-        scrollPane.getViewport().setBackground(new Color(186, 179, 179)); // Establecer color de fondo del panel de desplazamiento
-
-        // Personalizar el renderizador de encabezado para cambiar el color de los títulos
-        JTableHeader header = productosTable.getTableHeader();
-        header.setBackground(new Color(74, 159, 255));
-        header.setForeground(Color.WHITE);
-        DefaultTableCellRenderer renderer = (DefaultTableCellRenderer) productosTable.getTableHeader().getDefaultRenderer();
-        renderer.setHorizontalAlignment(JLabel.CENTER);
-        renderer.setFont(new Font("Arial", Font.BOLD, 14));
-
-        // Crear botones y agregarles acciones
-        agregarButton = new JButton("Agregar producto");
-        agregarButton.addActionListener(e -> agregarProducto());
-        agregarButton.setBackground(new Color(42, 89, 42)); // Establecer color de fondo del botón
-        agregarButton.setForeground(Color.WHITE); // Establecer color de texto del botón
-
-        eliminarButton = new JButton("Eliminar producto");
-        eliminarButton.addActionListener(e -> eliminarProducto());
-        eliminarButton.setBackground(new Color(42, 89, 42)); // Establecer color de fondo del botón
-        eliminarButton.setForeground(Color.WHITE); // Establecer color de texto del botón
-
-        salirButton = new JButton("Atrás");
-        salirButton.addActionListener(e -> salir());
-        salirButton.setBackground(new Color(42, 89, 42)); // Establecer color de fondo del botón
-        salirButton.setForeground(Color.WHITE); // Establecer color de texto del botón
-
-        // Crear un panel para los botones
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setBackground(new Color(42, 89, 42)); // Establecer color de fondo del panel
-        buttonPanel.add(agregarButton);
-        buttonPanel.add(eliminarButton);
-        buttonPanel.add(salirButton);
-
-        setLayout(new BorderLayout()); // Establecer el diseño de la ventana
-        add(scrollPane, BorderLayout.CENTER); // Agregar el panel de desplazamiento al centro de la ventana
-        add(buttonPanel, BorderLayout.SOUTH); // Agregar el panel de botones en la parte inferior de la ventana
-
-        pack(); // Ajustar el tamaño de la ventana según su contenido
         setLocationRelativeTo(null); // Mostrar la ventana en el centro de la pantalla
 
         // Verificar el tipo de usuario y realizar acciones correspondientes
@@ -167,6 +119,55 @@ public class GestionProductosVentana extends JFrame {
                 }
             }
         });
+    }
+
+    private void initComponents() {
+        // Crear el modelo de la tabla y la tabla con el modelo
+        tableModel = new DefaultTableModel(new Object[]{"Nombre", "Cantidad"}, 0);
+        productosTable = new JTable(tableModel) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // No permitir la edición de celdas en la tabla
+            }
+        };
+
+        // Crear un panel de desplazamiento para la tabla
+        JScrollPane scrollPane = new JScrollPane(productosTable);
+        scrollPane.getViewport().setBackground(new Color(186, 179, 179)); // Establecer color de fondo del panel de desplazamiento
+
+        // Personalizar el renderizador de encabezado para cambiar el color de los títulos
+        JTableHeader header = productosTable.getTableHeader();
+        header.setBackground(new Color(74, 159, 255));
+        header.setForeground(Color.WHITE);
+        DefaultTableCellRenderer renderer = (DefaultTableCellRenderer) productosTable.getTableHeader().getDefaultRenderer();
+        renderer.setHorizontalAlignment(JLabel.CENTER);
+        renderer.setFont(new Font("Arial", Font.BOLD, 14));
+        
+        
+        // Crear botones y agregarles acciones
+        agregarButton = new JButton("Agregar producto");
+        agregarButton.addActionListener(e -> agregarProducto());
+        agregarButton.setForeground(Color.WHITE); // Establecer color de texto del botón
+
+        eliminarButton = new JButton("Eliminar producto");
+        eliminarButton.addActionListener(e -> eliminarProducto());
+        eliminarButton.setForeground(Color.WHITE); // Establecer color de texto del botón
+
+        salirButton = new JButton("Atrás");
+        salirButton.addActionListener(e -> salir());
+        salirButton.setForeground(Color.WHITE); // Establecer color de texto del botón
+
+        // Crear un panel para los botones
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(agregarButton);
+        buttonPanel.add(eliminarButton);
+        buttonPanel.add(salirButton);
+
+        //setLayout(new BorderLayout()); // Establecer el diseño de la ventana
+        add(scrollPane, BorderLayout.CENTER); // Agregar el panel de desplazamiento al centro de la ventana
+        add(buttonPanel, BorderLayout.SOUTH); // Agregar el panel de botones en la parte inferior de la ventana
+
+        pack(); // Ajustar el tamaño de la ventana según su contenido
     }
 
     /**
@@ -459,15 +460,11 @@ public class GestionProductosVentana extends JFrame {
      * @param args Los argumentos de la línea de comandos.
      */
     public static void main(String[] args) {
-        try {
-            GestionDeProductos.registerCustomDefaultsSource("style");
-            UIManager.setLookAndFeel(new GestionDeProductos());
-        } catch (UnsupportedLookAndFeelException ex) {
-            JOptionPane.showMessageDialog(null, "Error al cargar el tema");
-        }
-        SwingUtilities.invokeLater(() -> {
-            GestionProductosVentana ventana = new GestionProductosVentana();
-            ventana.setVisible(true);
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                GestionProductosVentana ventana = new GestionProductosVentana();
+                ventana.setVisible(true);
+            }
         });
     }
 
