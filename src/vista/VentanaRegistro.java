@@ -8,8 +8,6 @@ import controlador.ConexionBD;
 import java.sql.*;
 import java.awt.Color;
 import java.awt.HeadlessException;
-import java.awt.Image;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.logging.Level;
@@ -73,12 +71,6 @@ public class VentanaRegistro extends javax.swing.JFrame {
                 }
             }
         });
-    }
-
-    @Override
-    public Image getIconImage() {
-        Image retValue = Toolkit.getDefaultToolkit().getImage("./src/images/iconoDeAppEscritorio.png");
-        return retValue;
     }
 
     /**
@@ -544,7 +536,7 @@ public class VentanaRegistro extends javax.swing.JFrame {
                     try {
                         insertarUsuarioCliente();
                         insertarCliente();
-                        JOptionPane.showMessageDialog(null, "Cliente registrado, inicie sesión en nuestra aplicacion Android", "Insercion completada", JOptionPane.DEFAULT_OPTION);
+                        JOptionPane.showMessageDialog(null, "Cliente registrado", "Insercion completada", JOptionPane.DEFAULT_OPTION);
                         VentanaLog vl = new VentanaLog();
                         vl.setVisible(true);
                         dispose();
@@ -624,23 +616,17 @@ public class VentanaRegistro extends javax.swing.JFrame {
         return idUsuario;
     }
 
-    private void insertarUsuarioCliente() {
-        try {
-            String insercionUsuario = "INSERT INTO USUARIO (NOMBRE,APELLIDOS,EMAIL,TELEFONO,CUENTA,CONTRASENIA,TIPO_DE_USUARIO) VALUES (?,?,?,?,?,?,?)";
-            PreparedStatement psUsuario = con.prepareStatement(insercionUsuario);
-            psUsuario.setString(1, textoNombre.getText());
-            psUsuario.setString(2, textoApellidos.getText());
-            psUsuario.setString(3, textoEmail.getText());
-            psUsuario.setInt(4, Integer.parseInt(textoTelf.getText()));
-            psUsuario.setString(5, textoCuenta.getText());
-            psUsuario.setString(6, textoContrasenia.getText().toString());
-            psUsuario.setString(7, "Cliente");
-            psUsuario.executeUpdate();
-        } catch (NullPointerException npe) {
-            JOptionPane.showMessageDialog(null, "Error intentando conectar a la base de datos");
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(null, "Parece que hubo un problema al registrarse");
-        }
+    private void insertarUsuarioCliente() throws SQLException, NumberFormatException {
+        String insercionUsuario = "INSERT INTO USUARIO (NOMBRE,APELLIDOS,EMAIL,TELEFONO,CUENTA,CONTRASENIA,TIPO_DE_USUARIO) VALUES (?,?,?,?,?,?,?)";
+        PreparedStatement psUsuario = con.prepareStatement(insercionUsuario);
+        psUsuario.setString(1, textoNombre.getText());
+        psUsuario.setString(2, textoApellidos.getText());
+        psUsuario.setString(3, textoEmail.getText());
+        psUsuario.setInt(4, Integer.parseInt(textoTelf.getText()));
+        psUsuario.setString(5, textoCuenta.getText());
+        psUsuario.setString(6, textoContrasenia.getText().toString());
+        psUsuario.setString(7, "Cliente");
+        psUsuario.executeUpdate();
     }
 
     private boolean comprobarEmail() throws HeadlessException {

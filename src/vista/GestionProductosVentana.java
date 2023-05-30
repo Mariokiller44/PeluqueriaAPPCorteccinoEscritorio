@@ -15,6 +15,8 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.sql.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
@@ -34,6 +36,7 @@ public class GestionProductosVentana extends JFrame {
     private final JButton agregarButton;
     private final JButton eliminarButton;
     private final JButton salirButton;
+    private VentanaPrincipal ventanaPrincipal;
     private int id;
 
     /**
@@ -55,6 +58,15 @@ public class GestionProductosVentana extends JFrame {
     }
 
     /**
+     * Establece la ventana principal.
+     *
+     * @param ventanaPrincipal La instancia de la ventana principal.
+     */
+    public void setVentanaPrincipal(VentanaPrincipal ventanaPrincipal) {
+        this.ventanaPrincipal = ventanaPrincipal;
+    }
+
+    /**
      * Este método devuelve el valor de la variable tipoUsu.
      *
      * @return El valor de la variable tipoUsu.
@@ -73,22 +85,24 @@ public class GestionProductosVentana extends JFrame {
     }
 
     /**
-     *
+     * Constructor de la clase GestionProductosVentana.
      */
     public GestionProductosVentana() {
-        setTitle("Gestión de Productos");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setIconImage(getIconImage());
-        setResizable(false);
+        setTitle("Gestión de Productos"); // Establecer el título de la ventana
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE); // Configurar el comportamiento al cerrar la ventana
+        setIconImage(getIconImage()); // Establecer la imagen del ícono de la ventana
+        setResizable(false); // Deshabilitar la capacidad de redimensionar la ventana
 
+        // Crear el modelo de la tabla y la tabla con el modelo
         tableModel = new DefaultTableModel(new Object[]{"Nombre", "Cantidad"}, 0);
         productosTable = new JTable(tableModel) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
+                return false; // No permitir la edición de celdas en la tabla
             }
-
         };
+
+        // Crear un panel de desplazamiento para la tabla
         JScrollPane scrollPane = new JScrollPane(productosTable);
         scrollPane.getViewport().setBackground(new Color(186, 179, 179)); // Establecer color de fondo del panel de desplazamiento
 
@@ -100,6 +114,7 @@ public class GestionProductosVentana extends JFrame {
         renderer.setHorizontalAlignment(JLabel.CENTER);
         renderer.setFont(new Font("Arial", Font.BOLD, 14));
 
+        // Crear botones y agregarles acciones
         agregarButton = new JButton("Agregar producto");
         agregarButton.addActionListener(e -> agregarProducto());
         agregarButton.setBackground(new Color(42, 89, 42)); // Establecer color de fondo del botón
@@ -115,25 +130,43 @@ public class GestionProductosVentana extends JFrame {
         salirButton.setBackground(new Color(42, 89, 42)); // Establecer color de fondo del botón
         salirButton.setForeground(Color.WHITE); // Establecer color de texto del botón
 
+        // Crear un panel para los botones
         JPanel buttonPanel = new JPanel();
         buttonPanel.setBackground(new Color(42, 89, 42)); // Establecer color de fondo del panel
         buttonPanel.add(agregarButton);
         buttonPanel.add(eliminarButton);
         buttonPanel.add(salirButton);
 
-        setLayout(new BorderLayout());
-        add(scrollPane, BorderLayout.CENTER);
-        add(buttonPanel, BorderLayout.SOUTH);
+        setLayout(new BorderLayout()); // Establecer el diseño de la ventana
+        add(scrollPane, BorderLayout.CENTER); // Agregar el panel de desplazamiento al centro de la ventana
+        add(buttonPanel, BorderLayout.SOUTH); // Agregar el panel de botones en la parte inferior de la ventana
 
-        pack();
+        pack(); // Ajustar el tamaño de la ventana según su contenido
         setLocationRelativeTo(null); // Mostrar la ventana en el centro de la pantalla
+
+        // Verificar el tipo de usuario y realizar acciones correspondientes
         if (tipoUsu != null) {
             if (!tipoUsu.isEmpty()) {
                 comprobarTipoUsuario();
                 aniadirmenuPopUp();
             }
         }
-        cargarProductos();
+
+        cargarProductos(); // Cargar los productos en la tabla
+
+        ventanaPrincipal = new VentanaPrincipal(); // Crear una instancia de la ventana principal
+
+        // Agregar un WindowListener para controlar el cierre de la ventana
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                int decision = JOptionPane.showConfirmDialog(null, "¿Seguro que quieres salir?", "Cerrar Sesión", JOptionPane.YES_NO_OPTION);
+                if (decision == JOptionPane.YES_OPTION) {
+                    dispose(); // Cerrar la ventana actual
+                    ventanaPrincipal.setVisible(true); // Mostrar la ventana principal
+                }
+            }
+        });
     }
 
     /**
@@ -451,5 +484,4 @@ public class GestionProductosVentana extends JFrame {
             eliminarButton.setEnabled(true);
         }
     }
-
 }

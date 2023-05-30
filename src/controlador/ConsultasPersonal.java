@@ -18,71 +18,128 @@ import modelo.Cita;
 
 /**
  *
- * @author Administrador
+ * @author Mario Clase ConsultasPersonal la cual tiene metodos que se usan para
+ * el resto de ventanas
  */
 public class ConsultasPersonal {
 
     private Connection con;
 
+    /**
+     * Obtiene los horarios con citas asociadas para un personal específico.
+     *
+     * @param id El ID del personal.
+     * @return Una lista de horarios con citas en formato de cadena.
+     */
     public ArrayList<String> obtenerHorariosConCita(int id) {
+        // Crear una lista para almacenar los horarios con citas
         ArrayList<String> horariosConCita = new ArrayList<>();
         try {
+            // Realizar la conexión a la base de datos
             realizarConexion();
+
+            // Consulta SQL para obtener los horarios con citas asociadas al personal identificado por el ID
             String mostrarCitas = "SELECT cita.id, horario.fecha_es AS fecha, horario.hora_es AS hora, servicios.descripcion, servicios.precio, CONCAT(usuario.nombre, ' ', usuario.apellidos) AS cliente FROM horario JOIN personal ON horario.id_personal = personal.id JOIN servicios ON horario.id_servicio = servicios.id LEFT JOIN cita ON horario.id = cita.ID_HORARIO LEFT JOIN usuario ON cita.ID_CLIENTE = usuario.ID WHERE personal.id = ? AND cita.id IS NOT NULL;";
+
+            // Preparar la sentencia SQL con el parámetro ID
             PreparedStatement stmt = con.prepareStatement(mostrarCitas);
             stmt.setInt(1, id);
+
+            // Ejecutar la consulta y obtener el resultado
             ResultSet resultado = stmt.executeQuery();
+
+            // Recorrer los resultados de la consulta
             while (resultado.next()) {
+                // Obtener los valores de cada columna de la fila actual
                 String fecha = resultado.getString("fecha");
                 String hora = resultado.getString("hora");
                 String descripcion = resultado.getString("descripcion");
                 String precio = resultado.getString("precio");
                 String cliente = resultado.getString("cliente");
+
+                // Crear una cadena de texto con los valores obtenidos
                 String horarioConCita = "Fecha: " + fecha + ", Hora: " + hora + ", Descripción: " + descripcion + ", Precio: " + precio + ", Cliente: " + cliente;
+
+                // Agregar la cadena de texto a la lista horariosConCita
                 horariosConCita.add(horarioConCita);
             }
         } catch (SQLException ex) {
+            // Mostrar un mensaje de error si ocurre una excepción de SQL
             JOptionPane.showMessageDialog(null, "No se pudo hacer la consulta");
         }
+
+        // Retornar la lista de horarios con citas
         return horariosConCita;
     }
 
+    /**
+     * Consulta los horarios disponibles para un cliente específico.
+     *
+     * @param idCliente El ID del cliente.
+     * @return Una lista de objetos Horario.
+     */
     public ArrayList<Horario> consultarHorarios(int idCliente) {
+        // Crear una lista para almacenar los horarios
         ArrayList<Horario> horarios = new ArrayList<>();
         try {
+            // Realizar la conexión a la base de datos
             realizarConexion();
+
+            // Consulta SQL para obtener los horarios disponibles para el cliente identificado por el ID
             String sql = "SELECT horario.id, horario.fecha_es AS fecha, horario.hora_es AS hora, servicios.descripcion, servicios.precio, CONCAT(usuario.nombre, ' ', usuario.apellidos) AS empleado\n"
                     + "FROM horario\n"
                     + "LEFT JOIN cita ON horario.id = cita.id_horario\n"
                     + "LEFT JOIN usuario ON cita.id_cliente = usuario.id\n"
                     + "JOIN servicios ON horario.id_servicio = servicios.id\n"
                     + "WHERE cita.id_cliente = ? OR cita.id_cliente IS NULL;";
+
+            // Preparar la sentencia SQL con el parámetro idCliente
             PreparedStatement stmt = con.prepareStatement(sql);
             stmt.setInt(1, idCliente);
+
+            // Ejecutar la consulta y obtener el resultado
             ResultSet rs = stmt.executeQuery();
+
+            // Recorrer los resultados de la consulta
             while (rs.next()) {
+                // Obtener los valores de cada columna de la fila actual
                 int id = rs.getInt("id");
                 String fecha = rs.getString("fecha");
                 String hora = rs.getString("hora");
                 String descripcion = rs.getString("descripcion");
                 String precio = rs.getString("precio");
                 String empleado = rs.getString("empleado");
+
+                // Crear un objeto Horario con los valores obtenidos
                 Horario horario = new Horario(id, fecha, hora, descripcion, precio, empleado);
+
+                // Agregar el objeto Horario a la lista horarios
                 horarios.add(horario);
             }
         } catch (SQLException ex) {
+            // Mostrar un mensaje de error si ocurre una excepción de SQL
             JOptionPane.showMessageDialog(null, "No se pudo hacer la consulta de horarios");
         }
+
+        // Retornar la lista de horarios
         return horarios;
     }
-
+/**
+ * Actualiza una cita existente con los datos de una nueva cita.
+ * @param citaAnt
+ * @param citaNueva
+ * @return 
+ */
     public Cita actualizarCita(Cita citaAnt, Cita citaNueva) {
         realizarConexion();
         String consultarIdCita = "UPDATE ";
-
         return citaNueva;
     }
-
+/**
+ * 
+ * @param cita
+ * @return 
+ */
     public String[] consultarServicios(Cita cita) {
         return null;
     }
@@ -348,7 +405,10 @@ public class ConsultasPersonal {
         }
         return resul;
     }
-
+/**
+ * 
+ * @return 
+ */
     public ArrayList<Servicio> obtenerListaServicios() {
         ArrayList<Servicio> servicios = new ArrayList<>();
 
@@ -375,7 +435,12 @@ public class ConsultasPersonal {
 
         return servicios;
     }
-
+/**
+ * 
+ * @param nombre
+ * @param apellidos
+ * @return 
+ */
     public Usuario obtenerEmpleadoPorNombre(String nombre, String apellidos) {
         Usuario empleado = null;
 
@@ -405,7 +470,12 @@ public class ConsultasPersonal {
 
         return empleado;
     }
-
+/**
+ * 
+ * @param nombreC
+ * @param apellidoC
+ * @return 
+ */
     public int obtenerIdUsuario(String nombreC, String apellidoC) {
         int id = -1;
         realizarConexion();
