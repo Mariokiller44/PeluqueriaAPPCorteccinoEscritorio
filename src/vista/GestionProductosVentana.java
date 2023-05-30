@@ -6,7 +6,6 @@ package vista;
 
 /**
  * Ventana para gestionar los productos
- *
  * @author Mario
  */
 import controlador.ConsultasPersonal;
