@@ -11,17 +11,30 @@ import java.awt.event.ActionListener;
 import java.sql.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 import javax.swing.ImageIcon;
-
+import java.util.Date;
 /**
  *
  * @author Administrador
  */
 public class VentanaLog extends javax.swing.JFrame {
+
+    private static String DATABASE_NAME="bd_alcorteccino";
+    private static String folderpath="src\\bd";
+    private static String DATABASE_PASSWORD="123pelu";
+    private static String DATABASE_USERNAME="admin";
+    private static String BACKUP_FOLDER;
+    private static String savepath="";
 
     /**
      * Creates new form VentanaLog
@@ -29,13 +42,24 @@ public class VentanaLog extends javax.swing.JFrame {
     private ConexionBD conexion;
     private Connection con;
     private Logger logger;
+    private String tipoUsu;
+    private int id;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public VentanaLog() {
         initComponents();
         colocarImagenes();
         setLocationRelativeTo(null);
         setResizable(false);
-
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setTitle("Inicio de sesión")  ;
         jCheckBox1.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -46,6 +70,47 @@ public class VentanaLog extends javax.swing.JFrame {
                 }
             }
         });
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                realizarCopiaDeSeguridad();
+            }
+            
+        });
+
+    }
+
+    /**
+     * Realiza una copia de seguridad de la base de datos.
+     */
+    private static void realizarCopiaDeSeguridad() {
+        // Obtener la fecha actual
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy_HH-mm-ss");
+        String fechaActual = dateFormat.format(new Date());
+
+        // Nombre del archivo de copia de seguridad
+        String nombreArchivoBackup = DATABASE_NAME + "_" + fechaActual;
+        savepath = "\"" + folderpath + "\\" + "" + nombreArchivoBackup + ".sql\"";
+        String execudecmd = "mysqldump -u" + DATABASE_USERNAME + " -p" + DATABASE_PASSWORD + " --database " + DATABASE_NAME + " -r " + savepath;
+
+        // Ruta completa del archivo de copia de seguridad
+        String rutaArchivoBackup = nombreArchivoBackup;
+
+        try {
+            // Comando para realizar la copia de seguridad
+            String comando = "mysql --user=" + DATABASE_USERNAME + " --password=" + DATABASE_PASSWORD + " " + DATABASE_NAME + " > " + rutaArchivoBackup;
+
+            // Ejecutar el comando en el sistema operativo
+            Process proceso = Runtime.getRuntime().exec(execudecmd);
+            int resultado = proceso.waitFor();
+            if (resultado == 0) {
+                System.out.println("Copia de seguridad creada correctamente: " + rutaArchivoBackup);
+            } else {
+                System.out.println("Error al hacer copia de seguridad");
+            }
+        } catch (IOException | InterruptedException e) {
+            System.err.println("Error al crear la copia de seguridad: " + e.getMessage());
+        }
     }
 
     private void colocarImagenes() {
@@ -488,33 +553,101 @@ public class VentanaLog extends javax.swing.JFrame {
     private javax.swing.JLabel titulo;
     // End of variables declaration//GEN-END:variables
 
+    /**
+     *
+     */
     private void iniciarSesion() {
         try {
             String usuario = textoUsuario.getText().toString();
             String contrasenia = textoContrasenia.getText();
             conexion = new ConexionBD(usuario, contrasenia);
             con = conexion.getConnection();
-            String sql = "SELECT * FROM usuario WHERE CUENTA LIKE ? AND CONTRASENIA LIKE ?";
-            PreparedStatement stmt = con.prepareStatement(sql);
-            stmt.setString(1, usuario);
-            stmt.setString(2, contrasenia);
-            ResultSet resul = stmt.executeQuery();
-            if (!resul.next()) {
-                JOptionPane.showMessageDialog(null, "Usuario o contraseña no validos");
-                textoContrasenia.setText("");
-                textoUsuario.setText("");
-            } else {
-                JOptionPane.showMessageDialog(null, "Bienvenido " + resul.getString("nombre"));
-            }
-            conexion.cerrarConnection();
+            String passwd = obtenerContrasenia(usuario);
+            String contraseniaMD5 = calcularMD5(contrasenia);
+            if (contraseniaMD5.contains(passwd)) {
+                String sql = "SELECT * FROM usuario WHERE CUENTA LIKE ? AND CONTRASENIA LIKE ?";
+                PreparedStatement stmt = con.prepareStatement(sql);
+                stmt.setString(1, usuario);
+                stmt.setString(2, contraseniaMD5);
+                ResultSet resul = stmt.executeQuery();
+                if (!resul.next()) {
+                    JOptionPane.showMessageDialog(null, "Usuario o contraseña no validos");
+                    textoContrasenia.setText("");
+                    textoUsuario.setText("");
+                } else {
+                    setId(resul.getInt("id"));
+                    JOptionPane.showMessageDialog(null, "Bienvenido " + resul.getString("nombre"));
+                    tipoUsu = resul.getString("tipo_de_usuario");
+                    try {
+                        if (tipoUsu.contains("Personal")) {
+                            dispose();
+                            VentanaPrincipal vc = new VentanaPrincipal();
+                            vc.setValor(id);
+                            vc.setTipoUsu(resul.getString("Nombre"));
+                            vc.setVisible(true);
+                        } else {
+                            throw new ClassCastException("Esta aplicación solo la puede utilizar el personal. Pruebe nuestra aplicación Android");
+                        }
+                    } catch (ClassCastException cse) {
+                        JOptionPane.showMessageDialog(null, cse.getMessage());
+                    }
 
+                }
+                conexion.cerrarConnection();
+            }
+
+        } catch (NullPointerException npe) {
+            JOptionPane.showMessageDialog(null, "Error intentando conectar a la base de datos");
         } catch (SQLException ex) {
-            System.out.println(ex.getMessage());
+            JOptionPane.showMessageDialog(null, "Hubo un problema con la base de datos.");
+        } catch (NoSuchAlgorithmException ex) {
+            JOptionPane.showMessageDialog(null, "Falló la comprobación de contraseña");
         }
+    }
+
+    /**
+     *
+     * @param texto
+     * @return
+     * @throws NoSuchAlgorithmException
+     */
+    public String calcularMD5(String texto) throws NoSuchAlgorithmException {
+        MessageDigest md = MessageDigest.getInstance("MD5");
+        byte[] hashBytes = md.digest(texto.getBytes());
+
+        StringBuilder sb = new StringBuilder();
+        for (byte b : hashBytes) {
+            sb.append(String.format("%02x", b));
+        }
+
+        return sb.toString();
     }
 
     private void irARegistro() {
         VentanaRegistro vr = new VentanaRegistro();
         vr.setVisible(true);
+    }
+
+    /**
+     *
+     * @param usuario
+     * @return
+     */
+    private String obtenerContrasenia(String usuario) {
+        String contrasenia = null;
+        try {
+            conexion = new ConexionBD("usuario", "passwd");
+            con = conexion.getConnection();
+            String sql = "SELECT CONTRASENIA FROM USUARIO WHERE CUENTA LIKE ?";
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setString(1, usuario);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                contrasenia = rs.getString("contrasenia");
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Error en la conexion.");
+        }
+        return contrasenia;
     }
 }

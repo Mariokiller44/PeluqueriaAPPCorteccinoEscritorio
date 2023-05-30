@@ -144,6 +144,7 @@ public class GestionCitasVentana extends javax.swing.JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Establecer la acción de cierre de la ventana
         setLocationRelativeTo(null); // Centrar la ventana en la pantalla
         modificarDiseño(); // Modificar el diseño de la ventana
+        setTitle("Gestionar citas");
     }
 
     /**
@@ -1216,7 +1217,7 @@ public class GestionCitasVentana extends javax.swing.JFrame {
                 + "LEFT JOIN cita ON horario.id = cita.ID_HORARIO "
                 + "LEFT JOIN usuario AS cliente ON cita.ID_CLIENTE = cliente.ID "
                 + "JOIN usuario AS personal ON horario.id_personal = personal.id "
-                + "JOIN servicios ON horario.id_servicio = servicios.id ORDER BY horario.fecha ASC;";
+                + "JOIN servicios ON horario.id_servicio = servicios.id ORDER BY horario.fecha DESC;";
 
         // Se crea una instancia de Statement y se ejecuta la consulta SQL
         Statement statement = con.createStatement();
@@ -1259,7 +1260,7 @@ public class GestionCitasVentana extends javax.swing.JFrame {
         conexion = realizarConexion();
 
         // Consulta SQL para obtener los datos del horario personalizado por idPersonal
-        String mostrarHorarioPersonal = "SELECT horario.fecha_es AS fecha, horario.hora_es AS hora, servicios.descripcion, servicios.precio, IFNULL(CONCAT(usuario.nombre, ' ', usuario.apellidos), 'No hay cliente') AS cliente FROM horario JOIN personal ON horario.id_personal = personal.id LEFT JOIN cita ON horario.id = cita.ID_HORARIO LEFT JOIN usuario ON cita.ID_CLIENTE = usuario.ID JOIN servicios ON horario.id_servicio = servicios.id WHERE personal.id = ? ORDER BY horario.fecha ASC;";
+        String mostrarHorarioPersonal = "SELECT DISTINCT horario.fecha_es AS fecha, horario.hora_es AS hora, servicios.descripcion, servicios.precio, IFNULL(CONCAT(usuario.nombre, ' ', usuario.apellidos), 'No hay cliente') AS cliente FROM horario JOIN personal ON horario.id_personal = personal.id LEFT JOIN cita ON horario.id = cita.ID_HORARIO LEFT JOIN usuario ON cita.ID_CLIENTE = usuario.ID JOIN servicios ON horario.id_servicio = servicios.id WHERE personal.id = ? ORDER BY horario.fecha DESC;";
 
         // Se prepara una sentencia parametrizada y se asigna el valor de idPersonal al parámetro
         PreparedStatement stmt = con.prepareStatement(mostrarHorarioPersonal);
@@ -1459,7 +1460,7 @@ public class GestionCitasVentana extends javax.swing.JFrame {
             realizarConexion();
 
             // Consulta SQL para obtener los horarios y la información relacionada
-            String query = "SELECT horario.fecha, horario.hora, servicios.precio, servicios.descripcion, usuario.nombre as nombre_cliente, usuario.apellidos as apellidos_cliente, personal.nombre as nombre_personal, personal.apellidos as apellidos_personal FROM horario LEFT JOIN cita ON horario.id = cita.id_horario LEFT JOIN usuario ON cita.id_cliente = usuario.id JOIN servicios ON horario.id_servicio = servicios.id LEFT JOIN usuario as personal ON horario.id_personal = personal.id";
+            String query = "SELECT DISTINCT horario.fecha, horario.hora, servicios.precio, servicios.descripcion, usuario.nombre as nombre_cliente, usuario.apellidos as apellidos_cliente, personal.nombre as nombre_personal, personal.apellidos as apellidos_personal FROM horario LEFT JOIN cita ON horario.id = cita.id_horario LEFT JOIN usuario ON cita.id_cliente = usuario.id JOIN servicios ON horario.id_servicio = servicios.id LEFT JOIN usuario as personal ON horario.id_personal = personal.id";
 
             // Se crea un Statement para ejecutar la consulta
             Statement statement = con.createStatement();
