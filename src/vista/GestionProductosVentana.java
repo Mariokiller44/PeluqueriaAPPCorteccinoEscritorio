@@ -5,9 +5,10 @@
 package vista;
 
 /**
+ * Clase GestionProductosVentana el cual es una ventana para gestionar los
+ * productos
  *
- * @author Mario Clase GestionProductosVentana el cual es una ventana para
- * gestionar los productos
+ * @author Mario
  */
 import controlador.ConsultasPersonal;
 import javax.swing.*;
@@ -141,8 +142,7 @@ public class GestionProductosVentana extends javax.swing.JFrame {
         DefaultTableCellRenderer renderer = (DefaultTableCellRenderer) productosTable.getTableHeader().getDefaultRenderer();
         renderer.setHorizontalAlignment(JLabel.CENTER);
         renderer.setFont(new Font("Arial", Font.BOLD, 14));
-        
-        
+
         // Crear botones y agregarles acciones
         agregarButton = new JButton("Agregar producto");
         agregarButton.addActionListener(e -> agregarProducto());

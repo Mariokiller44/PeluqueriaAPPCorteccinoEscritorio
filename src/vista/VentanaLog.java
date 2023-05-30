@@ -24,9 +24,8 @@ import javax.swing.JOptionPane;
 import javax.swing.ImageIcon;
 import java.util.Date;
 /**
- *
+ * Clase VentanaLog (Representa el inicio de sesion) Es la ventana principal de la aplicacion
  * @author Mario
- * Clase VentanaLog. Representa el inicio de sesion. Es la ventana principal de la aplicacion
  */
 public class VentanaLog extends javax.swing.JFrame {
 
