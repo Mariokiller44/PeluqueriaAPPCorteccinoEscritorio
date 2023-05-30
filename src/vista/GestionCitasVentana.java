@@ -45,6 +45,7 @@ import modelo.Usuario;
 
 /**
  * Clase para gestionar la ventana de citas.
+ * @author Mario
  */
 public class GestionCitasVentana extends javax.swing.JFrame {
 

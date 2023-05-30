@@ -6,8 +6,8 @@ package modelo;
 
 /**
  *
- * @author Mario
  * Clase Servicio: representa un servicio con sus atributos.
+ * @author Mario
  */
 public class Servicio {
     private int id;             // ID del servicio

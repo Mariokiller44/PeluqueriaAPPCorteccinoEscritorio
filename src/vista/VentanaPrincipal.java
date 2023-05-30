@@ -48,7 +48,8 @@ import javax.swing.table.TableCellEditor;
 import modelo.Usuario;
 
 /**
- * Clase VentanaPrincipal. Representa la ventana principal de la aplicación.
+ * Clase VentanaPrincipal, la cual representa la ventana de bienvenida
+ * @author Mario
  */
 public class VentanaPrincipal extends javax.swing.JFrame {
 

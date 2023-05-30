@@ -17,9 +17,9 @@ import modelo.Usuario;
 import modelo.Cita;
 
 /**
- *
- * @author Mario Clase ConsultasPersonal la cual tiene metodos que se usan para
- * el resto de ventanas
+ * Clase ConsultasPersonal la cual tiene metodos que se usan para el resto de
+ * ventanas
+ * @author Mario
  */
 public class ConsultasPersonal {
 
@@ -124,22 +124,25 @@ public class ConsultasPersonal {
         // Retornar la lista de horarios
         return horarios;
     }
-/**
- * Actualiza una cita existente con los datos de una nueva cita.
- * @param citaAnt
- * @param citaNueva
- * @return 
- */
+
+    /**
+     * Actualiza una cita existente con los datos de una nueva cita.
+     *
+     * @param citaAnt
+     * @param citaNueva
+     * @return
+     */
     public Cita actualizarCita(Cita citaAnt, Cita citaNueva) {
         realizarConexion();
         String consultarIdCita = "UPDATE ";
         return citaNueva;
     }
-/**
- * 
- * @param cita
- * @return 
- */
+
+    /**
+     *
+     * @param cita
+     * @return
+     */
     public String[] consultarServicios(Cita cita) {
         return null;
     }
@@ -405,10 +408,11 @@ public class ConsultasPersonal {
         }
         return resul;
     }
-/**
- * 
- * @return 
- */
+
+    /**
+     *
+     * @return
+     */
     public ArrayList<Servicio> obtenerListaServicios() {
         ArrayList<Servicio> servicios = new ArrayList<>();
 
@@ -435,12 +439,13 @@ public class ConsultasPersonal {
 
         return servicios;
     }
-/**
- * 
- * @param nombre
- * @param apellidos
- * @return 
- */
+
+    /**
+     *
+     * @param nombre
+     * @param apellidos
+     * @return
+     */
     public Usuario obtenerEmpleadoPorNombre(String nombre, String apellidos) {
         Usuario empleado = null;
 
@@ -470,12 +475,13 @@ public class ConsultasPersonal {
 
         return empleado;
     }
-/**
- * 
- * @param nombreC
- * @param apellidoC
- * @return 
- */
+
+    /**
+     *
+     * @param nombreC
+     * @param apellidoC
+     * @return
+     */
     public int obtenerIdUsuario(String nombreC, String apellidoC) {
         int id = -1;
         realizarConexion();

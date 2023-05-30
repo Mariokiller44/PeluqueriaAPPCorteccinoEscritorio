@@ -16,8 +16,8 @@ import javax.swing.ButtonGroup;
 import javax.swing.JOptionPane;
 
 /**
- *
- * @author mescr
+ * Ventana para realizar el registro
+ * @author Mario
  */
 public class VentanaRegistro extends javax.swing.JFrame {
 

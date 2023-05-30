@@ -5,8 +5,8 @@
 package modelo;
 
 /**
- *
- * @author Administrador
+ * Clase que representa al Personal
+ * @author Mario
  */
 public class Personal extends Usuario{
     private double salario;

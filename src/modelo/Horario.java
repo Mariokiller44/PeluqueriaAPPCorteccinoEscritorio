@@ -4,13 +4,10 @@
  */
 package modelo;
 
-import java.time.*;
-import java.util.*;
-
 /**
  *
- * @author Mario
  * Clase Horario: representa un horario con sus atributos.
+ * @author Mario
  */
 public class Horario {
     private int id;             // ID del horario

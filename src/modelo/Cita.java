@@ -1,8 +1,11 @@
 
+/**
+ * Paquete modelo
+ */
 package modelo;
 /**
- * @author Mario
  * Clase Cita: representa una cita con sus atributos.
+ * @author Mario
  */
 public class Cita {
     // Atributos

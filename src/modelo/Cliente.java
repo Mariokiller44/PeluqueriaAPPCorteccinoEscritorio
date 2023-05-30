@@ -5,8 +5,8 @@
 package modelo;
 
 /**
- *
- * @author Administrador
+ *  Clase que representa a un Cliente
+ * @author Mario
  */
 public class Cliente extends Usuario{
     private String descripcion;
