@@ -5,8 +5,7 @@
 package vista;
 
 /**
- * Clase GestionProductosVentana el cual es una ventana para gestionar los
- * productos
+ * Ventana para gestionar los productos
  *
  * @author Mario
  */
