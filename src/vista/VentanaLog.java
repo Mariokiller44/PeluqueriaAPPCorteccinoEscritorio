@@ -55,7 +55,6 @@ public class VentanaLog extends javax.swing.JFrame {
 
     public VentanaLog() {
         initComponents();
-        colocarImagenes();
         setLocationRelativeTo(null);
         setResizable(false);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -113,11 +112,7 @@ public class VentanaLog extends javax.swing.JFrame {
         }
     }
 
-    private void colocarImagenes() {
-        jLabel1.setIcon(new ImageIcon("./src/images/tijera.png"));
-        jLabel2.setIcon(new ImageIcon("./src/images/iconoPeluqueria.png"));
-        jLabel3.setIcon(new ImageIcon("./src/images/peine.png"));
-    }
+
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -304,6 +299,7 @@ public class VentanaLog extends javax.swing.JFrame {
         panelLI.setToolTipText("");
 
         jLabel2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/iconoPeluqueria.png"))); // NOI18N
 
         javax.swing.GroupLayout panelLILayout = new javax.swing.GroupLayout(panelLI);
         panelLI.setLayout(panelLILayout);
@@ -322,6 +318,7 @@ public class VentanaLog extends javax.swing.JFrame {
         panelLD.setBackground(new java.awt.Color(18, 189, 201));
 
         jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/peine.png"))); // NOI18N
         jLabel3.setToolTipText("");
         jLabel3.setAlignmentY(0.0F);
 
@@ -346,6 +343,8 @@ public class VentanaLog extends javax.swing.JFrame {
 
         jPanel4.setBackground(new java.awt.Color(18, 189, 201));
         jPanel4.setToolTipText("");
+
+        jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/tijera.png"))); // NOI18N
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);

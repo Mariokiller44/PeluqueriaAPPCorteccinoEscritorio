@@ -113,9 +113,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     public VentanaPrincipal() {
         initComponents(); // Inicializar componentes de la ventana
         setIconImage(getIconImage()); // Establecer la imagen del ícono de la ventana
-        jMenu1.setIcon(new ImageIcon("./src/images/home.png")); // Establecer el ícono para el menú 1
-        jMenu2.setIcon(new ImageIcon("./src/images/cita.png")); // Establecer el ícono para el menú 2
-
+        
         tipoUsu = getTipoUsu(); // Obtener el tipo de usuario
         vaciarPanelOpciones(); // Vaciar el panel de opciones
         panelOpciones.setVisible(true); // Mostrar el panel de opciones
@@ -255,7 +253,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 320, Short.MAX_VALUE)
+            .addGap(0, 299, Short.MAX_VALUE)
             .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addComponent(jLabel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
@@ -330,7 +328,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                 .addComponent(menuConsultas)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(cerrarSesion)
-                .addContainerGap(162, Short.MAX_VALUE))
+                .addContainerGap(141, Short.MAX_VALUE))
         );
 
         panelBienvenida.add(panelOpciones, java.awt.BorderLayout.WEST);
@@ -363,6 +361,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
             }
         });
 
+        jMenu1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/home.png"))); // NOI18N
         jMenu1.setName(""); // NOI18N
         jMenu1.setToolTipText("Home");
         jMenu1.addMenuListener(new javax.swing.event.MenuListener() {
@@ -392,6 +391,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         });
         jMenuBar1.add(jMenu1);
 
+        jMenu2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/cita.png"))); // NOI18N
         jMenu2.setToolTipText("Citas");
         jMenu2.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
