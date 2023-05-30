@@ -21,6 +21,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionAdapter;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Calendar;
@@ -46,62 +48,118 @@ import javax.swing.table.TableCellEditor;
 import modelo.Usuario;
 
 /**
- *
- * @author mescr
+ * Clase VentanaPrincipal. Representa la ventana principal de la aplicación.
  */
 public class VentanaPrincipal extends javax.swing.JFrame {
 
-    /**
-     * Creates new form VentanaCliente
-     */
-    private int posicionActual, id;
-    private int posicionFinal;
-    private Timer animacion;
-    private JPanel panelSustituto;
-    private ConsultasPersonal consultas;
-    private Usuario usu;
-    private String tipoUsu;
+    private int posicionActual, id; // Variables para controlar la posición y el ID
+    private int posicionFinal; // Variable para la posición final
+    private Timer animacion; // Temporizador para la animación
+    private JPanel panelSustituto; // Panel que se sustituirá en la animación
+    private ConsultasPersonal consultas; // Objeto para realizar consultas
+    private Usuario usu; // Objeto para representar al usuario
+    private String tipoUsu; // Tipo de usuario
+    private VentanaLog ventanaLog; // Referencia a la ventana de inicio de sesión
 
+    /**
+     * Obtiene el ID.
+     *
+     * @return El ID.
+     */
     public int getId() {
         return id;
     }
 
+    /**
+     * Establece el ID.
+     *
+     * @param id El ID a establecer.
+     */
     public void setId(int id) {
         this.id = id;
     }
 
+    /**
+     * Obtiene el tipo de usuario.
+     *
+     * @return El tipo de usuario.
+     */
     public String getTipoUsu() {
         return tipoUsu;
     }
 
+    /**
+     * Establece el tipo de usuario.
+     *
+     * @param tipoUsu El tipo de usuario a establecer.
+     */
     public void setTipoUsu(String tipoUsu) {
         this.tipoUsu = tipoUsu;
     }
-    
 
-    public VentanaPrincipal() {
-        initComponents();
-        setIconImage(getIconImage());
-        jMenu1.setIcon(new ImageIcon("./src/images/home.png"));
-        jMenu2.setIcon(new ImageIcon("./src/images/cita.png"));
-//        mostrarPanelSustituto();
-        tipoUsu=getTipoUsu();
-        vaciarPanelOpciones();
-        panelOpciones.setVisible(true);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setResizable(false);
-        if (tipoUsu!=null) {
-            tipoUsu=getTipoUsu();
-        }
+    /**
+     * Establece la ventana de inicio de sesión.
+     *
+     * @param ventanaLog La ventana de inicio de sesión a establecer.
+     */
+    public void setVentanaLog(VentanaLog ventanaLog) {
+        this.ventanaLog = ventanaLog;
     }
 
+    /**
+     * Constructor de la clase VentanaPrincipal.
+     */
+    public VentanaPrincipal() {
+        initComponents(); // Inicializar componentes de la ventana
+        setIconImage(getIconImage()); // Establecer la imagen del ícono de la ventana
+        jMenu1.setIcon(new ImageIcon("./src/images/home.png")); // Establecer el ícono para el menú 1
+        jMenu2.setIcon(new ImageIcon("./src/images/cita.png")); // Establecer el ícono para el menú 2
+
+        tipoUsu = getTipoUsu(); // Obtener el tipo de usuario
+        vaciarPanelOpciones(); // Vaciar el panel de opciones
+        panelOpciones.setVisible(true); // Mostrar el panel de opciones
+
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE); // Configurar el comportamiento al cerrar la ventana
+        setLocationRelativeTo(null); // Mostrar la ventana en el centro de la pantalla
+        setResizable(false); // Deshabilitar la capacidad de redimensionar la ventana
+
+        if (tipoUsu != null) {
+            tipoUsu = getTipoUsu(); // Obtener el tipo de usuario
+        }
+
+        ventanaLog = new VentanaLog(); // Crear una instancia de la ventana de inicio de sesión
+
+        // Agregar un WindowListener para controlar el cierre de la ventana
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                // Abre la otra ventana en lugar de cerrar el programa
+                int decision = JOptionPane.showConfirmDialog(null, "¿Seguro que quieres salir?", "Cerrar Sesión", JOptionPane.YES_NO_OPTION);
+                if (decision == JOptionPane.YES_OPTION) {
+                    dispose(); // Cerrar la ventana actual
+                    ventanaLog.setVisible(true); // Mostrar la ventana de inicio de sesión
+                }
+            }
+        });
+    }
+
+    /**
+     * Sobrescribe el método getIconImage para obtener la imagen del ícono de la
+     * aplicación.
+     *
+     * @return La imagen del ícono de la aplicación.
+     */
     @Override
     public Image getIconImage() {
         Image retValue = Toolkit.getDefaultToolkit().getImage("./src/images/iconoDeAppEscritorio.png");
         return retValue;
     }
 
+    /**
+     * Establece el valor del ID.
+     *
+     * @param valor El valor del ID a establecer.
+     */
     public void setValor(int valor) {
         this.id = valor;
     }
@@ -370,21 +428,26 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenu1ActionPerformed
 
     private void jMenu1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenu1MouseClicked
-        jMenu1.setSelected(false);
+        jMenu1.setSelected(false); // Desactiva la selección del menú jMenu1
+        // Verifica si el número de clics del evento es menor o igual a 1
         if (evt.getClickCount() <= 1) {
-            menuConsultas.setText("-> Consultar mis datos");
-            cerrarSesion.setText("-> Cerrar sesión");
+            menuConsultas.setText("-> Consultar mis datos"); // Establece el texto del elemento de menú "menuConsultas" como "-> Consultar mis datos"
+            cerrarSesion.setText("-> Cerrar sesión"); // Establece el texto del elemento de menú "cerrarSesion" como "-> Cerrar sesión"
         }
     }//GEN-LAST:event_jMenu1MouseClicked
 
     private void jMenu2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenu2MouseClicked
-        jMenu2.setSelected(false);
+        jMenu2.setSelected(false); // Desactiva la selección del menú jMenu2
+        // Verifica si el texto del elemento de menú "menuConsultas" contiene la cadena "Consultar citas"
+        // y si el texto del elemento de menú "cerrarSesion" no contiene la cadena "-> Cerrar sesión"
         if (menuConsultas.getText().contains("Consultar citas") && !cerrarSesion.getText().contains("-> Cerrar sesión")) {
+            // No realiza ninguna acción si se cumple la condición anterior
         } else {
-            menuConsultas.setText("-> Consultar citas");
-            cerrarSesion.setText("-> Consultar productos");
+            menuConsultas.setText("-> Consultar citas"); // Establece el texto del elemento de menú "menuConsultas" como "-> Consultar citas"
+            cerrarSesion.setText("-> Consultar productos"); // Establece el texto del elemento de menú "cerrarSesion" como "-> Consultar productos"
         }
-        mostrarPanelOculto();
+        mostrarPanelOculto(); // Llama al método mostrarPanelOculto() para mostrar un panel oculto
+
     }//GEN-LAST:event_jMenu2MouseClicked
 
     private void jMenu1MenuDeselected(javax.swing.event.MenuEvent evt) {//GEN-FIRST:event_jMenu1MenuDeselected
@@ -392,15 +455,15 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenu1MenuDeselected
 
     private void jMenu1MouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenu1MouseExited
-        jMenu1.setSelected(false);
+        jMenu1.setSelected(false);// Desactiva la selección del menú jMenu1
     }//GEN-LAST:event_jMenu1MouseExited
 
     private void jMenu2MouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenu2MouseEntered
-        jMenu2.setSelected(false);
+        jMenu2.setSelected(false);// Desactiva la selección del menú jMenu2
     }//GEN-LAST:event_jMenu2MouseEntered
 
     private void jMenu2MouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenu2MouseExited
-        jMenu2.setSelected(false);
+        jMenu2.setSelected(false);// Desactiva la selección del menú jMenu2
     }//GEN-LAST:event_jMenu2MouseExited
 
     private void jMenu2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenu2ActionPerformed
@@ -414,37 +477,56 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private void menuConsultasMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_menuConsultasMouseClicked
         // TODO add your handling code here:
         if (menuConsultas.getText().contains("Consultar citas")) {
-            JOptionPane.showMessageDialog(null, "Abriendo el menu de consultas");
-            dispose();
-            GestionCitasVentana gc = new GestionCitasVentana();
-            gc.setValor(id);
-            gc.setTipoUsu(tipoUsu);
-            gc.modificarDiseño();
-            gc.comprobarTabla();
-            gc.setVisible(true);
+            // Si el texto del elemento de menú contiene la subcadena "Consultar citas"
+            JOptionPane.showMessageDialog(null, "Abriendo el menú de consultas"); // Muestra un mensaje de diálogo indicando que se está abriendo el menú de consultas
+            dispose(); // Cierra la ventana actual
+            GestionCitasVentana gc = new GestionCitasVentana(); // Crea una instancia de la clase GestionCitasVentana
+            gc.setValor(id); // Establece el valor de "id" en la instancia de GestionCitasVentana
+            gc.setTipoUsu(tipoUsu); // Establece el valor de "tipoUsu" en la instancia de GestionCitasVentana
+            gc.modificarDiseño(); // Modifica el diseño de la ventana de GestionCitasVentana
+            gc.comprobarTabla(); // Comprueba la tabla en la ventana de GestionCitasVentana
+            gc.setVisible(true); // Hace visible la ventana de GestionCitasVentana
         } else {
-            JOptionPane.showMessageDialog(null, "Mostrando datos del perfil");
-            mostrarTablaDatos();
+            // Si el texto del elemento de menú no contiene la subcadena "Consultar citas"
+            JOptionPane.showMessageDialog(null, "Mostrando datos del perfil"); // Muestra un mensaje de diálogo indicando que se están mostrando los datos del perfil
+            mostrarTablaDatos(); // Llama al método "mostrarTablaDatos" para mostrar la tabla de datos del perfil
         }
+
     }//GEN-LAST:event_menuConsultasMouseClicked
 
+    /**
+     * Método para mostrar una tabla con los datos del usuario.
+     *
+     * @throws HeadlessException Si se produce un error de encabezado.
+     */
     private void mostrarTablaDatos() throws HeadlessException {
         consultas = new ConsultasPersonal();
+
         // Nombres de las columnas
-        String[] columnNames = {"Nombre", "Apellidos", "Telefono", "Email", "Cuenta", "Contrasenia"};
+        String[] columnNames = {"Nombre", "Apellidos", "Teléfono", "Email", "Cuenta", "Contraseña"};
+
+        // Crear el modelo de la tabla
         DefaultTableModel modelo = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
+
         consultas.realizarConexion();
-        String mostrarDatos = "SELECT id,nombre,apellidos,telefono,email,cuenta,contrasenia FROM usuario WHERE id=?";
+
+        String mostrarDatos = "SELECT id, nombre, apellidos, telefono, email, cuenta, contrasenia FROM usuario WHERE id=?";
+
         try {
             PreparedStatement psDatos = consultas.getCon().prepareStatement(mostrarDatos);
             if (id != 0) {
+                // Establecer el valor del parámetro en la consulta preparada
                 psDatos.setInt(1, id);
+
+                // Ejecutar la consulta
                 ResultSet resul = psDatos.executeQuery();
+
+                // Iterar sobre los resultados y agregarlos al modelo de la tabla
                 while (resul.next()) {
                     int idCliente = resul.getInt("id");
                     String nombre = resul.getString("nombre");
@@ -453,14 +535,19 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                     String email = resul.getString("email");
                     String cuenta = resul.getString("cuenta");
                     String contrasenia = resul.getString("contrasenia");
+
+                    // Crear un objeto Usuario con los datos obtenidos
                     usu = new Usuario(id, nombre, apellidos, Integer.parseInt(telefono), email, cuenta, contrasenia);
+
+                    // Agregar los datos al modelo de la tabla
                     String fila[] = {nombre, apellidos, telefono, email, cuenta, contrasenia};
                     modelo.addRow(fila);
                 }
-                // Crear el JTable
+
+                // Crear el JTable con el modelo de la tabla
                 JTable table = new JTable(modelo);
+
                 // Agregar el MouseMotionListener para mostrar el tooltip con el valor completo
-                // Agregar el MouseMotionListener para mostrar el registro completo en el ToolTipText
                 table.addMouseMotionListener(new MouseMotionAdapter() {
                     @Override
                     public void mouseMoved(MouseEvent e) {
@@ -477,7 +564,8 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                         }
                     }
                 });
-                // Crear el menú emergente
+
+                // Crear el menú emergente para modificar el usuario
                 JPopupMenu popupMenu = new JPopupMenu();
                 JMenuItem menuItem = new JMenuItem("Modificar");
                 menuItem.addActionListener(new ActionListener() {
@@ -488,17 +576,22 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                     }
                 });
                 popupMenu.add(menuItem);
+
                 // Asociar el menú emergente a la tabla
                 table.setComponentPopupMenu(popupMenu);
+
                 // Ajustar el ancho de las columnas al contenido
                 table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
                 table.setRowHeight(table.getRowHeight() + 5);
+
                 // Ajustar el tamaño de las celdas al contenido
                 DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
                 renderer.setHorizontalAlignment(DefaultTableCellRenderer.LEFT);
                 table.setDefaultRenderer(String.class, renderer);
+
                 // Crear el JScrollPane para agregar el JTable
                 JScrollPane scrollPane = new JScrollPane(table);
+
                 // Mostrar el JTable en el JOptionPane
                 JOptionPane.showMessageDialog(null, scrollPane, "Datos del usuario", JOptionPane.INFORMATION_MESSAGE);
             } else {
@@ -510,37 +603,51 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     }
 
     private void menuConsultasMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_menuConsultasMouseEntered
+        // Establecer el color del texto del menú de consultas como GRAY
         menuConsultas.setForeground(Color.GRAY);
+        // Establecer el cursor del menú de consultas como un cursor de mano
         menuConsultas.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }//GEN-LAST:event_menuConsultasMouseEntered
 
     private void menuConsultasMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_menuConsultasMouseExited
+        // Establecer el color del texto del menú de consultas como BLACK
         menuConsultas.setForeground(Color.BLACK);
     }//GEN-LAST:event_menuConsultasMouseExited
 
     private void cerrarSesionMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cerrarSesionMouseClicked
         // TODO add your handling code here:
+// Comprobación si el texto del botón cerrarSesion contiene "Cerrar sesión"
         if (cerrarSesion.getText().contains("Cerrar sesión")) {
+            // Mostrar un cuadro de diálogo de confirmación para cerrar sesión
             int decision = JOptionPane.showConfirmDialog(null, "¿Seguro que desea cerrar sesión?");
+            // Verificar si se ha seleccionado "Sí" en el cuadro de diálogo de confirmación
             if (decision == JOptionPane.YES_OPTION) {
+                // Cerrar la ventana actual
                 dispose();
+                // Crear una nueva instancia de VentanaLog y mostrarla
                 VentanaLog vl = new VentanaLog();
                 vl.setVisible(true);
             }
         } else {
+            // Mostrar un mensaje de diálogo indicando que se está abriendo el menú de productos
             JOptionPane.showMessageDialog(null, "Abriendo el menu de productos...");
+            // Cerrar la ventana actual
             dispose();
+            // Crear una nueva instancia de GestionProductosVentana y configurar sus propiedades
             GestionProductosVentana gpv = new GestionProductosVentana();
             gpv.setId(id);
             gpv.setTipoUsu(tipoUsu);
             gpv.aniadirmenuPopUp();
+            // Mostrar la ventana de gestión de productos
             gpv.setVisible(true);
         }
+
     }//GEN-LAST:event_cerrarSesionMouseClicked
 
     private void cerrarSesionMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cerrarSesionMouseEntered
-        // TODO add your handling code here:
+        // Establecer el color del texto del botón cerrarSesion como GRIS
         cerrarSesion.setForeground(Color.GRAY);
+        // Establecer el cursor del botón cerrarSesion como CURSOR_MANO
         cerrarSesion.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }//GEN-LAST:event_cerrarSesionMouseEntered
 
@@ -607,18 +714,17 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private javax.swing.JPanel panelOpciones;
     // End of variables declaration//GEN-END:variables
 
-    /* private void mostrarPanelSustituto() {
-        panelSustituto = new JPanel();
-        panelSustituto.setSize(new Dimension(189, 278));
-        panelSustituto.setVisible(true);
-        panelBienvenida.add(panelSustituto, BorderLayout.WEST);
-    }*/
+    /**
+     * Muestra el panel oculto.
+     */
     private void mostrarPanelOculto() {
-//        panelSustituto.setVisible(false);
-        panelOpciones.setVisible(true);
+        panelOpciones.setVisible(true); // Establece la visibilidad del panelOpciones como true para mostrarlo
     }
 
+    /**
+     * Vacia el panel de opciones.
+     */
     private void vaciarPanelOpciones() {
-        menuConsultas.setText("                    ");
+        menuConsultas.setText("                    "); // Establece el texto del elemento de menú "menuConsultas" como una cadena vacía con espacios en blanco para vaciarlo visualmente
     }
 }

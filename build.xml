@@ -8,9 +8,6 @@
 <!-- You can turn off the Compile on Save (or Deploy on Save) setting -->
 <!-- in the project's Project Properties dialog box.-->
 <project name="ProyectoAl-Corteccino" default="default" basedir=".">
-    <property name="backup.dir" value="${basedir}/bd" />
-    <property name="env.PATH" value="${env.PATH};C:\xampp\mysql\bin"/>
-
     <description>Builds, tests, and runs the project ProyectoAl-Corteccino.</description>
     <import file="nbproject/build-impl.xml"/>
     <!--
@@ -65,11 +62,6 @@
             <exec dir="bin" executable="launcher.exe">
                 <arg file="${dist.jar}"/>
             </exec>
-<exec executable="C:\xampp\mysql\bin\mysqldump">
-    <!-- otras configuraciones de la tarea -->
-<arg value="--result-file=${backup.dir}/bd.sql" />
-</exec>
-
         </target>
 
     Notice that the overridden target depends on the jar target and not only on 
