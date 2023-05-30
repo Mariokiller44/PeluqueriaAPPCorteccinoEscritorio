@@ -20,7 +20,6 @@ import java.awt.event.WindowEvent;
 import java.sql.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
-import style.GestionDeProductos;
 
 public class GestionProductosVentana extends javax.swing.JFrame {
 
