@@ -5,8 +5,8 @@
 package controlador;
 
 /**
- *
- * @author mescr
+ * Interfaz para la conexion con la base de datos
+ * @author Mario
  */
 public interface Configuracion {
     String DB_NAME="bd_alcorteccino";

@@ -5,16 +5,14 @@
 package controlador;
 
 import java.sql.*;
-import logger.Logger;
 /**
- *
- * @author mescr
+ *  Clase para conectarse a la base de datos usando Sockets
+ * @author Mario
  */
 public class ConexionBD implements Configuracion{
     private String usuario;
     private String password;
     private Connection conexion;
-    private Logger logger;
     private String URL;
 
     public ConexionBD(String usuario, String password) {

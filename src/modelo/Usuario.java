@@ -6,8 +6,8 @@ package modelo;
 
 /**
  *
- * @author Mario
  * Clase Usuario: representa un usuario con sus atributos.
+ * @author Mario
  */
 public class Usuario {
     private int id;                  // ID del usuario
