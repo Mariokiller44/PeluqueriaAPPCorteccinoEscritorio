@@ -113,7 +113,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     public VentanaPrincipal() {
         initComponents(); // Inicializar componentes de la ventana
         setIconImage(getIconImage()); // Establecer la imagen del ícono de la ventana
-        
+        setTitle("Ventana Principal");
         tipoUsu = getTipoUsu(); // Obtener el tipo de usuario
         vaciarPanelOpciones(); // Vaciar el panel de opciones
         panelOpciones.setVisible(true); // Mostrar el panel de opciones
