@@ -591,7 +591,6 @@ public class VentanaLog extends javax.swing.JFrame {
                     } catch (ClassCastException cse) {
                         JOptionPane.showMessageDialog(null, cse.getMessage());
                     }
-
                 }
                 conexion.cerrarConnection();
             }

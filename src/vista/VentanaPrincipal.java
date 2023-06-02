@@ -49,6 +49,7 @@ import modelo.Usuario;
 
 /**
  * Clase VentanaPrincipal, la cual representa la ventana de bienvenida
+ *
  * @author Mario
  */
 public class VentanaPrincipal extends javax.swing.JFrame {
@@ -61,6 +62,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private Usuario usu; // Objeto para representar al usuario
     private String tipoUsu; // Tipo de usuario
     private VentanaLog ventanaLog; // Referencia a la ventana de inicio de sesión
+    private JTable tablaDatosUsuario;
 
     /**
      * Obtiene el ID.
@@ -502,23 +504,66 @@ public class VentanaPrincipal extends javax.swing.JFrame {
      */
     private void mostrarTablaDatos() throws HeadlessException {
         consultas = new ConsultasPersonal();
-
-        // Nombres de las columnas
-        String[] columnNames = {"Nombre", "Apellidos", "Teléfono", "Email", "Cuenta", "Contraseña"};
-
-        // Crear el modelo de la tabla
-        DefaultTableModel modelo = new DefaultTableModel(columnNames, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-
+        tablaDatosUsuario = new JTable();
+        DefaultTableModel modelo = rellenarFilasTabla();
         consultas.realizarConexion();
+        llenarTabla(modelo);
+        // Agregar el MouseMotionListener para mostrar el tooltip con el valor completo
+        tablaDatosUsuario.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                int row = tablaDatosUsuario.rowAtPoint(e.getPoint());
+                if (row > -1) {
+                    StringBuilder tooltip = new StringBuilder();
+                    for (int col = 0; col < tablaDatosUsuario.getColumnCount(); col++) {
+                        Object value = tablaDatosUsuario.getValueAt(row, col);
+                        tooltip.append(tablaDatosUsuario.getColumnName(col)).append(": ").append(value).append("<br>");
+                    }
+                    tablaDatosUsuario.setToolTipText("<html>" + tooltip.toString() + "</html>");
+                } else {
+                    tablaDatosUsuario.setToolTipText(null);
+                }
+            }
+        });
 
-        String mostrarDatos = "SELECT id, nombre, apellidos, telefono, email, cuenta, contrasenia FROM usuario WHERE id=?";
+        // Crear el menú emergente para modificar el usuario
+        JPopupMenu popupMenu = new JPopupMenu();
+        JMenuItem menuItem = new JMenuItem("Modificar");
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                consultas.modificarUsuario(id);
+                tablaDatosUsuario.removeAll();
+                llenarTabla(null);
+            }
+        });
+        popupMenu.add(menuItem);
 
+        // Asociar el menú emergente a la tabla
+        tablaDatosUsuario.setComponentPopupMenu(popupMenu);
+
+        // Ajustar el ancho de las columnas al contenido
+        tablaDatosUsuario.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        tablaDatosUsuario.setRowHeight(tablaDatosUsuario.getRowHeight() + 5);
+
+        // Ajustar el tamaño de las celdas al contenido
+        DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
+        renderer.setHorizontalAlignment(DefaultTableCellRenderer.LEFT);
+        tablaDatosUsuario.setDefaultRenderer(String.class, renderer);
+
+        // Crear el JScrollPane para agregar el JTable
+        JScrollPane scrollPane = new JScrollPane(tablaDatosUsuario);
+
+        // Mostrar el JTable en el JOptionPane
+        JOptionPane.showMessageDialog(null, scrollPane, "Datos del usuario", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void llenarTabla(DefaultTableModel modelo) {
+        if (modelo == null) {
+            modelo = rellenarFilasTabla();
+        }
         try {
+            String mostrarDatos = "SELECT id, nombre, apellidos, telefono, email, cuenta, contrasenia FROM usuario WHERE id=?";
             PreparedStatement psDatos = consultas.getCon().prepareStatement(mostrarDatos);
             if (id != 0) {
                 // Establecer el valor del parámetro en la consulta preparada
@@ -544,63 +589,29 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                     String fila[] = {nombre, apellidos, telefono, email, cuenta, contrasenia};
                     modelo.addRow(fila);
                 }
-
                 // Crear el JTable con el modelo de la tabla
-                JTable table = new JTable(modelo);
-
-                // Agregar el MouseMotionListener para mostrar el tooltip con el valor completo
-                table.addMouseMotionListener(new MouseMotionAdapter() {
-                    @Override
-                    public void mouseMoved(MouseEvent e) {
-                        int row = table.rowAtPoint(e.getPoint());
-                        if (row > -1) {
-                            StringBuilder tooltip = new StringBuilder();
-                            for (int col = 0; col < table.getColumnCount(); col++) {
-                                Object value = table.getValueAt(row, col);
-                                tooltip.append(table.getColumnName(col)).append(": ").append(value).append("<br>");
-                            }
-                            table.setToolTipText("<html>" + tooltip.toString() + "</html>");
-                        } else {
-                            table.setToolTipText(null);
-                        }
-                    }
-                });
-
-                // Crear el menú emergente para modificar el usuario
-                JPopupMenu popupMenu = new JPopupMenu();
-                JMenuItem menuItem = new JMenuItem("Modificar");
-                menuItem.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        consultas.modificarUsuario(id);
-                        JOptionPane.getRootFrame().dispose();
-                    }
-                });
-                popupMenu.add(menuItem);
-
-                // Asociar el menú emergente a la tabla
-                table.setComponentPopupMenu(popupMenu);
-
-                // Ajustar el ancho de las columnas al contenido
-                table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-                table.setRowHeight(table.getRowHeight() + 5);
-
-                // Ajustar el tamaño de las celdas al contenido
-                DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
-                renderer.setHorizontalAlignment(DefaultTableCellRenderer.LEFT);
-                table.setDefaultRenderer(String.class, renderer);
-
-                // Crear el JScrollPane para agregar el JTable
-                JScrollPane scrollPane = new JScrollPane(table);
-
-                // Mostrar el JTable en el JOptionPane
-                JOptionPane.showMessageDialog(null, scrollPane, "Datos del usuario", JOptionPane.INFORMATION_MESSAGE);
+                tablaDatosUsuario.setModel(modelo);
             } else {
                 JOptionPane.showMessageDialog(null, "No hay datos que mostrar");
             }
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(null, "Error mostrando datos");
+        } catch (NumberFormatException nfe) {
+            JOptionPane.showMessageDialog(null, "El dato introducido no es un numero");
         }
+    }
+
+    private DefaultTableModel rellenarFilasTabla() {
+        // Nombres de las columnas
+        String[] columnNames = {"Nombre", "Apellidos", "Teléfono", "Email", "Cuenta", "Contraseña"};
+        // Crear el modelo de la tabla
+        DefaultTableModel modelo = new DefaultTableModel(columnNames, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        return modelo;
     }
 
     private void menuConsultasMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_menuConsultasMouseEntered
