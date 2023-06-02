@@ -9,6 +9,8 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.JOptionPane;
 import modelo.Horario;
 import modelo.Personal;
@@ -19,6 +21,7 @@ import modelo.Cita;
 /**
  * Clase ConsultasPersonal la cual tiene metodos que se usan para el resto de
  * ventanas
+ *
  * @author Mario
  */
 public class ConsultasPersonal {
@@ -250,6 +253,7 @@ public class ConsultasPersonal {
             int result = ps.executeUpdate();
             if (result == 0) {
                 JOptionPane.showMessageDialog(null, "No se ha podido modificar la fecha, vuelva a intentarlo");
+            }else{
                 JOptionPane.showMessageDialog(null, "Hora modificada exitosamente");
             }
         } catch (SQLException ex) {
@@ -306,7 +310,7 @@ public class ConsultasPersonal {
                     case "Telefono":
                         telefono = JOptionPane.showInputDialog(null, "Por favor, ingrese su número de teléfono:");
                         String actualizacionTelefono = actualizacionSQL + "TELEFONO = ? WHERE ID=?";
-                        if (actualizacionTelefono.length() != 9) {
+                        if (telefono.length() != 9) {
                             JOptionPane.showMessageDialog(null, "Telefono no valido. Introduce 9 digitos");
                         } else {
                             PreparedStatement actTelf = con.prepareStatement(actualizacionTelefono);
@@ -319,7 +323,11 @@ public class ConsultasPersonal {
                         }
                         break;
                     case "Email":
-                        email = JOptionPane.showInputDialog(null, "Por favor, ingrese su dirección de correo electrónico:");
+                        boolean comprobacion=false;
+                        do{
+                            email = JOptionPane.showInputDialog(null, "Por favor, ingrese su dirección de correo electrónico:");
+                            comprobacion=validarEmail(email);
+                        }while(!comprobacion);
                         String actualizacionEmail = actualizacionSQL + "EMAIL = ? WHERE ID=?";
                         PreparedStatement actEmail = con.prepareStatement(actualizacionEmail);
                         actEmail.setString(1, email);
@@ -342,7 +350,7 @@ public class ConsultasPersonal {
                         break;
                     case "Contrasenia":
                         contrasenia = JOptionPane.showInputDialog(null, "Por favor, ingrese su contraseña:");
-                        String actualizacionPasswd = actualizacionSQL + "CONTRASENIA = ? WHERE ID=?";
+                        String actualizacionPasswd = actualizacionSQL + "CONTRASENIA = MD5(?) WHERE ID=?";
                         PreparedStatement actPasswd = con.prepareStatement(actualizacionPasswd);
                         actPasswd.setString(1, contrasenia);
                         actPasswd.setInt(2, id);
@@ -498,5 +506,15 @@ public class ConsultasPersonal {
             JOptionPane.showMessageDialog(null, "Error en la búsqueda");
         }
         return id;
+    }
+
+    private boolean validarEmail(String email) {
+        String EMAIL_PATTERN = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+        Pattern pattern = Pattern.compile(EMAIL_PATTERN);
+        Matcher matcher = pattern.matcher(email);
+        if (matcher.matches()==false) {
+            JOptionPane.showConfirmDialog(null, "Email invalido.");
+        }
+        return matcher.matches();
     }
 }
