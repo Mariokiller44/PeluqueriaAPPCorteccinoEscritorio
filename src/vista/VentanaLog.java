@@ -458,6 +458,7 @@ public class VentanaLog extends javax.swing.JFrame {
 
     private void botonSalirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonSalirActionPerformed
         // TODO add your handling code here:
+        realizarCopiaDeSeguridad();
         System.exit(0);
     }//GEN-LAST:event_botonSalirActionPerformed
 
