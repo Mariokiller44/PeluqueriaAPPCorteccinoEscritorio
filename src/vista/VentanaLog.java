@@ -4,8 +4,10 @@
  */
 package vista;
 
+import com.formdev.flatlaf.FlatLightLaf;
 import controlador.ConexionBD;
 import java.awt.Color;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
@@ -13,28 +15,46 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FilenameFilter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 import javax.swing.ImageIcon;
 import java.util.Date;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+import styles.GestionProductosStyle;
+
 /**
- * Clase VentanaLog (Representa el inicio de sesion) Es la ventana principal de la aplicacion
+ * Clase VentanaLog (Representa el inicio de sesion) Es la ventana principal de
+ * la aplicacion
+ *
  * @author Mario
  */
 public class VentanaLog extends javax.swing.JFrame {
 
-    private static String DATABASE_NAME="bd_alcorteccino";
-    private static String folderpath="src\\bd";
-    private static String DATABASE_PASSWORD="123pelu";
-    private static String DATABASE_USERNAME="admin";
+    private static String DATABASE_NAME = "bd_alcorteccino";
+    private static String folderpath = "src\\bd";
+    private static String DATABASE_PASSWORD = "123pelu";
+    private static String DATABASE_USERNAME = "admin";
     private static String BACKUP_FOLDER;
-    private static String savepath="";
+    private static String savepath = "";
+    private static String DATABASE_FOLDER = "src\\bd";
+    private static String DATABASE_PREFIX = "bd_alcorteccino";
 
     /**
      * Creates new form VentanaLog
@@ -55,10 +75,11 @@ public class VentanaLog extends javax.swing.JFrame {
 
     public VentanaLog() {
         initComponents();
+        setIconImage(getIconImage());
         setLocationRelativeTo(null);
         setResizable(false);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setTitle("Inicio de sesión")  ;
+        setTitle("Inicio de sesión");
         jCheckBox1.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -74,10 +95,17 @@ public class VentanaLog extends javax.swing.JFrame {
             public void windowClosing(WindowEvent e) {
                 realizarCopiaDeSeguridad();
             }
-            
+
         });
 
     }
+
+    @Override
+    public Image getIconImage() {
+        ImageIcon icono=new ImageIcon("src/images/iconoDeAppEscritorio.png");
+        return  icono.getImage();// Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
+    }
+    
 
     /**
      * Realiza una copia de seguridad de la base de datos.
@@ -87,32 +115,193 @@ public class VentanaLog extends javax.swing.JFrame {
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy_HH-mm-ss");
         String fechaActual = dateFormat.format(new Date());
 
-        // Nombre del archivo de copia de seguridad
-        String nombreArchivoBackup = DATABASE_NAME + "_" + fechaActual;
-        savepath = "\"" + folderpath + "\\" + "" + nombreArchivoBackup + ".sql\"";
-        String execudecmd = "mysqldump -u" + DATABASE_USERNAME + " -p" + DATABASE_PASSWORD + " --database " + DATABASE_NAME + " -r " + savepath;
+        if (isDatabaseEmpty()) {
+            JOptionPane.showMessageDialog(null, "No se pudo hacer copia de la base de datos. Esta vacía", "Copia de seguridad", JOptionPane.WARNING_MESSAGE);
+        } else {
+            // Nombre del archivo de copia de seguridad
+            String nombreArchivoBackup = DATABASE_NAME + "_" + fechaActual;
+            savepath = "\"" + folderpath + "\\" + "" + nombreArchivoBackup + ".sql\"";
+            String execudecmd = "mysqldump -u" + DATABASE_USERNAME + " -p" + DATABASE_PASSWORD + " --database " + DATABASE_NAME + " -r " + savepath;
 
-        // Ruta completa del archivo de copia de seguridad
-        String rutaArchivoBackup = nombreArchivoBackup;
+            // Ruta completa del archivo de copia de seguridad
+            String rutaArchivoBackup = nombreArchivoBackup;
 
-        try {
-            // Comando para realizar la copia de seguridad
-            String comando = "mysql --user=" + DATABASE_USERNAME + " --password=" + DATABASE_PASSWORD + " " + DATABASE_NAME + " > " + rutaArchivoBackup;
+            try {
+                // Comando para realizar la copia de seguridad
+                String comando = "mysql --user=" + DATABASE_USERNAME + " --password=" + DATABASE_PASSWORD + " " + DATABASE_NAME + " > " + rutaArchivoBackup;
 
-            // Ejecutar el comando en el sistema operativo
-            Process proceso = Runtime.getRuntime().exec(execudecmd);
-            int resultado = proceso.waitFor();
-            if (resultado == 0) {
-                System.out.println("Copia de seguridad creada correctamente: " + rutaArchivoBackup);
-            } else {
-                System.out.println("Error al hacer copia de seguridad");
+                // Ejecutar el comando en el sistema operativo
+                Process proceso = Runtime.getRuntime().exec(execudecmd);
+                int resultado = proceso.waitFor();
+                if (resultado == 0) {
+                    JOptionPane.showMessageDialog(null,"Copia de seguridad creada correctamente");
+                } else {
+                    JOptionPane.showMessageDialog(null, "Error al hacer copia de seguridad","Error",JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+            } catch (IOException | InterruptedException e) {
+                System.err.println("Error al crear la copia de seguridad: " + e.getMessage());
             }
-        } catch (IOException | InterruptedException e) {
-            System.err.println("Error al crear la copia de seguridad: " + e.getMessage());
         }
     }
 
+    private static void importarBaseDatos() {
+        String url = "jdbc:mysql://localhost:3306/bd_alcorteccino";
+        String usuario = "admin";
+        String contraseña = "123pelu";
 
+        try (Connection conn = DriverManager.getConnection(url, usuario, contraseña); Statement stmt = conn.createStatement()) {
+
+            String archivoSQL = "src/bd/bd_alcorteccino.sql";
+
+            try (BufferedReader br = new BufferedReader(new FileReader(archivoSQL))) {
+                StringBuilder sentencia = new StringBuilder();
+                String linea;
+                while ((linea = br.readLine()) != null) {
+                    linea = linea.trim();
+                    if (!linea.startsWith("--") && !linea.isEmpty()) {
+                        if (linea.endsWith(";")) {
+                            sentencia.append(linea, 0, linea.length() - 1);
+                            String sqlStatement = sentencia.toString();
+
+                            if (sqlStatement.startsWith("DELIMITER")) {
+                                sentencia.setLength(0);
+                                continue;
+                            }
+
+                            try {
+                                stmt.executeUpdate(sqlStatement);
+                            } catch (SQLException e) {
+                            }
+
+                            sentencia.setLength(0);
+                        } else {
+                            sentencia.append(linea);
+                        }
+                    }
+                }
+            }
+
+            // Crear los triggers que presentaron errores
+            crearTriggerActualizarFechaHorarios(stmt);
+            crearTriggerControlFechaInsert(stmt);
+            crearTriggerMantenerHorariosSemana(stmt);
+            crearTriggerCodificarMD5(stmt);
+            crearTriggerInsertarUsuario(stmt);
+
+            JOptionPane.showMessageDialog(null, "Archivo SQL importado correctamente");
+        } catch (Exception e) {
+        }
+    }
+
+    private static void crearTriggerActualizarFechaHorarios(Statement stmt) {
+        String triggerSQL = "DELIMITER //\n"
+                + "CREATE TRIGGER control_fecha_insert BEFORE INSERT ON horario\n"
+                + "FOR EACH ROW\n"
+                + "BEGIN\n"
+                + "IF NEW.fecha < CURDATE() THEN\n"
+                + "SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede insertar un horario con fecha anterior a hoy';\n"
+                + "END IF;\n"
+                + "END //\n"
+                + "DELIMITER ;";
+        try {
+            stmt.executeUpdate(triggerSQL);
+        } catch (SQLException e) {
+        }
+    }
+
+    private static void crearTriggerControlFechaInsert(Statement stmt) {
+        String triggerSQL = "DELIMITER //\n"
+                + "CREATE TRIGGER control_fecha_insert BEFORE INSERT ON horario\n"
+                + "FOR EACH ROW\n"
+                + "BEGIN\n"
+                + "IF NEW.fecha < CURDATE() THEN\n"
+                + "SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede insertar un horario con fecha anterior a hoy';\n"
+                + "END IF;\n"
+                + "END //\n"
+                + "DELIMITER ;";
+        try {
+            stmt.executeUpdate(triggerSQL);
+        } catch (SQLException e) {
+
+        }
+    }
+
+    private static void crearTriggerMantenerHorariosSemana(Statement stmt) {
+        String triggerSQL = "DELIMITER //"
+                + "CREATE TRIGGER mantener_horarios_semana BEFORE INSERT ON horario "
+                + "FOR EACH ROW "
+                + "BEGIN "
+                + "DECLARE fecha_inicio_semana_actual DATE; "
+                + "DECLARE fecha_fin_semana_actual DATE; "
+                + "DECLARE dia_semana_actual INT; "
+                + "DECLARE hora_asignada TIME; "
+                + "SET @fecha_actual = CURDATE(); "
+                + "SET @fecha_inicio_semana_actual = @fecha_actual - INTERVAL WEEKDAY(@fecha_actual) DAY; "
+                + "SET @fecha_fin_semana_actual = @fecha_inicio_semana_actual + INTERVAL 6 DAY; "
+                + "SET @dia_semana_actual = WEEKDAY(NEW.fecha) + 1; "
+                + "SELECT hora INTO hora_asignada FROM horarios_asignados "
+                + "WHERE id_personal = NEW.id_personal "
+                + "AND fecha_inicio_semana = @fecha_inicio_semana_actual "
+                + "AND fecha_fin_semana = @fecha_fin_semana_actual "
+                + "AND dia_semana = @dia_semana_actual; "
+                + "IF hora_asignada IS NOT NULL THEN "
+                + "SET NEW.hora = hora_asignada; "
+                + "END IF; "
+                + "END; //"
+                + "DELIMITER ;";
+        try {
+            stmt.executeUpdate(triggerSQL);
+        } catch (SQLException e) {
+
+        }
+    }
+
+    private static void crearTriggerCodificarMD5(Statement stmt) {
+        String triggerSQL = "CREATE TRIGGER codificar_md5 BEFORE INSERT ON usuario "
+                + "FOR EACH ROW "
+                + "BEGIN "
+                + "SET NEW.contrasenia = MD5(NEW.contrasenia); "
+                + "END";
+        try {
+            stmt.executeUpdate(triggerSQL);
+        } catch (SQLException e) {
+            ;
+        }
+    }
+
+    private static void crearTriggerInsertarUsuario(Statement stmt) {
+        String triggerSQL = "DELIMITER //\n"
+                + "CREATE TRIGGER insertar_usuario AFTER INSERT ON usuario\n"
+                + "FOR EACH ROW\n"
+                + "BEGIN\n"
+                + "IF NEW.tipo_de_usuario = 'Cliente' THEN\n"
+                + "INSERT INTO cliente (id) VALUES (NEW.id);\n"
+                + "ELSEIF NEW.tipo_de_usuario = 'Personal' THEN\n"
+                + "INSERT INTO personal (id) VALUES (NEW.id);\n"
+                + "END IF;\n"
+                + "END //\n"
+                + "DELIMITER ;";
+        try {
+            stmt.executeUpdate(triggerSQL);
+        } catch (SQLException e) {
+
+        }
+    }
+
+    private static String obtenerNombreTabla(String createTableStatement) {
+        // Extraer el nombre de la tabla de la sentencia CREATE TABLE
+        int startIndex = createTableStatement.indexOf("`") + 1;
+        int endIndex = createTableStatement.indexOf("`", startIndex);
+        return createTableStatement.substring(startIndex, endIndex);
+    }
+
+    private static boolean existeTabla(Connection conn, String tableName) throws SQLException {
+        // Verificar si una tabla existe en la base de datos
+        DatabaseMetaData metaData = conn.getMetaData();
+        ResultSet resultSet = metaData.getTables(null, null, tableName, null);
+        return resultSet.next();
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -131,6 +320,8 @@ public class VentanaLog extends javax.swing.JFrame {
         botonAceptar = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
         botonRegistrarse = new javax.swing.JButton();
+        jPanel6 = new javax.swing.JPanel();
+        botonCargarDatos = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
         botonSalir = new javax.swing.JButton();
         panelLI = new javax.swing.JPanel();
@@ -263,6 +454,37 @@ public class VentanaLog extends javax.swing.JFrame {
         );
 
         panelBotonera.add(jPanel2, new java.awt.GridBagConstraints());
+
+        jPanel6.setBackground(new java.awt.Color(24, 173, 156));
+        jPanel6.setToolTipText("");
+
+        botonCargarDatos.setFont(new java.awt.Font("Segoe UI", 0, 16)); // NOI18N
+        botonCargarDatos.setText("CARGAR DATOS");
+        botonCargarDatos.setBorder(null);
+        botonCargarDatos.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                botonCargarDatosActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
+        jPanel6.setLayout(jPanel6Layout);
+        jPanel6Layout.setHorizontalGroup(
+            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel6Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(botonCargarDatos, javax.swing.GroupLayout.PREFERRED_SIZE, 137, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(40, 40, 40))
+        );
+        jPanel6Layout.setVerticalGroup(
+            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel6Layout.createSequentialGroup()
+                .addContainerGap(26, Short.MAX_VALUE)
+                .addComponent(botonCargarDatos, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(31, 31, 31))
+        );
+
+        panelBotonera.add(jPanel6, new java.awt.GridBagConstraints());
 
         jPanel3.setBackground(new java.awt.Color(24, 173, 156));
 
@@ -492,33 +714,143 @@ public class VentanaLog extends javax.swing.JFrame {
 
     }//GEN-LAST:event_panelGeneralKeyTyped
 
+    private void botonCargarDatosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonCargarDatosActionPerformed
+        try {
+            // TODO add your handling code here:
+            checkAndImportDatabase();
+        } catch (IOException ex) {
+            System.out.println(ex.getMessage());
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+        }
+    }//GEN-LAST:event_botonCargarDatosActionPerformed
+    public static void checkAndImportDatabase() throws IOException, SQLException {
+        if (isDatabaseEmpty() || isDatabaseCorrupted()) {
+            renameAndImportLatestBackup();
+            importarBaseDatos();
+        }
+
+    }
+
+    private static boolean isDatabaseEmpty() {
+        // Lógica para verificar si la base de datos está vacía
+        boolean isEmpty = false;
+
+        // Conexión a la base de datos
+        Connection connection = null;
+        try {
+            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/bd_alcorteccino", "admin", "123pelu");
+
+            // Consulta SQL para contar el número de registros en una tabla
+            String query = "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'bd_alcorteccino';";
+            PreparedStatement statement = connection.prepareStatement(query);
+
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                int count = resultSet.getInt(1);
+                isEmpty = (count == 0);
+            }
+
+            resultSet.close();
+            statement.close();
+        } catch (SQLException e) {
+        } finally {
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return isEmpty;
+    }
+
+    private static boolean isDatabaseCorrupted() {
+        // Lógica para verificar si la base de datos está corrupta
+        boolean isCorrupted = false;
+
+        // Conexión a la base de datos
+        Connection connection = null;
+        try {
+            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/bd_alcorteccino", "admin", "123pelu");
+
+            // Consulta SQL para realizar una operación que identifique la corrupción
+            // Puedes realizar una consulta específica según tu SGBD
+            // Ejemplo: Verificar la existencia de una tabla particular
+            String query = "SELECT 1";
+            PreparedStatement statement = connection.prepareStatement(query);
+
+            ResultSet resultSet = statement.executeQuery();
+            isCorrupted = !resultSet.next(); // Si no hay resultados, se considera que la base de datos está corrupta
+
+            resultSet.close();
+            statement.close();
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Base de datos corrupta o no existente", "Error", JOptionPane.ERROR_MESSAGE);
+            isCorrupted = true; // Se considera que la base de datos está corrupta si hay una excepción SQL
+        } finally {
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return isCorrupted;
+        // Devuelve true si está corrupta, false en caso contrario
+
+    }
+
+    private static void renameAndImportLatestBackup() {
+        File folder = new File(DATABASE_FOLDER);
+        FilenameFilter filter = (dir, name) -> name.startsWith(DATABASE_PREFIX);
+
+        File[] backupFiles = folder.listFiles(filter);
+        if (backupFiles == null || backupFiles.length == 0) {
+            System.out.println("No se encontraron archivos de respaldo de la base de datos.");
+            return;
+        }
+
+        Arrays.sort(backupFiles, Comparator.comparing(File::lastModified).reversed());
+
+        File latestBackup = backupFiles[0];
+        String newFileName = getNewFileName(latestBackup.getName());
+
+        String sobreescribirArchivo = "bd_alcorteccino.sql";
+        File nuevoArchivo = new File(sobreescribirArchivo);
+        Path sourcePath = latestBackup.toPath();
+        Path targetPath = new File(DATABASE_FOLDER + File.separator + nuevoArchivo).toPath();
+
+        try {
+            Files.move(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+            System.out.println("Archivo renombrado y movido con éxito.");
+
+            // Lógica para importar el archivo a la base de datos
+        } catch (IOException e) {
+            System.out.println("Error al renombrar y mover el archivo: " + e.getMessage());
+        }
+    }
+
+    private static String getNewFileName(String oldFileName) {
+        DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy_HH-mm-ss");
+        Date currentDate = new Date();
+
+        String formattedDate = dateFormat.format(currentDate);
+        String newFileName = oldFileName.split("\\.")[0] + "_" + formattedDate + ".sql";
+
+        return newFileName;
+    }
+
     /**
      * @param args the command line arguments
      */
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(VentanaLog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(VentanaLog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(VentanaLog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(VentanaLog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
+        
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
@@ -529,6 +861,7 @@ public class VentanaLog extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton botonAceptar;
+    private javax.swing.JButton botonCargarDatos;
     private javax.swing.JButton botonRegistrarse;
     private javax.swing.JButton botonSalir;
     private javax.swing.JCheckBox jCheckBox1;
@@ -542,6 +875,7 @@ public class VentanaLog extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
+    private javax.swing.JPanel jPanel6;
     private javax.swing.JPanel panelBotonera;
     private javax.swing.JPanel panelCentral;
     private javax.swing.JPanel panelGeneral;
