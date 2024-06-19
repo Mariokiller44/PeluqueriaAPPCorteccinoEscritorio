@@ -381,33 +381,36 @@ public class GestionCitasVentana extends javax.swing.JFrame {
                     // Mostrar el JOptionPane para seleccionar una opción
                     String[] opciones = {"Fecha", "Hora", "Servicio", "Precio", "Personal"};
                     String seleccionAdmin = (String) JOptionPane.showInputDialog(null, "Seleccione una opción", "Opciones", JOptionPane.QUESTION_MESSAGE, null, opciones, opciones[0]);
-                    // Realizar acciones según la opción seleccionada
-                    switch (seleccionAdmin) {
-                        case "Fecha":
-                            modificarFecha(horarioAdminId);
-                            llenarTablaTodosLosClientes();
-                            break;
-                        case "Hora":
-                            modificarServicioHora(horarioAdminId);
-                            llenarTablaTodosLosClientes();
-                            break;
-                        case "Servicio":
-                            Horario horAdmin = new Horario(horarioAdminId, fechaH, horaH, servicioH);
-                            modificarServicio(horAdmin);
-                            llenarTablaTodosLosClientes();
-                            break;
-                        case "Precio":
-                            Horario horAdminPrecio = new Horario(horarioAdminId, fechaH, horaH, servicioH);
-                            modificarPrecio(horAdminPrecio);
-                            llenarTablaTodosLosClientes();
-                            break;
-                        case "Personal":
-                            Horario horAdminPersonal = new Horario(horarioAdminId, fechaH, horaH, servicioH, precioH, personalH);
-                            modificarPersonal(horAdminPersonal);
-                            llenarTablaTodosLosClientes();
-                            break;
-                        default:
-                            JOptionPane.showMessageDialog(null, "Opción no válida");
+                    if (seleccionAdmin==null) {
+                    } else {
+                        // Realizar acciones según la opción seleccionada
+                        switch (seleccionAdmin) {
+                            case "Fecha":
+                                modificarFecha(horarioAdminId);
+                                llenarTablaTodosLosClientes();
+                                break;
+                            case "Hora":
+                                modificarServicioHora(horarioAdminId);
+                                llenarTablaTodosLosClientes();
+                                break;
+                            case "Servicio":
+                                Horario horAdmin = new Horario(horarioAdminId, fechaH, horaH, servicioH);
+                                modificarServicio(horAdmin);
+                                llenarTablaTodosLosClientes();
+                                break;
+                            case "Precio":
+                                Horario horAdminPrecio = new Horario(horarioAdminId, fechaH, horaH, servicioH);
+                                modificarPrecio(horAdminPrecio);
+                                llenarTablaTodosLosClientes();
+                                break;
+                            case "Personal":
+                                Horario horAdminPersonal = new Horario(horarioAdminId, fechaH, horaH, servicioH, precioH, personalH);
+                                modificarPersonal(horAdminPersonal);
+                                llenarTablaTodosLosClientes();
+                                break;
+                            default:
+                                JOptionPane.showMessageDialog(null, "Opción no válida");
+                        }
                     }
                 } else {
                     String citasPersonal = obtenerHorarioEscogidoPersonal();
@@ -420,23 +423,26 @@ public class GestionCitasVentana extends javax.swing.JFrame {
                         // Mostrar el JOptionPane para seleccionar una opción
                         String[] opciones = {"Fecha", "Hora", "Servicio"};
                         String seleccion = (String) JOptionPane.showInputDialog(null, "Seleccione una opción", "Opciones", JOptionPane.QUESTION_MESSAGE, null, opciones, opciones[0]);
-                        // Realizar acciones según la opción seleccionada
-                        switch (seleccion) {
-                            case "Fecha":
-                                modificarServicioFecha(horarioId);
-                                llenarTablaHorario(id);
-                                break;
-                            case "Hora":
-                                modificarServicioHora(horarioId);
-                                llenarTablaHorario(id);
-                                break;
-                            case "Servicio":
-                                Horario horario = new Horario(horarioId, fechaH, horaH, servicioH);
-                                modificarServicio(horario);
-                                llenarTablaHorario(id);
-                                break;
-                            default:
-                                JOptionPane.showMessageDialog(null, "Seleccione una opcion");
+                        if (seleccion==null) {
+                        } else {
+                            // Realizar acciones según la opción seleccionada
+                            switch (seleccion) {
+                                case "Fecha":
+                                    modificarServicioFecha(horarioId);
+                                    llenarTablaHorario(id);
+                                    break;
+                                case "Hora":
+                                    modificarServicioHora(horarioId);
+                                    llenarTablaHorario(id);
+                                    break;
+                                case "Servicio":
+                                    Horario horario = new Horario(horarioId, fechaH, horaH, servicioH);
+                                    modificarServicio(horario);
+                                    llenarTablaHorario(id);
+                                    break;
+                                default:
+                                    JOptionPane.showMessageDialog(null, "Seleccione una opcion");
+                            }
                         }
                     }
                 }
@@ -456,12 +462,14 @@ public class GestionCitasVentana extends javax.swing.JFrame {
     public void modificarFecha(int fechaActual) {
         // Crear un cuadro de diálogo con un DatePicker para que el usuario seleccione una nueva fecha
         DatePicker nuevaFecha = new DatePicker();
-        JOptionPane.showConfirmDialog(null, nuevaFecha, "Introduce nueva fecha", JOptionPane.OK_OPTION);
-
-        // Obtener la fecha actualizada como un objeto LocalDate
-        String fechaActualizada = nuevaFecha.getDate().toString();
-        // Llamar a un método de consulta para modificar el servicio con la nueva fecha
-        consultas.modificarServicioPorFecha(fechaActualizada, fechaActual);
+        int resultado = JOptionPane.showConfirmDialog(null, nuevaFecha, "Introduce nueva fecha", JOptionPane.OK_CANCEL_OPTION);
+        if (resultado != JOptionPane.CANCEL_OPTION) {
+            // Obtener la fecha actualizada como un objeto LocalDate
+            String fechaActualizada = nuevaFecha.getDate().toString();
+            // Llamar a un método de consulta para modificar el servicio con la nueva fecha
+            consultas.modificarServicioPorFecha(fechaActualizada, fechaActual);
+        } else {
+        }
     }
 
     /**
@@ -471,28 +479,33 @@ public class GestionCitasVentana extends javax.swing.JFrame {
      */
     public void modificarPrecio(Horario precioActual) {
         // Mostrar un cuadro de diálogo para que el usuario ingrese el nuevo precio
-        String nuevoPrecioStr = JOptionPane.showInputDialog(null, "Introduce el nuevo precio:");
-        double nuevoPrecio = Double.parseDouble(nuevoPrecioStr);
+        String nuevoPrecioStr = JOptionPane.showInputDialog(null, "Introduce el nuevo precio:","Actualizar precio",JOptionPane.OK_CANCEL_OPTION);
 
-        // Obtener la descripción del servicio y el ID del servicio
-        String descripcion = precioActual.getDescripcion();
-        int idServicio = obtenerIdServicio(descripcion);
+        if (nuevoPrecioStr==null) {
 
-        // Crear la consulta SQL para actualizar el precio del servicio
-        String sql = "UPDATE servicios SET precio = ? WHERE id = ?";
+        } else {
+            double nuevoPrecio = Double.parseDouble(nuevoPrecioStr);
 
-        try {
-            realizarConexion();
-            PreparedStatement pstmt = con.prepareStatement(sql);
+            // Obtener la descripción del servicio y el ID del servicio
+            String descripcion = precioActual.getDescripcion();
+            int idServicio = obtenerIdServicio(descripcion);
 
-            // Establecer los valores de los parámetros de la consulta
-            pstmt.setDouble(1, nuevoPrecio);
-            pstmt.setInt(2, idServicio);
+            // Crear la consulta SQL para actualizar el precio del servicio
+            String sql = "UPDATE servicios SET precio = ? WHERE id = ?";
 
-            // Ejecutar la consulta
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(null, "Error modificando el precio");
+            try {
+                realizarConexion();
+                PreparedStatement pstmt = con.prepareStatement(sql);
+
+                // Establecer los valores de los parámetros de la consulta
+                pstmt.setDouble(1, nuevoPrecio);
+                pstmt.setInt(2, idServicio);
+
+                // Ejecutar la consulta
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(null, "Error modificando el precio");
+            }
         }
     }
 
@@ -508,19 +521,22 @@ public class GestionCitasVentana extends javax.swing.JFrame {
 
         // Mostrar un cuadro de lista desplegable con el personal disponible para que el usuario seleccione uno nuevo
         JComboBox comboboxPers = new JComboBox(personalPelu.toArray());
-        JOptionPane.showConfirmDialog(null, comboboxPers, "Seleccione Nuevo Personal", JOptionPane.OK_OPTION);
+        int resultado = JOptionPane.showConfirmDialog(null, comboboxPers, "Seleccione Nuevo Personal", JOptionPane.OK_OPTION);
 
-        // Obtener el personal seleccionado y extraer el nombre y apellidos
-        String nuevoS = comboboxPers.getSelectedItem().toString();
-        String[] personal = nuevoS.split(", ");
-        String nombreP = personal[0].split(": ")[1];
-        String apellidosP = personal[1].split(": ")[1];
+        if (resultado == JOptionPane.CANCEL_OPTION) {
+        } else {
+            // Obtener el personal seleccionado y extraer el nombre y apellidos
+            String nuevoS = comboboxPers.getSelectedItem().toString();
+            String[] personal = nuevoS.split(", ");
+            String nombreP = personal[0].split(": ")[1];
+            String apellidosP = personal[1].split(": ")[1];
 
-        // Obtener el ID del nuevo personal
-        int idP = consultas.obtenerIdUsuario(nombreP, apellidosP);
+            // Obtener el ID del nuevo personal
+            int idP = consultas.obtenerIdUsuario(nombreP, apellidosP);
 
-        // Llamar a un método de consulta para modificar el servicio con el nuevo personal
-        modificarPersonal(personalActual, idP);
+            // Llamar a un método de consulta para modificar el servicio con el nuevo personal
+            modificarPersonal(personalActual, idP);
+        }
     }
 
     // Método para obtener los horarios con cita asignada
@@ -575,21 +591,24 @@ public class GestionCitasVentana extends javax.swing.JFrame {
     private void modificarServicioFecha(int idHorario) throws HeadlessException {
         // Mostrar un cuadro de diálogo con un DatePicker para que el usuario seleccione una nueva fecha
         DatePicker nuevaFecha = new DatePicker();
-        JOptionPane.showConfirmDialog(null, nuevaFecha, "Introduce nueva fecha", JOptionPane.OK_OPTION);
+        int resultado = JOptionPane.showConfirmDialog(null, nuevaFecha, "Introduce nueva fecha", JOptionPane.OK_CANCEL_OPTION);
+        if (resultado == JOptionPane.CANCEL_OPTION) {
 
-        // Obtener la fecha seleccionada y convertirla a una cadena de texto
-        String fechaActualizada = nuevaFecha.getDate().toString();
-
-        LocalDate fechaEscogida = nuevaFecha.getDate();
-        // Comprobación de que no sea menor a hoy
-        LocalDate fechaHoy = LocalDate.now();
-        if (fechaEscogida.isBefore(fechaHoy)) {
-            JOptionPane.showMessageDialog(null, "La fecha seleccionada no puede ser anterior a hoy");
         } else {
-            // Obtener el ID de la cita
-            int idCita = idHorario;
-            // Llamar a un método de consulta para modificar el servicio con la nueva fecha
-            consultas.modificarServicioPorFecha(fechaActualizada, idCita);
+            // Obtener la fecha seleccionada y convertirla a una cadena de texto
+            String fechaActualizada = nuevaFecha.getDate().toString();
+
+            LocalDate fechaEscogida = nuevaFecha.getDate();
+            // Comprobación de que no sea menor a hoy
+            LocalDate fechaHoy = LocalDate.now();
+            if (fechaEscogida.isBefore(fechaHoy)) {
+                JOptionPane.showMessageDialog(null, "La fecha seleccionada no puede ser anterior a hoy");
+            } else {
+                // Obtener el ID de la cita
+                int idCita = idHorario;
+                // Llamar a un método de consulta para modificar el servicio con la nueva fecha
+                consultas.modificarServicioPorFecha(fechaActualizada, idCita);
+            }
         }
     }
 
@@ -606,17 +625,19 @@ public class GestionCitasVentana extends javax.swing.JFrame {
 
         // Mostrar un cuadro de lista desplegable con los servicios disponibles para que el usuario seleccione uno nuevo
         JComboBox comboboxServ = new JComboBox(listaServ.toArray());
-        JOptionPane.showConfirmDialog(null, comboboxServ, "Seleccione nuevo servicio", JOptionPane.OK_OPTION);
+        int resultado = JOptionPane.showConfirmDialog(null, comboboxServ, "Seleccione nuevo servicio", JOptionPane.OK_OPTION);
 
-        // Obtener el servicio seleccionado y su ID
-        String nuevoS = comboboxServ.getSelectedItem().toString();
-        idS = consultas.cogerIdServicio(nuevoS);
+        if (resultado != JOptionPane.CANCEL_OPTION) {
+            // Obtener el servicio seleccionado y su ID
+            String nuevoS = comboboxServ.getSelectedItem().toString();
+            idS = consultas.cogerIdServicio(nuevoS);
 
-        // Obtener el ID del horario de servicio
-        int horarioServId = horarioSeleccionado.getId();
+            // Obtener el ID del horario de servicio
+            int horarioServId = horarioSeleccionado.getId();
 
-        // Llamar a un método de consulta para modificar el servicio del horario
-        consultas.modificarServicio(idS, horarioServId);
+            // Llamar a un método de consulta para modificar el servicio del horario
+            consultas.modificarServicio(idS, horarioServId);
+        }
     }
 
     /**
@@ -1364,16 +1385,18 @@ public class GestionCitasVentana extends javax.swing.JFrame {
         TimePicker nuevaFecha = new TimePicker();
 
         // Se muestra un cuadro de diálogo para que el usuario introduzca la nueva hora utilizando el objeto TimePicker
-        JOptionPane.showConfirmDialog(null, nuevaFecha, "Introduce nueva hora", JOptionPane.OK_OPTION);
+        int resultado = JOptionPane.showConfirmDialog(null, nuevaFecha, "Introduce nueva hora", JOptionPane.OK_CANCEL_OPTION);
 
-        // Se obtiene la hora actualizada seleccionada por el usuario en formato de cadena de texto
-        String horaActualizada = nuevaFecha.getTime().toString();
+        if (resultado != JOptionPane.CANCEL_OPTION) {
+            // Se obtiene la hora actualizada seleccionada por el usuario en formato de cadena de texto
+            String horaActualizada = nuevaFecha.getTime().toString();
 
-        // Se asigna el valor del horarioId a una variable local llamada idCita
-        int idCita = horarioId;
+            // Se asigna el valor del horarioId a una variable local llamada idCita
+            int idCita = horarioId;
 
-        // Se llama al método modificarServicioPorHora() del objeto consultas, pasando la hora actualizada y el idCita como argumentos
-        consultas.modificarServicioPorHora(horaActualizada, idCita);
+            // Se llama al método modificarServicioPorHora() del objeto consultas, pasando la hora actualizada y el idCita como argumentos
+            consultas.modificarServicioPorHora(horaActualizada, idCita);
+        }
     }
 
     /**

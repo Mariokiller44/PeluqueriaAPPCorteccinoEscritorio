@@ -42,6 +42,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
@@ -62,7 +63,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private Usuario usu; // Objeto para representar al usuario
     private String tipoUsu; // Tipo de usuario
     private VentanaLog ventanaLog; // Referencia a la ventana de inicio de sesión
-    private JTable tablaDatosUsuario;
+    private JTable tablaDatosUsuario; 
 
     /**
      * Obtiene el ID.
