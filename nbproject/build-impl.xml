@@ -1092,12 +1092,27 @@ is divided into following sections:
         </pathconvert>
         <j2seproject3:depend srcdir="${src.dir}:${build.generated.subdirs}"/>
     </target>
-    <target depends="init,deps-jar,-pre-pre-compile,-pre-compile, -copy-persistence-xml,-compile-depend" if="have.sources" name="-do-compile">
-        <j2seproject3:javac gensrcdir="${build.generated.sources.dir}"/>
-        <copy todir="${build.classes.dir}">
-            <fileset dir="${src.dir}" excludes="${build.classes.excludes},${excludes}" includes="${includes}"/>
-        </copy>
-    </target>
+   <target depends="init,deps-jar,-pre-pre-compile,-pre-compile,-copy-persistence-xml,-compile-depend" if="have.sources" name="-do-compile">
+    <javac srcdir="${src.dir}" 
+           destdir="${build.classes.dir}"
+           classpath="${javac.classpath}"
+           includes="${includes}" 
+           excludes="${build.classes.excludes},${excludes}" 
+           encoding="${source.encoding}" 
+           debug="${javac.debug}" 
+           source="${javac.source}" 
+           target="${javac.target}" 
+           includeantruntime="false"
+           fork="${javac.fork}">
+    </javac>
+
+    <copy todir="${build.classes.dir}">
+        <fileset dir="${src.dir}" 
+                 includes="${includes}" 
+                 excludes="${build.classes.excludes},${excludes}" />
+    </copy>
+</target>
+
     <target if="has.persistence.xml" name="-copy-persistence-xml">
         <mkdir dir="${build.classes.dir}/META-INF"/>
         <copy todir="${build.classes.dir}/META-INF">

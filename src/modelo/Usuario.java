@@ -4,20 +4,26 @@
  */
 package modelo;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+
 /**
  *
  * Clase Usuario: representa un usuario con sus atributos.
+ * 
  * @author Mario
  */
 public class Usuario {
-    private int id;                  // ID del usuario
-    private int telefono;            // Número de teléfono del usuario
-    private String nombre;           // Nombre del usuario
-    private String apellidos;        // Apellidos del usuario
-    private String email;            // Email del usuario
-    private String cuenta;           // Cuenta del usuario
-    private String contrasenia;      // Contraseña del usuario
-    private String tipo_de_usuario;  // Tipo de usuario
+    private int id; // ID del usuario
+    private int telefono; // Número de teléfono del usuario
+    private String nombre; // Nombre del usuario
+    private String apellidos; // Apellidos del usuario
+    private String email; // Email del usuario
+    private String cuenta; // Cuenta del usuario
+    private String contrasenia; // Contraseña del usuario
+    private String tipo_de_usuario; // Tipo de usuario
+    private Connection conexionBaseDatos; // Conexion a la base de datos
 
     /*
      * Constructor vacío de la clase Usuario.
@@ -28,16 +34,24 @@ public class Usuario {
     /*
      * Constructor de la clase Usuario.
      *
-     * @param id              ID del usuario
-     * @param telefono        Número de teléfono del usuario
-     * @param nombre          Nombre del usuario
-     * @param apellidos       Apellidos del usuario
-     * @param email           Email del usuario
-     * @param cuenta          Cuenta del usuario
-     * @param contrasenia     Contraseña del usuario
+     * @param id ID del usuario
+     * 
+     * @param telefono Número de teléfono del usuario
+     * 
+     * @param nombre Nombre del usuario
+     * 
+     * @param apellidos Apellidos del usuario
+     * 
+     * @param email Email del usuario
+     * 
+     * @param cuenta Cuenta del usuario
+     * 
+     * @param contrasenia Contraseña del usuario
+     * 
      * @param tipo_de_usuario Tipo de usuario
      */
-    public Usuario(int id, int telefono, String nombre, String apellidos, String email, String cuenta, String contrasenia, String tipo_de_usuario) {
+    public Usuario(int id, int telefono, String nombre, String apellidos, String email, String cuenta,
+            String contrasenia, String tipo_de_usuario) {
         this.id = id;
         this.telefono = telefono;
         this.nombre = nombre;
@@ -48,18 +62,44 @@ public class Usuario {
         this.tipo_de_usuario = tipo_de_usuario;
     }
 
+    public Usuario(int id, Connection conexionBD) {
+        setId(id);
+        this.conexionBaseDatos = conexionBD;
+    }
+
+    public Usuario(int id, String nombre, String apellidos, String email, int telefono, String cuenta,
+            String contrasenia, String tipo_de_usuario, Connection conexionBD) {
+        setId(id);
+        setNombre(nombre);
+        setApellidos(apellidos);
+        setEmail(email);
+        setTelefono(telefono);
+        setCuenta(cuenta);
+        setContrasenia(contrasenia);
+        setTipo_de_usuario(tipo_de_usuario);
+        this.conexionBaseDatos = conexionBD;
+    }
+
     /*
-     * Constructor de la clase Usuario que recibe ID, nombre, apellidos, teléfono, email, cuenta y contraseña.
+     * Constructor de la clase Usuario que recibe ID, nombre, apellidos, teléfono,
+     * email, cuenta y contraseña.
      *
-     * @param id          ID del usuario
-     * @param nombre      Nombre del usuario
-     * @param apellidos   Apellidos del usuario
-     * @param telefono    Número de teléfono del usuario
-     * @param email       Email del usuario
-     * @param cuenta      Cuenta del usuario
+     * @param id ID del usuario
+     * 
+     * @param nombre Nombre del usuario
+     * 
+     * @param apellidos Apellidos del usuario
+     * 
+     * @param telefono Número de teléfono del usuario
+     * 
+     * @param email Email del usuario
+     * 
+     * @param cuenta Cuenta del usuario
+     * 
      * @param contrasenia Contraseña del usuario
      */
-    public Usuario(int id, String nombre, String apellidos, int telefono, String email, String cuenta, String contrasenia) {
+    public Usuario(int id, String nombre, String apellidos, int telefono, String email, String cuenta,
+            String contrasenia) {
         this.id = id;
         this.nombre = nombre;
         this.apellidos = apellidos;
@@ -72,8 +112,10 @@ public class Usuario {
     /*
      * Constructor de la clase Usuario que recibe ID, nombre y apellidos.
      *
-     * @param id        ID del usuario
-     * @param nombre    Nombre del usuario
+     * @param id ID del usuario
+     * 
+     * @param nombre Nombre del usuario
+     * 
      * @param apellidos Apellidos del usuario
      */
     public Usuario(int id, String nombre, String apellidos) {
@@ -83,6 +125,31 @@ public class Usuario {
     }
 
     // Métodos de acceso y modificación de los atributos
+
+    protected boolean inicializarDesdeBD() {
+        boolean devo = false;
+        try {
+            String sql = "SELECT * FROM USUARIO";
+            PreparedStatement rs = conexionBaseDatos.prepareStatement(sql);
+            ResultSet resultSet = rs.executeQuery();
+            if (resultSet.next()) {
+                setId(resultSet.getInt("ID"));
+                setNombre(resultSet.getString("NOMBRE"));
+                setApellidos(resultSet.getString("APELLIDOS"));
+                setEmail(resultSet.getString("EMAIL"));
+                setTelefono(resultSet.getInt("TELEFONO"));
+                setCuenta(resultSet.getString("CUENTA"));
+                setContrasenia(resultSet.getString("CONTRASENIA"));
+                tipo_de_usuario=resultSet.getString("TIPO_DE_USUARIO");
+                devo = true;
+            } else {
+                System.out.println("No se encontró el usuario con ID: " + this.id);
+            }
+        } catch (Exception e) {
+            devo = false;
+        }
+        return devo;
+    }
 
     /*
      * Obtener el ID del usuario.
@@ -224,12 +291,27 @@ public class Usuario {
      *
      * @param tipo_de_usuario El tipo de usuario.
      */
-    public void setTipo_de_usuario(String tipo_de_usuario) {
-        this.tipo_de_usuario = tipo_de_usuario;
+    public boolean setTipo_de_usuario(String tipo_de_usuario) {
+        boolean devo = false;
+        try {
+            this.tipo_de_usuario = tipo_de_usuario;
+            if (tipo_de_usuario.equalsIgnoreCase("Cliente")) {
+                Cliente.obtenerClientePorId(this.id, conexionBaseDatos);
+            } else {
+                Personal.obtenerPersonalPorId(this.id, conexionBaseDatos);
+            }
+            devo = true;
+        } catch (Exception e) {
+            // TODO: handle exception
+            devo = false;
+        }
+
+        return devo;
     }
 
     /*
-     * Sobrescritura del método toString() para representar el objeto como una cadena de texto.
+     * Sobrescritura del método toString() para representar el objeto como una
+     * cadena de texto.
      *
      * @return La representación en cadena de texto del objeto Usuario.
      */
