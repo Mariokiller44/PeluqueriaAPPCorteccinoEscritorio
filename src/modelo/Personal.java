@@ -10,6 +10,7 @@ import java.sql.*;
  * Clase que representa al Personal
  * 
  * @author Mario
+ * @version 1.0.2
  */
 public class Personal extends Usuario {
     private double salario;
