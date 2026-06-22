@@ -44,10 +44,8 @@ public class Usuario {
 	 * @param conexionBD Conexion a la Base de Datos
 	 */
 
-	public Usuario(int id, Connection conexionBD) {
-		setId(id);
-		conexionBaseDatos = conexionBD;
-		inicializarUsuario(id,conexionBD);
+	public Usuario(int id, Connection conexion) {
+		inicializarUsuario(id,conexion);
 	}
 
 	/**
@@ -56,7 +54,7 @@ public class Usuario {
 	 * @param id
 	 * @return true si se consiguió, false en caso contrario.
 	 */
-	private boolean inicializarUsuario(int id,Connection conexionBD) {
+	public boolean inicializarUsuario(int id,Connection conexionBD) {
 		boolean flag = false;
 		Usuario devo;
 		try {
@@ -119,7 +117,7 @@ public class Usuario {
 	 * @param conexionBD
 	 * @return el usuario si existe, si no existe devuelve null.
 	 */
-	protected static Usuario buscarUsuarioPorId(int id, Connection conexionBD) {
+	public static Usuario buscarUsuarioPorId(int id, Connection conexionBD) {
 		// TODO Auto-generated method stub
 		Usuario usuario = new Usuario();
 		String sql = "SELECT * FROM Usuario WHERE ID = " + id;
@@ -130,16 +128,12 @@ public class Usuario {
 			resultadoConsulta = sentencia.executeQuery();
 
 			while (resultadoConsulta.next()) {
-				if (!resultadoConsulta.next()) {
-					throw new SQLException("No existen usuarios con id " + id);
-				} else {
 					usuario.setId(resultadoConsulta.getInt("id"));
 					usuario.setNombre(resultadoConsulta.getString("nombre"));
 					usuario.setApellidos(resultadoConsulta.getString("apellidos"));
 					usuario.setTelefono(resultadoConsulta.getString("telefono"));
 					usuario.setCuenta(resultadoConsulta.getString("cuenta"));
 					usuario.setContrasenia(resultadoConsulta.getString("contrasenia"));
-				}
 			}
 		} catch (SQLException sqle) {
 			// TODO: handle exception
