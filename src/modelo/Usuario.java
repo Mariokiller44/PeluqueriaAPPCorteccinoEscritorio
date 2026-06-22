@@ -11,13 +11,21 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.regex.Pattern;
 
 import com.mysql.cj.protocol.Resultset;
 
 /**
+ * Representa a cualquier usuario registrado en el sistema.
  *
- * Clase Usuario: representa un usuario con sus atributos.
- * 
+ * Esta clase contiene la información común compartida por clientes y personal
+ * de la peluquería.
+ *
+ * La información se almacena en la tabla {@code Usuario}.
+ *
+ * Las clases {@link Cliente} y {@link Personal} extienden esta clase añadiendo
+ * sus características específicas.
+ *
  * @author Mario
  * @version 1.0.3
  */
@@ -112,7 +120,14 @@ public class Usuario {
 
 	// <editor-fold defaultstate="collapsed" desc="Métodos de acceso y modificación
 	// de los atributos">
-
+	/**
+	 * Obtiene todos los empleados registrados en el sistema.
+	 *
+	 * @param conexionBD conexión activa contra la base de datos.
+	 *
+	 * @return lista de usuarios que son empleados. Si no existen registros,
+	 *         devuelve una lista vacía.
+	 */
 	protected static ArrayList<Usuario> buscarTodosPersonal(Connection conexionBD) {
 
 		ArrayList<Usuario> devo = new ArrayList<Usuario>();
@@ -138,6 +153,14 @@ public class Usuario {
 		return devo;
 	}
 
+	/**
+	 * Obtiene todos los clientes registrados en el sistema.
+	 *
+	 * @param conexionBD conexión activa contra la base de datos.
+	 *
+	 * @return lista de usuarios que son clientes. Si no existen registros, devuelve
+	 *         una lista vacía.
+	 */
 	protected static ArrayList<Usuario> buscarTodosClientes(Connection conexionBD) {
 
 		ArrayList<Usuario> devo = new ArrayList<Usuario>();
@@ -181,7 +204,7 @@ public class Usuario {
 			resultadoConsulta = sentencia.executeQuery();
 
 			while (resultadoConsulta.next()) {
-				usuario=mapearUsuario(resultadoConsulta);
+				usuario = mapearUsuario(resultadoConsulta);
 			}
 		} catch (SQLException sqle) {
 			// TODO: handle exception
@@ -248,6 +271,24 @@ public class Usuario {
 		return -1;
 	}
 
+	/**
+	 * Actualiza los datos generales de un usuario.
+	 *
+	 * Este método permite modificar toda la información editable asociada a un
+	 * usuario existente.
+	 *
+	 * @param id          identificador del usuario.
+	 * @param nombre      nuevo nombre.
+	 * @param apellidos   nuevos apellidos.
+	 * @param email       nuevo correo electrónico.
+	 * @param telefono    nuevo teléfono.
+	 * @param cuenta      nuevo nombre de cuenta.
+	 * @param contrasenia nueva contraseña.
+	 * @param conexionBD  conexión activa contra la base de datos.
+	 *
+	 * @return {@code true} si se actualizó correctamente; {@code false} en caso
+	 *         contrario.
+	 */
 	public static boolean actualizarUsuario(int id, String nombre, String apellidos, String email, String telefono,
 			String cuenta, String contrasenia, Connection conexionBD) {
 
@@ -429,19 +470,27 @@ public class Usuario {
 	}
 
 	// Metodos auxiliares
+	/**
+	 * Metodo que devuelve la inicializacion del usuario
+	 * 
+	 * @param Resultado de la consulta
+	 * @return Usuario si se mapea bien, en caso contrario devuelve nulo.
+	 * @throws SQLException si ocurre una excepcion a la hora del result set
+	 */
 	private static Usuario mapearUsuario(ResultSet rs) throws SQLException {
-	    Usuario usuario = new Usuario();
+		Usuario usuario = new Usuario();
 
-	    usuario.setId(rs.getInt("id"));
-	    usuario.setNombre(rs.getString("nombre"));
-	    usuario.setApellidos(rs.getString("apellidos"));
-	    usuario.setEmail(rs.getString("email"));
-	    usuario.setTelefono(rs.getString("telefono"));
-	    usuario.setCuenta(rs.getString("cuenta"));
-	    usuario.setContrasenia(rs.getString("contrasenia"));
+		usuario.setId(rs.getInt("id"));
+		usuario.setNombre(rs.getString("nombre"));
+		usuario.setApellidos(rs.getString("apellidos"));
+		usuario.setEmail(rs.getString("email"));
+		usuario.setTelefono(rs.getString("telefono"));
+		usuario.setCuenta(rs.getString("cuenta"));
+		usuario.setContrasenia(rs.getString("contrasenia"));
 
-	    return usuario;
+		return usuario;
 	}
+
 	private static String generarMD5(String texto) {
 		try {
 			MessageDigest md = MessageDigest.getInstance("MD5");
@@ -458,6 +507,15 @@ public class Usuario {
 		} catch (NoSuchAlgorithmException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public static boolean validarEmail(String email) {
+		if (email == null) {
+			return false;
+		}
+
+		String patron = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+		return Pattern.matches(patron, email);
 	}
 
 	/*

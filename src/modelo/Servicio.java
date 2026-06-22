@@ -1,283 +1,234 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package modelo;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
+ * Representa un servicio ofrecido por la peluquería.
  *
- * Clase Servicio: representa un servicio con sus atributos.
- * 
+ * Un servicio puede utilizar un producto asociado y dispone de un precio
+ * configurado.
+ *
+ * La información se almacena en la tabla {@code servicios}.
+ *
  * @author Mario
+ * @version 1.0.3
  */
 public class Servicio {
-    // Atributos
-    private int id; // ID del servicio
-    private String descripcion; // Descripción del servicio
-    private double precio; // Precio del servicio
-    private int idProducto; // ID del producto asociado al servicio
-    private Connection conexionBD; // Conexión a la base de datos
-    private Producto producto; // Producto asociado al servicio
 
-    // Constructor
-    public Servicio(int id, Connection conexion) {
-        setId(id);
-        conexionBD = conexion;
-    }
+	private int id;
+	private String descripcion;
+	private int productoId;
+	private double precio;
 
-    // Métodos getter y setter
-    public int getId() {
-        return id;
-    }
+	public Servicio() {
+	}
 
-    public boolean setId(int id) {
-        boolean exito = false;
-        try {
-            this.id = id;
-            exito = true;
-        } catch (Exception e) {
-            exito = false;
-        }
-        return exito;
-    }
+	public Servicio(int id, String descripcion, int productoId, double precio) {
+		this.id = id;
+		this.descripcion = descripcion;
+		this.productoId = productoId;
+		this.precio = precio;
+	}
 
-    public String getDescripcion() {
-        return descripcion;
-    }
+	public Servicio(int id, String descripcion) {
+		this.id = id;
+		this.descripcion = descripcion;
+	}
 
-    public boolean setDescripcion(String descripcion) {
-        boolean exito = false;
-        try {
-            this.descripcion = descripcion;
-            exito = true;
-        } catch (Exception e) {
-            exito = false;
-        }
-        return exito;
-    }
+	public int getId() {
+		return id;
+	}
 
-    public double getPrecio() {
-        double valor = 0.0;
-        try {
-            valor = this.precio;
-        } catch (Exception e) {
-            valor = 0.0;
-        }
-        return valor;
-    }
+	public void setId(int id) {
+		this.id = id;
+	}
 
-    public boolean setPrecio(double precio) {
-        boolean exito = false;
-        try {
-            this.precio = precio;
-            exito = true;
-        } catch (Exception e) {
-            exito = false;
-        }
-        return exito;
-    }
+	public String getDescripcion() {
+		return descripcion;
+	}
 
-    public int getIdProducto() {
-        int valor = 0;
-        try {
-            valor = this.idProducto;
-        } catch (Exception e) {
-            valor = 0;
-        }
-        return valor;
-    }
+	public void setDescripcion(String descripcion) {
+		this.descripcion = descripcion;
+	}
 
-    public boolean setIdProducto(int idProducto) {
-        boolean exito = false;
-        try {
-            this.idProducto = idProducto;
-            exito = true;
-        } catch (Exception e) {
-            exito = false;
-        }
-        return exito;
-    }
+	public int getProductoId() {
+		return productoId;
+	}
 
-    public Connection getConexionBD() {
-        Connection conn = null;
-        try {
-            conn = this.conexionBD;
-        } catch (Exception e) {
-            conn = null;
-        }
-        return conn;
-    }
+	public void setProductoId(int productoId) {
+		this.productoId = productoId;
+	}
 
-    public boolean setConexionBD(Connection conexionBD) {
-        boolean exito = false;
-        try {
-            this.conexionBD = conexionBD;
-            exito = true;
-        } catch (Exception e) {
-            exito = false;
-        }
-        return exito;
-    }
+	public double getPrecio() {
+		return precio;
+	}
 
-    public Producto getProducto() {
-        Producto prod = null;
-        try {
-            if (this.idProducto != 0) {
-                prod = Producto.buscarPorId(this.idProducto, this.conexionBD);
-            } else {
-                prod = this.producto;
-            }
-        } catch (Exception e) {
-            prod = null;
-        }
-        return prod;
-    }
+	public void setPrecio(double precio) {
+		this.precio = precio;
+	}
 
-    public boolean setProducto(Producto producto) {
-        boolean exito = false;
-        try {
-            this.producto = producto;
-            exito = true;
-        } catch (Exception e) {
-            exito = false;
-        }
-        return exito;
-    }
+	/**
+	 * Recupera un servicio a partir de su identificador.
+	 *
+	 * @param idServicio identificador del servicio.
+	 * @param conexionBD conexión activa contra la base de datos.
+	 *
+	 * @return el servicio encontrado o {@code null} si no existe.
+	 */
+	public static Servicio buscarServicioPorId(int idServicio, Connection conexionBD) {
+		String sql = """
+				SELECT id, descripcion, producto_id, precio
+				FROM servicios
+				WHERE id = ?
+				""";
 
-    // Inicializa los datos del servicio desde la base de datos usando el id
-    public boolean inicializarDesdeBD() {
-        boolean exito = false;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        try {
-            String sql = "SELECT * FROM servicio WHERE ID = ?";
-            stmt = conexionBD.prepareStatement(sql);
-            stmt.setInt(1, id);
-            rs = stmt.executeQuery();
-            // Si se encuentra el servicio, inicializa los atributos
-            if (rs.next()) {
-                setId(rs.getInt("ID"));
-                setDescripcion(rs.getString("DESCRIPCION"));
-                setPrecio(rs.getDouble("PRECIO"));
-                setIdProducto(rs.getInt("ID_PRODUCTO"));
-                getProducto();
-            }
-            exito = true;
-        } catch (Exception e) {
-            exito = false;
-        } finally {
-            try {
-                if (rs != null)
-                    rs.close();
-            } catch (SQLException e) {
-            }
-            try {
-                if (stmt != null)
-                    stmt.close();
-            } catch (SQLException e) {
-            }
-        }
-        // Retorna true si se inicializó correctamente, false en caso contrario
-        return exito;
-    }
+		try (PreparedStatement ps = conexionBD.prepareStatement(sql)) {
+			ps.setInt(1, idServicio);
 
-    // Obtener un servicio por ID
-    public static Servicio obtenerServicioPorId(int idServicio, Connection conexionBD) {
-        Servicio servicio = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        try {
-            servicio = new Servicio(idServicio, conexionBD);
-            if (servicio.inicializarDesdeBD()) {
-                return servicio;
-            }
-        } catch (Exception e) {
-            System.err.println("Error al obtener el servicio: " + e.getMessage());
-        } finally {
-            try {
-                if (rs != null)
-                    rs.close();
-            } catch (SQLException e) {
-            }
-            try {
-                if (stmt != null)
-                    stmt.close();
-            } catch (SQLException e) {
-            }
-        }
-        return servicio;
-    }
+			try (ResultSet rs = ps.executeQuery()) {
+				if (!rs.next()) {
+					return null;
+				}
 
-    public static ArrayList<Servicio> buscarPorDescripcionYPrecioYProducto(
-            boolean usarDescripcion, String filtroDescripcion,
-            boolean usarPrecio, double precio,
-            boolean usarIdProducto, int idProducto,
-            Connection conexion) {
-        ArrayList<Servicio> servicios = new ArrayList<>();
+				return mapearServicio(rs);
+			}
 
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        try {
-            StringBuilder sql = new StringBuilder(
-                    "SELECT ID, DESCRIPCION, PRECIO, ID_PRODUCTO FROM servicio WHERE 1=1");
+		} catch (SQLException e) {
+			System.err.println("Error al buscar servicio por ID: " + e.getMessage());
+			return null;
+		}
+	}
 
-            if (usarDescripcion && filtroDescripcion != null && !filtroDescripcion.isEmpty()) {
-                sql.append(" AND DESCRIPCION LIKE ?");
-            }
-            if (usarPrecio) {
-                sql.append(" AND PRECIO = ?");
-            }
-            if (usarIdProducto) {
-                sql.append(" AND ID_PRODUCTO = ?");
-            }
+	/**
+	 * Obtiene todos los servicios disponibles.
+	 *
+	 * Los resultados se devuelven ordenados por descripción.
+	 *
+	 * @param conexionBD conexión activa contra la base de datos.
+	 *
+	 * @return lista de servicios registrados.
+	 */
+	public static List<Servicio> buscarTodosServicios(Connection conexionBD) {
+		List<Servicio> servicios = new ArrayList<>();
 
-            stmt = conexion.prepareStatement(sql.toString());
-            int paramIndex = 1;
-            if (usarDescripcion && filtroDescripcion != null && !filtroDescripcion.isEmpty()) {
-                stmt.setString(paramIndex++, "%" + filtroDescripcion + "%");
-            }
-            if (usarPrecio) {
-                stmt.setDouble(paramIndex++, precio);
-            }
-            if (usarIdProducto) {
-                stmt.setInt(paramIndex++, idProducto);
-            }
+		String sql = """
+				SELECT id, descripcion, producto_id, precio
+				FROM servicios
+				ORDER BY descripcion
+				""";
 
-            rs = stmt.executeQuery();
-            while (rs.next()) {
-                Servicio s = new Servicio(rs.getInt("ID"), conexion);
-                s.setDescripcion(rs.getString("DESCRIPCION"));
-                s.setPrecio(rs.getDouble("PRECIO"));
-                s.setIdProducto(rs.getInt("ID_PRODUCTO"));
-                servicios.add(s);
-            }
-        } catch (Exception e) {
-            servicios = null;
-        } finally {
-            try {
-                if (rs != null)
-                    rs.close();
-            } catch (SQLException e) {
-            }
-            try {
-                if (stmt != null)
-                    stmt.close();
-            } catch (SQLException e) {
-            }
-        }
-        return servicios;
-    }
+		try (PreparedStatement ps = conexionBD.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
-    // toString
-    @Override
-    public String toString() {
-        return "Servicio:" + descripcion;
-    }
+			while (rs.next()) {
+				servicios.add(mapearServicio(rs));
+			}
 
+		} catch (SQLException e) {
+			System.err.println("Error al buscar servicios: " + e.getMessage());
+		}
+
+		return servicios;
+	}
+
+	/**
+	 * Busca el identificador de un servicio utilizando su descripción y precio.
+	 *
+	 * @param descripcion descripción del servicio.
+	 * @param precio      precio del servicio.
+	 * @param conexionBD  conexión activa contra la base de datos.
+	 *
+	 * @return identificador del servicio o {@code -1} si no existe coincidencia.
+	 */
+	public static int buscarIdServicio(String descripcion, double precio, Connection conexionBD) {
+		String sql = """
+				SELECT id
+				FROM servicios
+				WHERE descripcion = ?
+				  AND precio = ?
+				""";
+
+		try (PreparedStatement ps = conexionBD.prepareStatement(sql)) {
+			ps.setString(1, descripcion);
+			ps.setDouble(2, precio);
+
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					return rs.getInt("id");
+				}
+			}
+
+		} catch (SQLException e) {
+			System.err.println("Error al buscar ID de servicio: " + e.getMessage());
+		}
+
+		return -1;
+	}
+
+	/**
+	 * Actualiza la información de un servicio existente.
+	 *
+	 * Permite modificar la descripción, el producto asociado y el precio del
+	 * servicio.
+	 *
+	 * @param idServicio  identificador del servicio.
+	 * @param descripcion nueva descripción.
+	 * @param productoId  identificador del producto asociado.
+	 * @param precio      nuevo precio.
+	 * @param conexionBD  conexión activa contra la base de datos.
+	 *
+	 * @return {@code true} si la actualización se realizó correctamente;
+	 *         {@code false} en caso contrario.
+	 */
+	public static boolean actualizarServicio(int idServicio, String descripcion, int productoId, double precio,
+			Connection conexionBD) {
+
+		String sql = """
+				UPDATE servicios
+				SET descripcion = ?,
+				    producto_id = ?,
+				    precio = ?
+				WHERE id = ?
+				""";
+
+		try (PreparedStatement ps = conexionBD.prepareStatement(sql)) {
+			ps.setString(1, descripcion);
+			ps.setInt(2, productoId);
+			ps.setDouble(3, precio);
+			ps.setInt(4, idServicio);
+
+			return ps.executeUpdate() > 0;
+
+		} catch (SQLException e) {
+			System.err.println("Error al actualizar servicio: " + e.getMessage());
+			return false;
+		}
+	}
+
+	/**
+	 * Convierte la fila actual del ResultSet en un objeto Servicio.
+	 *
+	 * @param rs resultado posicionado sobre una fila válida.
+	 *
+	 * @return instancia de Servicio completamente inicializada.
+	 *
+	 * @throws SQLException si ocurre un error durante la lectura de los datos.
+	 */
+	private static Servicio mapearServicio(ResultSet rs) throws SQLException {
+		Servicio servicio = new Servicio();
+
+		servicio.setId(rs.getInt("id"));
+		servicio.setDescripcion(rs.getString("descripcion"));
+		servicio.setProductoId(rs.getInt("producto_id"));
+		servicio.setPrecio(rs.getDouble("precio"));
+
+		return servicio;
+	}
+
+	@Override
+	public String toString() {
+		return "Servicio [id=" + id + ", descripcion=" + descripcion + ", productoId=" + productoId + ", precio="
+				+ precio + "]";
+	}
 }

@@ -1,310 +1,275 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package modelo;
 
 import java.sql.*;
-import java.util.*;
-
-import controlador.ConexionBD;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
+ * Representa una franja horaria asignada a un empleado para la realización de
+ * un servicio determinado.
  *
- * Clase Horario: representa un horario con sus atributos.
- * 
+ * Un horario puede estar disponible o reservado mediante una cita.
+ *
+ * La información se almacena en la tabla {@code horario}.
+ *
  * @author Mario
+ * @version 1.0.3
  */
 public class Horario {
-    // Atributos
-    private int id, idPersonal, idServicio; // ID del horario
-    private String fecha; // Fecha del horario
-    private String hora; // Hora del horario
-    private Personal personal; // Empleado asignado al horario
-    private Servicio servicio; // Servicio asociado al horario
-    private String descripcion; // Descripción del horario
-    private String precio; // Precio del horario
-    private String empleado;
-    private Connection conexionBD; // Empleado asignado al horario
 
-    // Constructores
-    public Horario(int id, String fecha, String hora, String descripcion, String precio, String empleado) {
-        this.id = id;
-        this.fecha = fecha;
-        this.hora = hora;
-        this.descripcion = descripcion;
-        this.precio = precio;
-        this.empleado = empleado;
-    }
+	private int id;
+	private LocalDateTime fechaHora;
+	private int usuarioId;
+	private int servicioId;
+	private int duracionMinutos;
+	private boolean disponible;
 
-    public Horario(int id, String fecha, String hora, Personal personal, Servicio servicio, Connection connect) {
-        setId(id);
-        setFecha(fecha);
-        setHora(hora);
-        setPersonal(personal);
-        setServicio(servicio);
-        this.conexionBD = connect;
-    }
+	public Horario() {
+	}
 
-    public Horario(int id, Connection connect) {
-        setId(id);
-        this.conexionBD = connect;
-    }
+	public Horario(int id, LocalDateTime fechaHora, int usuarioId, int servicioId, int duracionMinutos,
+			boolean disponible) {
+		this.id = id;
+		this.fechaHora = fechaHora;
+		this.usuarioId = usuarioId;
+		this.servicioId = servicioId;
+		this.duracionMinutos = duracionMinutos;
+		this.disponible = disponible;
+	}
 
-    public Horario(int id, String fecha, String hora, String descripcion) {
-        this.id = id;
-        this.fecha = fecha;
-        this.hora = hora;
-        this.descripcion = descripcion;
-    }
+	public int getId() {
+		return id;
+	}
 
-    public Horario(int id, String empleado) {
-        this.id = id;
-        this.empleado = empleado;
-    }
+	public void setId(int id) {
+		this.id = id;
+	}
 
-    // Métodos de acceso (getters)
-    public int getId() {
-        return id;
-    }
+	public LocalDateTime getFechaHora() {
+		return fechaHora;
+	}
 
-    public String getFecha() {
-        return fecha;
-    }
+	public void setFechaHora(LocalDateTime fechaHora) {
+		this.fechaHora = fechaHora;
+	}
 
-    public String getHora() {
-        return hora;
-    }
+	public int getUsuarioId() {
+		return usuarioId;
+	}
 
-    public String getDescripcion() {
-        return descripcion;
-    }
+	public void setUsuarioId(int usuarioId) {
+		this.usuarioId = usuarioId;
+	}
 
-    public String getPrecio() {
-        return precio;
-    }
+	public int getServicioId() {
+		return servicioId;
+	}
 
-    public String getEmpleado() {
-        return empleado;
-    }
+	public void setServicioId(int servicioId) {
+		this.servicioId = servicioId;
+	}
 
-    public Personal getPersonal() {
-        if (idPersonal != 0) {
-            this.personal = Personal.obtenerPersonalPorId(idPersonal, conexionBD);
-        }
-        return this.personal;
-    }
+	public int getDuracionMinutos() {
+		return duracionMinutos;
+	}
 
-    public Servicio getServicio() {
-        if (idServicio != 0) {
-            this.servicio = Servicio.obtenerServicioPorId(idServicio, conexionBD);
-        }
-        return this.servicio;
-    }
+	public void setDuracionMinutos(int duracionMinutos) {
+		this.duracionMinutos = duracionMinutos;
+	}
 
-    public Connection getConexionBD() {
-        return ConexionBD.conectarSinLogin();
-    }
+	public boolean isDisponible() {
+		return disponible;
+	}
 
-    // Métodos de modificación (setters)
-    public void setId(int id) {
-        this.id = id;
-    }
+	public void setDisponible(boolean disponible) {
+		this.disponible = disponible;
+	}
 
-    public void setFecha(String fecha) {
-        this.fecha = fecha;
-    }
+	/**
+	 * Recupera un horario concreto a partir de su identificador.
+	 *
+	 * @param idHorario  identificador único del horario.
+	 * @param conexionBD conexión activa contra la base de datos.
+	 *
+	 * @return el horario encontrado o {@code null} si no existe.
+	 */
+	public static Horario buscarHorarioPorId(int idHorario, Connection conexionBD) {
+		String sql = """
+				SELECT id, fecha_hora, usuario_id, servicio_id, duracion_minutos, disponible
+				FROM horario
+				WHERE id = ?
+				""";
 
-    public void setHora(String hora) {
-        this.hora = hora;
-    }
+		try (PreparedStatement ps = conexionBD.prepareStatement(sql)) {
+			ps.setInt(1, idHorario);
 
-    public boolean setPersonal(Personal personal) {
-        boolean devo = false;
-        try {
-            this.personal = personal;
-            devo = true;
-        } catch (Exception e) {
-            devo = false;
-        }
-        return devo;
-    }
+			try (ResultSet rs = ps.executeQuery()) {
+				if (!rs.next())
+					return null;
+				return mapearHorario(rs);
+			}
 
-    public boolean setServicio(Servicio servicio) {
-        boolean devo = false;
-        try {
-            if (idServicio != 0) {
-                Servicio.obtenerServicioPorId(idPersonal, conexionBD);
-            } else {
-                this.servicio = servicio;
-            }
-            devo = true;
-        } catch (Exception e) {
-            devo = false;
-        }
-        return devo;
-    }
+		} catch (SQLException e) {
+			System.err.println("Error al buscar horario por ID: " + e.getMessage());
+			return null;
+		}
+	}
 
-    // Métodos de utilidad
-    private boolean inicializarDesdeBD() {
-        boolean devo = false;
-        String sql;
-        ResultSet rs;
-        PreparedStatement ps;
-        try {
-            sql = "SELECT * FROM horario WHERE id = ?";
-            ps = conexionBD.prepareStatement(sql);
-            ps.setInt(1, id);
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                this.fecha = rs.getString("fecha");
-                this.hora = rs.getString("hora");
-                this.idPersonal = rs.getInt("ID_PERSONAL");
-                this.idServicio = rs.getInt("ID_SERVICIO");
-                getPersonal();
-                getServicio();
-                devo = true;
-            } else {
-                System.out.println("No se encontró el horario con ID: " + this.id);
-                devo = true;
-            }
-        } catch (Exception e) {
-            devo=false;
-        }
-        return devo;
-    }
+	/**
+	 * Obtiene todos los horarios que actualmente pueden ser reservados.
+	 *
+	 * Un horario disponible es aquel cuyo campo {@code disponible} tiene valor
+	 * verdadero en la base de datos.
+	 *
+	 * @param conexionBD conexión activa contra la base de datos.
+	 *
+	 * @return lista de horarios disponibles. Si no existen resultados, devuelve una
+	 *         lista vacía.
+	 */
+	public static List<Horario> buscarHorariosDisponibles(Connection conexionBD) {
+		List<Horario> horarios = new ArrayList<>();
 
-    // Métodos CRUD
-    public boolean crearHorario() {
-        boolean exito = false;
-        try {
-            String sql = "INSERT INTO horario (fecha, hora, ID_PERSONAL, ID_SERVICIO) VALUES (?, ?, ?, ?)";
-            PreparedStatement ps = conexionBD.prepareStatement(sql);
-            ps.setString(1, fecha);
-            ps.setString(2, hora);
-            ps.setInt(3, idPersonal);
-            ps.setInt(4, idServicio);
-            int rows = ps.executeUpdate();
-            exito = rows > 0;
-        } catch (Exception e) {
-            exito = false;
-        }
-        return exito;
-    }
+		String sql = """
+				SELECT id, fecha_hora, usuario_id, servicio_id, duracion_minutos, disponible
+				FROM horario
+				WHERE disponible = 1
+				ORDER BY fecha_hora
+				""";
 
-    public boolean leerHorario() {
-        boolean exito = false;
-        try {
-            String sql = "SELECT * FROM horario WHERE id = ?";
-            PreparedStatement ps = conexionBD.prepareStatement(sql);
-            ps.setInt(1, id);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                this.id = rs.getInt("id");
-                this.fecha = rs.getString("fecha");
-                this.hora = rs.getString("hora");
-                this.idPersonal = rs.getInt("ID_PERSONAL");
-                this.idServicio = rs.getInt("ID_SERVICIO");
-                exito = true;
-            }
-        } catch (Exception e) {
-            exito = false;
-        }
-        return exito;
-    }
+		try (PreparedStatement ps = conexionBD.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
-    public boolean actualizarHorario() {
-        boolean exito = false;
-        try {
-            String sql = "UPDATE horario SET fecha=?, hora=?, ID_PERSONAL=?, ID_SERVICIO=? WHERE id=?";
-            PreparedStatement ps = conexionBD.prepareStatement(sql);
-            ps.setString(1, fecha);
-            ps.setString(2, hora);
-            ps.setInt(3, idPersonal);
-            ps.setInt(4, idServicio);
-            ps.setInt(5, id);
-            int rows = ps.executeUpdate();
-            exito = rows > 0;
-        } catch (Exception e) {
-            exito = false;
-        }
-        return exito;
-    }
+			while (rs.next()) {
+				horarios.add(mapearHorario(rs));
+			}
 
-    public boolean eliminarHorario() {
-        boolean exito = false;
-        try {
-            String sql = "DELETE FROM horario WHERE id = ?";
-            PreparedStatement ps = conexionBD.prepareStatement(sql);
-            ps.setInt(1, id);
-            int rows = ps.executeUpdate();
-            exito = rows > 0;
-        } catch (Exception e) {
-            exito = false;
-        }
-        return exito;
-    }
+		} catch (SQLException e) {
+			System.err.println("Error al buscar horarios disponibles: " + e.getMessage());
+		}
 
-    // Buscar un Horario por su id
-    public static Horario buscarPorId(int id, Connection conn) {
-        try {
-            String sql = "SELECT * FROM horario WHERE id = ?";
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setInt(1, id);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                Horario h = new Horario(rs.getInt("id"), conn);
-                return h;
-            }
-        } catch (Exception e) {
-            // Manejo de error
-        }
-        return null;
-    }
+		return horarios;
+	}
 
-    // Buscar Horarios filtrando por atributos
-    public static ArrayList<Horario> buscarFiltrado(
-            boolean filtrarFecha, String fecha,
-            boolean filtrarHora, String hora,
-            boolean filtrarIdPersonal, int idPersonal,
-            boolean filtrarIdServicio, int idServicio, Connection conn) {
-        ArrayList<Horario> lista = new ArrayList<>();
-        StringBuilder sql = new StringBuilder("SELECT * FROM horario WHERE 1=1");
-        if (filtrarFecha)
-            sql.append(" AND fecha = ?");
-        if (filtrarHora)
-            sql.append(" AND hora = ?");
-        if (filtrarIdPersonal)
-            sql.append(" AND ID_PERSONAL = ?");
-        if (filtrarIdServicio)
-            sql.append(" AND ID_SERVICIO = ?");
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql.toString());
-            int idx = 1;
-            if (filtrarFecha)
-                ps.setString(idx++, fecha);
-            if (filtrarHora)
-                ps.setString(idx++, hora);
-            if (filtrarIdPersonal)
-                ps.setInt(idx++, idPersonal);
-            if (filtrarIdServicio)
-                ps.setInt(idx++, idServicio);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                Horario h = new Horario(rs.getInt("id"), conn);
-                h.inicializarDesdeBD();
-                lista.add(h);
-            }
-        } catch (Exception e) {
-            // Manejo de error
-            lista = null;
-        }
-        return lista;
-    }
+	/**
+	 * Obtiene todos los horarios asociados a un empleado concreto.
+	 *
+	 * Los resultados se devuelven ordenados cronológicamente.
+	 *
+	 * @param usuarioId  identificador del empleado.
+	 * @param conexionBD conexión activa contra la base de datos.
+	 *
+	 * @return lista de horarios pertenecientes al empleado.
+	 */
+	public static ArrayList<Horario> buscarHorariosPorPersonal(int usuarioId, Connection conexionBD) {
+		ArrayList<Horario> horarios = new ArrayList<>();
 
-    @Override
-    public String toString() {
-        return "fecha: " + fecha + ", hora: " + hora + ", descripcion: " + descripcion + ", precio: " + precio
-                + ", empleado: " + empleado;
-    }
+		String sql = """
+				SELECT id, fecha_hora, usuario_id, servicio_id, duracion_minutos, disponible
+				FROM horario
+				WHERE usuario_id = ?
+				ORDER BY fecha_hora
+				""";
+
+		try (PreparedStatement ps = conexionBD.prepareStatement(sql)) {
+			ps.setInt(1, usuarioId);
+
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					horarios.add(mapearHorario(rs));
+				}
+			}
+
+		} catch (SQLException e) {
+			System.err.println("Error al buscar horarios por personal: " + e.getMessage());
+		}
+
+		return horarios;
+	}
+
+	/**
+	 * Actualiza completamente la información de un horario existente.
+	 *
+	 * Este método sobrescribe todos los atributos editables del horario.
+	 *
+	 * @param idHorario       identificador del horario a modificar.
+	 * @param fechaHora       nueva fecha y hora.
+	 * @param usuarioId       nuevo empleado asignado.
+	 * @param servicioId      nuevo servicio asignado.
+	 * @param duracionMinutos duración del servicio en minutos.
+	 * @param disponible      estado de disponibilidad.
+	 * @param conexionBD      conexión activa contra la base de datos.
+	 *
+	 * @return {@code true} si se modificó al menos un registro; {@code false} en
+	 *         caso contrario.
+	 */
+	public static boolean actualizarHorario(int idHorario, LocalDateTime fechaHora, int usuarioId, int servicioId,
+			int duracionMinutos, boolean disponible, Connection conexionBD) {
+
+		String sql = """
+				UPDATE horario
+				SET fecha_hora = ?,
+				    usuario_id = ?,
+				    servicio_id = ?,
+				    duracion_minutos = ?,
+				    disponible = ?
+				WHERE id = ?
+				""";
+
+		try (PreparedStatement ps = conexionBD.prepareStatement(sql)) {
+			ps.setTimestamp(1, Timestamp.valueOf(fechaHora));
+			ps.setInt(2, usuarioId);
+			ps.setInt(3, servicioId);
+			ps.setInt(4, duracionMinutos);
+			ps.setBoolean(5, disponible);
+			ps.setInt(6, idHorario);
+
+			return ps.executeUpdate() > 0;
+
+		} catch (SQLException e) {
+			System.err.println("Error al actualizar horario: " + e.getMessage());
+			return false;
+		}
+	}
+
+	/**
+	 * Modifica únicamente el estado de disponibilidad de un horario.
+	 *
+	 * Es especialmente útil durante los procesos de reserva y cancelación de citas.
+	 *
+	 * @param idHorario  identificador del horario.
+	 * @param disponible nuevo estado.
+	 * @param conexionBD conexión activa contra la base de datos.
+	 *
+	 * @return {@code true} si la actualización tuvo éxito; {@code false} en caso
+	 *         contrario.
+	 */
+	public static boolean marcarDisponibilidad(int idHorario, boolean disponible, Connection conexionBD) {
+		String sql = """
+				UPDATE horario
+				SET disponible = ?
+				WHERE id = ?
+				""";
+
+		try (PreparedStatement ps = conexionBD.prepareStatement(sql)) {
+			ps.setBoolean(1, disponible);
+			ps.setInt(2, idHorario);
+
+			return ps.executeUpdate() > 0;
+
+		} catch (SQLException e) {
+			System.err.println("Error al modificar disponibilidad: " + e.getMessage());
+			return false;
+		}
+	}
+
+	private static Horario mapearHorario(ResultSet rs) throws SQLException {
+		return new Horario(rs.getInt("id"), rs.getTimestamp("fecha_hora").toLocalDateTime(), rs.getInt("usuario_id"),
+				rs.getInt("servicio_id"), rs.getInt("duracion_minutos"), rs.getBoolean("disponible"));
+	}
+
+	@Override
+	public String toString() {
+		return "Horario [id=" + id + ", fechaHora=" + fechaHora + ", usuarioId=" + usuarioId + ", servicioId="
+				+ servicioId + ", duracionMinutos=" + duracionMinutos + ", disponible=" + disponible + "]";
+	}
 }
