@@ -8,76 +8,81 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 /**
- *  Clase que representa a un Cliente
+ * Clase que representa a un Cliente
+ * 
  * @author Mario
  */
-public class Cliente extends Usuario{
-    private String descripcion;
+public class Cliente extends Usuario {
+	private String categoria;
 
-    public Cliente() {
-    }
+	public Cliente() {
+	}
 
-    public Cliente(String descripcion, int id, int telefono, String nombre, String apellidos, String email, String cuenta, String contrasenia, String tipo_de_usuario) {
-        super(id, telefono, nombre, apellidos, email, cuenta, contrasenia, tipo_de_usuario);
-        this.descripcion = descripcion;
-    }
+	public String getCategoria() {
+		return categoria;
+	}
 
-    public String getDescripcion() {
-        return descripcion;
-    }
+	public void setCategoria(String categoria) {
+		this.categoria = categoria;
+	}
 
-    public void setDescripcion(String descripcion) {
-        this.descripcion = descripcion;
-    }
+	@Override
+	public String toString() {
+		return super.toString() + ", categoría del cliente: " + categoria;
+	}
 
-    @Override
-    public String toString() {
-        return super.toString()+", descripcion: "+descripcion;
-    }
-    
-    /*
-     * Método para obtener un cliente por su ID.
-     *
-     * @param idCliente ID del cliente a buscar
-     * @param conexionBD Conexión a la base de datos
-     * @return Cliente encontrado o null si no se encuentra
-     */
-    public static Cliente obtenerClientePorId(int idCliente, Connection conexionBD) {
-        Cliente cliente = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        try {
-            String query = "SELECT ID, DESCRIPCION FROM cliente WHERE ID = ?";
-            stmt = conexionBD.prepareStatement(query);
-            stmt.setInt(1, idCliente);
-            rs = stmt.executeQuery();
-            if (rs.next()) {
-                cliente = new Cliente();
-                cliente.setId(rs.getInt("ID"));
-                cliente.setDescripcion(rs.getString("DESCRIPCION"));
-                // Si necesitas inicializar más campos heredados, hazlo aquí
-            }
-        } catch (Exception e) {
-            cliente = null;
-            System.err.println("Error al obtener el cliente: " + e.getMessage());
-        } finally {
-            try {
-                if (rs != null)
-                    rs.close();
-            } catch (SQLException e) {
-            }
-            try {
-                if (stmt != null)
-                    stmt.close();
-            } catch (SQLException e) {
-            }
-        }
-        return cliente;
-    }
+	/*
+	 * Método estático para obtener un cliente por su ID.
+	 *
+	 * @param idCliente ID del cliente a buscar
+	 * 
+	 * @param conexionBD Conexión a la base de datos
+	 * 
+	 * @return Cliente encontrado o null si no se encuentra
+	 */
+	public static Cliente obtenerClientePorId(int idCliente, Connection conexionBD) {
+	    Usuario usuario = Usuario.buscarUsuarioPorId(idCliente, conexionBD);
 
-    
-    
-    
+	    if (usuario == null) {
+	        return null;
+	    }
+
+	    String sql = """
+	        SELECT categoria_cliente
+	        FROM Perfiles_Usuario
+	        WHERE usuario_id = ?
+	          AND tipo = 'CLIENTE'
+	        """;
+
+	    try (PreparedStatement ps = conexionBD.prepareStatement(sql)) {
+	        ps.setInt(1, idCliente);
+
+	        try (ResultSet rs = ps.executeQuery()) {
+	            if (!rs.next()) {
+	                return null;
+	            }
+
+	            Cliente cliente = new Cliente();
+
+	            cliente.setId(usuario.getId());
+	            cliente.setNombre(usuario.getNombre());
+	            cliente.setApellidos(usuario.getApellidos());
+	            cliente.setEmail(usuario.getEmail());
+	            cliente.setTelefono(usuario.getTelefono());
+	            cliente.setCuenta(usuario.getCuenta());
+	            cliente.setContrasenia(usuario.getContrasenia());
+
+	            cliente.setCategoria(rs.getString("categoria_cliente"));
+
+	            return cliente;
+	        }
+
+	    } catch (SQLException e) {
+	        System.err.println("Error al obtener cliente por ID: " + e.getMessage());
+	        return null;
+	    }
+	}
 }

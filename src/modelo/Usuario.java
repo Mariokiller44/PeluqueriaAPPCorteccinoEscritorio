@@ -4,6 +4,8 @@
  */
 package modelo;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -45,7 +47,7 @@ public class Usuario {
 	 */
 
 	public Usuario(int id, Connection conexion) {
-		inicializarUsuario(id,conexion);
+		inicializarUsuario(id, conexion);
 	}
 
 	/**
@@ -54,7 +56,7 @@ public class Usuario {
 	 * @param id
 	 * @return true si se consiguió, false en caso contrario.
 	 */
-	public boolean inicializarUsuario(int id,Connection conexionBD) {
+	public boolean inicializarUsuario(int id, Connection conexionBD) {
 		boolean flag = false;
 		Usuario devo;
 		try {
@@ -108,7 +110,58 @@ public class Usuario {
 		this.apellidos = apellidos;
 	}
 
-	// Métodos de acceso y modificación de los atributos
+	// <editor-fold defaultstate="collapsed" desc="Métodos de acceso y modificación
+	// de los atributos">
+
+	protected static ArrayList<Usuario> buscarTodosPersonal(Connection conexionBD) {
+
+		ArrayList<Usuario> devo = new ArrayList<Usuario>();
+		String sql = "SELECT usuario_id FROM Perfiles_Usuario WHERE tipo LIKE 'Personal'";
+		PreparedStatement sentencia;
+		ResultSet resultadoConsulta;
+		try {
+			sentencia = conexionBD.prepareStatement(sql);
+			resultadoConsulta = sentencia.executeQuery();
+			while (resultadoConsulta.next()) {
+				Usuario personal = Usuario.buscarUsuarioPorId(resultadoConsulta.getInt("usuario_id"), conexionBD);
+				devo.add(personal);
+			}
+		} catch (SQLException sqle) {
+			// TODO: handle exception
+			System.out.println("Error al buscar la lista de empleados. " + sqle.getMessage());
+		} catch (Exception e) {
+			// TODO: handle exception
+			System.out.println("Error general del metodo. " + e.getMessage());
+
+		}
+
+		return devo;
+	}
+
+	protected static ArrayList<Usuario> buscarTodosClientes(Connection conexionBD) {
+
+		ArrayList<Usuario> devo = new ArrayList<Usuario>();
+		String sql = "SELECT usuario_id FROM Perfiles_Usuario WHERE tipo LIKE 'Cliente'";
+		PreparedStatement sentencia;
+		ResultSet resultadoConsulta;
+		try {
+			sentencia = conexionBD.prepareStatement(sql);
+			resultadoConsulta = sentencia.executeQuery();
+			while (resultadoConsulta.next()) {
+				Usuario cliente = Usuario.buscarUsuarioPorId(resultadoConsulta.getInt("usuario_id"), conexionBD);
+				devo.add(cliente);
+			}
+		} catch (SQLException sqle) {
+			// TODO: handle exception
+			System.out.println("Error al buscar la lista de empleados. " + sqle.getMessage());
+		} catch (Exception e) {
+			// TODO: handle exception
+			System.out.println("Error general del metodo. " + e.getMessage());
+
+		}
+
+		return devo;
+	}
 
 	/**
 	 * Método estático para buscar el usuario por su ID
@@ -128,12 +181,7 @@ public class Usuario {
 			resultadoConsulta = sentencia.executeQuery();
 
 			while (resultadoConsulta.next()) {
-					usuario.setId(resultadoConsulta.getInt("id"));
-					usuario.setNombre(resultadoConsulta.getString("nombre"));
-					usuario.setApellidos(resultadoConsulta.getString("apellidos"));
-					usuario.setTelefono(resultadoConsulta.getString("telefono"));
-					usuario.setCuenta(resultadoConsulta.getString("cuenta"));
-					usuario.setContrasenia(resultadoConsulta.getString("contrasenia"));
+				usuario=mapearUsuario(resultadoConsulta);
 			}
 		} catch (SQLException sqle) {
 			// TODO: handle exception
@@ -146,13 +194,13 @@ public class Usuario {
 	}
 
 	/**
-	 * Metodo para buscar el usuario a traves de su cuenta
+	 * Método estático para buscar el usuario a traves de su cuenta.
 	 * 
 	 * @param cuenta
 	 * @param conexionBD
 	 * @throws SQLException
 	 */
-	protected static Usuario buscarIdPorCuenta(String cuenta, Connection conexionBD) {
+	public static Usuario buscarIdPorCuenta(String cuenta, Connection conexionBD) {
 
 		String sql = "SELECT id FROM Usuario WHERE cuenta = ?";
 		Usuario devo = null;
@@ -174,6 +222,77 @@ public class Usuario {
 		}
 		return devo;
 	}
+
+	public static int buscarIdPorNombreApellidos(String nombre, String apellidos, Connection conexionBD) {
+		String sql = """
+				SELECT id
+				FROM Usuario
+				WHERE nombre = ?
+				  AND apellidos = ?
+				""";
+
+		try (PreparedStatement ps = conexionBD.prepareStatement(sql)) {
+			ps.setString(1, nombre);
+			ps.setString(2, apellidos);
+
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					return rs.getInt("id");
+				}
+			}
+
+		} catch (SQLException e) {
+			System.err.println("Error al buscar ID por nombre y apellidos: " + e.getMessage());
+		}
+
+		return -1;
+	}
+
+	public static boolean actualizarUsuario(int id, String nombre, String apellidos, String email, String telefono,
+			String cuenta, String contrasenia, Connection conexionBD) {
+
+		String sql = """
+				UPDATE Usuario
+				SET nombre = ?,
+				    apellidos = ?,
+				    email = ?,
+				    telefono = ?,
+				    cuenta = ?,
+				    contrasenia = ?
+				WHERE id = ?
+				""";
+
+		try (PreparedStatement ps = conexionBD.prepareStatement(sql)) {
+
+			ps.setString(1, nombre);
+			ps.setString(2, apellidos);
+			ps.setString(3, email);
+			ps.setString(4, telefono);
+			ps.setString(5, cuenta);
+			ps.setString(6, generarMD5(contrasenia));
+			ps.setInt(7, id);
+
+			return ps.executeUpdate() > 0;
+
+		} catch (SQLException e) {
+			System.err.println("Error al actualizar usuario: " + e.getMessage());
+			return false;
+		}
+	}
+
+	public static boolean eliminarUsuarioPorId(int id, Connection conexionBD) {
+		String sql = "DELETE FROM Usuario WHERE id = ?";
+
+		try (PreparedStatement ps = conexionBD.prepareStatement(sql)) {
+			ps.setInt(1, id);
+			return ps.executeUpdate() > 0;
+
+		} catch (SQLException e) {
+			System.err.println("Error al eliminar usuario: " + e.getMessage());
+			return false;
+		}
+	}
+	// </editor-fold>
 
 	/*
 	 * Obtener el ID del usuario.
@@ -309,6 +428,38 @@ public class Usuario {
 		this.contrasenia = contrasenia;
 	}
 
+	// Metodos auxiliares
+	private static Usuario mapearUsuario(ResultSet rs) throws SQLException {
+	    Usuario usuario = new Usuario();
+
+	    usuario.setId(rs.getInt("id"));
+	    usuario.setNombre(rs.getString("nombre"));
+	    usuario.setApellidos(rs.getString("apellidos"));
+	    usuario.setEmail(rs.getString("email"));
+	    usuario.setTelefono(rs.getString("telefono"));
+	    usuario.setCuenta(rs.getString("cuenta"));
+	    usuario.setContrasenia(rs.getString("contrasenia"));
+
+	    return usuario;
+	}
+	private static String generarMD5(String texto) {
+		try {
+			MessageDigest md = MessageDigest.getInstance("MD5");
+			byte[] hash = md.digest(texto.getBytes());
+
+			StringBuilder sb = new StringBuilder();
+
+			for (byte b : hash) {
+				sb.append(String.format("%02x", b));
+			}
+
+			return sb.toString();
+
+		} catch (NoSuchAlgorithmException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	/*
 	 * Sobrescritura del método toString() para representar el objeto como una
 	 * cadena de texto.
@@ -317,12 +468,7 @@ public class Usuario {
 	 */
 	@Override
 	public String toString() {
-	    return "Usuario [id=" + id +
-	           ", nombre=" + nombre +
-	           ", apellidos=" + apellidos +
-	           ", email=" + email +
-	           ", telefono=" + telefono +
-	           ", cuenta=" + cuenta +
-	           "]";
+		return "Usuario [id=" + id + ", nombre=" + nombre + ", apellidos=" + apellidos + ", email=" + email
+				+ ", telefono=" + telefono + ", cuenta=" + cuenta + "]";
 	}
 }
