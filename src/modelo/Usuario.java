@@ -7,6 +7,10 @@ package modelo;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+
+import com.mysql.cj.protocol.Resultset;
 
 /**
  *
@@ -17,7 +21,7 @@ import java.sql.ResultSet;
  */
 public class Usuario {
 	private int id; // ID del usuario
-	private int telefono; // Número de teléfono del usuario
+	private String telefono; // Número de teléfono del usuario
 	private String nombre; // Nombre del usuario
 	private String apellidos; // Apellidos del usuario
 	private String email; // Email del usuario
@@ -37,31 +41,29 @@ public class Usuario {
 	 *
 	 * @param id ID del usuario
 	 * 
-	 * @param telefono Número de teléfono del usuario
-	 * 
-	 * @param nombre Nombre del usuario
-	 * 
-	 * @param apellidos Apellidos del usuario
-	 * 
-	 * @param email Email del usuario
-	 * 
-	 * @param cuenta Cuenta del usuario
-	 * 
-	 * @param contrasenia Contraseña del usuario
-	 * 
-	 * @param tipo_de_usuario Tipo de usuario
+	 * @param conexionBD Conexion a la Base de Datos
 	 */
 
 	public Usuario(int id, Connection conexionBD) {
 		setId(id);
-		this.conexionBaseDatos = conexionBD;
-		inicializarUsuario(id);
+		conexionBaseDatos = conexionBD;
+		inicializarUsuario(id,conexionBD);
 	}
 
-	private boolean inicializarUsuario(int id) {
+	/**
+	 * Método para inicializar el usuario a través de su id
+	 * 
+	 * @param id
+	 * @return true si se consiguió, false en caso contrario.
+	 */
+	private boolean inicializarUsuario(int id,Connection conexionBD) {
 		boolean flag = false;
+		Usuario devo;
 		try {
-			
+			devo = buscarUsuarioPorId(id, conexionBD);
+			if (devo == null) {
+				throw new Exception("El usuario no existe");
+			}
 		} catch (Exception e) {
 			System.out.println("Hubo un error al inicializar usuario. " + e.getMessage());
 		}
@@ -69,8 +71,20 @@ public class Usuario {
 
 	}
 
-	public Usuario(int id, String nombre, String apellidos, String email, int telefono, String cuenta,
-			String contrasenia, String tipo_de_usuario, Connection conexionBD) {
+	/**
+	 * Constructor parametrizado del usuario
+	 * 
+	 * @param id
+	 * @param nombre
+	 * @param apellidos
+	 * @param email
+	 * @param telefono
+	 * @param cuenta
+	 * @param contrasenia codificada en MD5
+	 * @param conexionBD
+	 */
+	public Usuario(int id, String nombre, String apellidos, String email, String telefono, String cuenta,
+			String contrasenia, Connection conexionBD) {
 		setId(id);
 		setNombre(nombre);
 		setApellidos(apellidos);
@@ -78,37 +92,7 @@ public class Usuario {
 		setTelefono(telefono);
 		setCuenta(cuenta);
 		setContrasenia(contrasenia);
-		setTipo_de_usuario(tipo_de_usuario);
 		this.conexionBaseDatos = conexionBD;
-	}
-
-	/*
-	 * Constructor de la clase Usuario que recibe ID, nombre, apellidos, teléfono,
-	 * email, cuenta y contraseña.
-	 *
-	 * @param id ID del usuario
-	 * 
-	 * @param nombre Nombre del usuario
-	 * 
-	 * @param apellidos Apellidos del usuario
-	 * 
-	 * @param telefono Número de teléfono del usuario
-	 * 
-	 * @param email Email del usuario
-	 * 
-	 * @param cuenta Cuenta del usuario
-	 * 
-	 * @param contrasenia Contraseña del usuario
-	 */
-	public Usuario(int id, String nombre, String apellidos, int telefono, String email, String cuenta,
-			String contrasenia) {
-		this.id = id;
-		this.nombre = nombre;
-		this.apellidos = apellidos;
-		this.telefono = telefono;
-		this.email = email;
-		this.cuenta = cuenta;
-		this.contrasenia = contrasenia;
 	}
 
 	/*
@@ -128,27 +112,71 @@ public class Usuario {
 
 	// Métodos de acceso y modificación de los atributos
 
-	protected boolean inicializarDesdeBD() {
-		boolean devo = false;
+	/**
+	 * Método estático para buscar el usuario por su ID
+	 * 
+	 * @param id
+	 * @param conexionBD
+	 * @return el usuario si existe, si no existe devuelve null.
+	 */
+	protected static Usuario buscarUsuarioPorId(int id, Connection conexionBD) {
+		// TODO Auto-generated method stub
+		Usuario usuario = new Usuario();
+		String sql = "SELECT * FROM Usuario WHERE ID = " + id;
+		PreparedStatement sentencia;
+		ResultSet resultadoConsulta;
 		try {
-			String sql = "SELECT * FROM USUARIO";
-			PreparedStatement rs = conexionBaseDatos.prepareStatement(sql);
-			ResultSet resultSet = rs.executeQuery();
-			if (resultSet.next()) {
-				setId(resultSet.getInt("ID"));
-				setNombre(resultSet.getString("NOMBRE"));
-				setApellidos(resultSet.getString("APELLIDOS"));
-				setEmail(resultSet.getString("EMAIL"));
-				setTelefono(resultSet.getInt("TELEFONO"));
-				setCuenta(resultSet.getString("CUENTA"));
-				setContrasenia(resultSet.getString("CONTRASENIA"));
-				tipo_de_usuario = resultSet.getString("TIPO_DE_USUARIO");
-				devo = true;
-			} else {
-				System.out.println("No se encontró el usuario con ID: " + this.id);
+			sentencia = conexionBD.prepareStatement(sql);
+			resultadoConsulta = sentencia.executeQuery();
+
+			while (resultadoConsulta.next()) {
+				if (!resultadoConsulta.next()) {
+					throw new SQLException("No existen usuarios con id " + id);
+				} else {
+					usuario.setId(resultadoConsulta.getInt("id"));
+					usuario.setNombre(resultadoConsulta.getString("nombre"));
+					usuario.setApellidos(resultadoConsulta.getString("apellidos"));
+					usuario.setTelefono(resultadoConsulta.getString("telefono"));
+					usuario.setCuenta(resultadoConsulta.getString("cuenta"));
+					usuario.setContrasenia(resultadoConsulta.getString("contrasenia"));
+				}
 			}
+		} catch (SQLException sqle) {
+			// TODO: handle exception
+			System.out.println("Error al hacer la consulta.\n " + sqle.getMessage());
 		} catch (Exception e) {
-			devo = false;
+			// TODO: handle exception
+			System.out.println("Hubo un error al buscar el usuario.\n" + e.getMessage());
+		}
+		return usuario;
+	}
+
+	/**
+	 * Metodo para buscar el usuario a traves de su cuenta
+	 * 
+	 * @param cuenta
+	 * @param conexionBD
+	 * @throws SQLException
+	 */
+	protected static Usuario buscarIdPorCuenta(String cuenta, Connection conexionBD) {
+
+		String sql = "SELECT id FROM Usuario WHERE cuenta = ?";
+		Usuario devo = null;
+		try (PreparedStatement sentencia = conexionBD.prepareStatement(sql)) {
+			sentencia.setString(1, cuenta);
+			ResultSet rs = sentencia.executeQuery();
+			if (rs.next()) {
+				int idUsuario = rs.getInt("id");
+				devo = Usuario.buscarUsuarioPorId(idUsuario, conexionBD);
+			} else {
+				throw new SQLException("No existe la cuenta " + cuenta);
+			}
+		} catch (SQLException sqle) {
+			// TODO: handle exception
+			System.out.println("Hubo un error en la consulta.\n " + sqle.getMessage());
+		} catch (Exception e) {
+			// TODO: handle exception
+			System.out.println("Hubo un error al buscar al usuario.\n " + e.getMessage());
 		}
 		return devo;
 	}
@@ -176,7 +204,7 @@ public class Usuario {
 	 *
 	 * @return El número de teléfono del usuario.
 	 */
-	public int getTelefono() {
+	public String getTelefono() {
 		return telefono;
 	}
 
@@ -185,8 +213,16 @@ public class Usuario {
 	 *
 	 * @param telefono El número de teléfono del usuario.
 	 */
-	public void setTelefono(int telefono) {
-		this.telefono = telefono;
+	public boolean setTelefono(String telefono) {
+		boolean flag = false;
+		try {
+			this.telefono = telefono;
+			flag = true;
+		} catch (Exception e) {
+			// TODO: handle exception
+			System.out.println("Error a la hora de establecer el telefono: " + e.getMessage());
+		}
+		return flag;
 	}
 
 	/*
@@ -280,38 +316,6 @@ public class Usuario {
 	}
 
 	/*
-	 * Obtener el tipo de usuario.
-	 *
-	 * @return El tipo de usuario.
-	 */
-	public String getTipo_de_usuario() {
-		return tipo_de_usuario;
-	}
-
-	/*
-	 * Establecer el tipo de usuario.
-	 *
-	 * @param tipo_de_usuario El tipo de usuario.
-	 */
-	public boolean setTipo_de_usuario(String tipo_de_usuario) {
-		boolean devo = false;
-		try {
-			this.tipo_de_usuario = tipo_de_usuario;
-			if (tipo_de_usuario.equalsIgnoreCase("Cliente")) {
-				Cliente.obtenerClientePorId(this.id, conexionBaseDatos);
-			} else {
-				Personal.obtenerPersonalPorId(this.id, conexionBaseDatos);
-			}
-			devo = true;
-		} catch (Exception e) {
-			// TODO: handle exception
-			devo = false;
-		}
-
-		return devo;
-	}
-
-	/*
 	 * Sobrescritura del método toString() para representar el objeto como una
 	 * cadena de texto.
 	 *
@@ -319,6 +323,12 @@ public class Usuario {
 	 */
 	@Override
 	public String toString() {
-		return "id:" + id + ", nombre:" + nombre + ", apellidos:" + apellidos;
+	    return "Usuario [id=" + id +
+	           ", nombre=" + nombre +
+	           ", apellidos=" + apellidos +
+	           ", email=" + email +
+	           ", telefono=" + telefono +
+	           ", cuenta=" + cuenta +
+	           "]";
 	}
 }
