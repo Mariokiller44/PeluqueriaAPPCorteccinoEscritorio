@@ -3,302 +3,248 @@ package modelo;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.List;
 
 public class Cita {
 
-	private int id;
-	private int clienteId;
-	private int empleadoId;
-	private int horarioId;
-	private String estado;
-	private LocalDateTime fechaCreacion;
-	private String observaciones;
+    private int id;
+    private Cliente cliente;
+    private Personal empleado;
+    private Horario horario;
+    private String estado;
+    private LocalDateTime fechaCreacion;
+    private String observaciones;
 
-	/**
-	 * Representa una reserva realizada por un cliente para un horario y empleado
-	 * determinados.
-	 *
-	 * Una cita puede encontrarse en diferentes estados:
-	 * PENDIENTE
-	 * CONFIRMADA
-	 * COMPLETADA
-	 * CANCELADA
-	 * 
-	 *
-	 * La información se almacena en la tabla cita.
-	 *
-	 * @author Mario
-	 * @version 1.0.3
-	 */
-	public Cita() {
-	}
+    public Cita() {
+    }
 
-	public Cita(int id, int clienteId, int empleadoId, int horarioId, String estado, LocalDateTime fechaCreacion,
-			String observaciones) {
-		this.id = id;
-		this.clienteId = clienteId;
-		this.empleadoId = empleadoId;
-		this.horarioId = horarioId;
-		this.estado = estado;
-		this.fechaCreacion = fechaCreacion;
-		this.observaciones = observaciones;
-	}
+    public Cita(int id, Cliente cliente, Personal empleado, Horario horario,
+                String estado, LocalDateTime fechaCreacion, String observaciones) {
+        this.id = id;
+        this.cliente = cliente;
+        this.empleado = empleado;
+        this.horario = horario;
+        this.estado = estado;
+        this.fechaCreacion = fechaCreacion;
+        this.observaciones = observaciones;
+    }
 
-	public int getId() {
-		return id;
-	}
+    public int getId() {
+        return id;
+    }
 
-	public void setId(int id) {
-		this.id = id;
-	}
+    public void setId(int id) {
+        this.id = id;
+    }
 
-	public int getClienteId() {
-		return clienteId;
-	}
 
-	public void setClienteId(int clienteId) {
-		this.clienteId = clienteId;
-	}
+    public Cliente getCliente() {
+        return cliente;
+    }
 
-	public int getEmpleadoId() {
-		return empleadoId;
-	}
+    public void setCliente(Cliente cliente) {
+        this.cliente = cliente;
+    }
 
-	public void setEmpleadoId(int empleadoId) {
-		this.empleadoId = empleadoId;
-	}
 
-	public int getHorarioId() {
-		return horarioId;
-	}
+    public Personal getEmpleado() {
+        return empleado;
+    }
 
-	public void setHorarioId(int horarioId) {
-		this.horarioId = horarioId;
-	}
+    public void setEmpleado(Personal empleado) {
+        this.empleado = empleado;
+    }
 
-	public String getEstado() {
-		return estado;
-	}
 
-	public void setEstado(String estado) {
-		this.estado = estado;
-	}
+    public Horario getHorario() {
+        return horario;
+    }
 
-	public LocalDateTime getFechaCreacion() {
-		return fechaCreacion;
-	}
+    public void setHorario(Horario horario) {
+        this.horario = horario;
+    }
 
-	public void setFechaCreacion(LocalDateTime fechaCreacion) {
-		this.fechaCreacion = fechaCreacion;
-	}
 
-	public String getObservaciones() {
-		return observaciones;
-	}
+    public String getEstado() {
+        return estado;
+    }
 
-	public void setObservaciones(String observaciones) {
-		this.observaciones = observaciones;
-	}
+    public void setEstado(String estado) {
+        this.estado = estado;
+    }
 
-	/**
-	 * Busca una cita mediante su identificador único.
-	 *
-	 * @param idCita     identificador de la cita.
-	 * @param conexionBD conexión activa contra la base de datos.
-	 *
-	 * @return la cita encontrada o null si no existe.
-	 */
-	public static Cita buscarCitaPorId(int idCita, Connection conexionBD) {
-		String sql = """
-				SELECT id, cliente_id, empleado_id, horario_id, estado, fecha_creacion, observaciones
-				FROM cita
-				WHERE id = ?
-				""";
 
-		try (PreparedStatement ps = conexionBD.prepareStatement(sql)) {
-			ps.setInt(1, idCita);
+    public LocalDateTime getFechaCreacion() {
+        return fechaCreacion;
+    }
 
-			try (ResultSet rs = ps.executeQuery()) {
-				if (!rs.next())
-					return null;
-				return mapearCita(rs);
-			}
+    public void setFechaCreacion(LocalDateTime fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
+    }
 
-		} catch (SQLException e) {
-			System.err.println("Error al buscar cita por ID: " + e.getMessage());
-			return null;
-		}
-	}
 
-	/**
-	 * Recupera todas las citas asociadas a un cliente.
-	 *
-	 * Los resultados se devuelven ordenados por fecha de creación en orden
-	 * descendente.
-	 *
-	 * @param clienteId  identificador del cliente.
-	 * @param conexionBD conexión activa contra la base de datos.
-	 *
-	 * @return lista de citas asociadas al cliente.
-	 */
-	public static List<Cita> buscarCitasPorCliente(int clienteId, Connection conexionBD) {
-		List<Cita> citas = new ArrayList<>();
+    public String getObservaciones() {
+        return observaciones;
+    }
 
-		String sql = """
-				SELECT id, cliente_id, empleado_id, horario_id, estado, fecha_creacion, observaciones
-				FROM cita
-				WHERE cliente_id = ?
-				ORDER BY fecha_creacion DESC
-				""";
+    public void setObservaciones(String observaciones) {
+        this.observaciones = observaciones;
+    }
 
-		try (PreparedStatement ps = conexionBD.prepareStatement(sql)) {
-			ps.setInt(1, clienteId);
+    public static Cita buscarCitaPorId(int idCita, Connection conexionBD) {
+        String sql = """
+            SELECT id, cliente_id, empleado_id, horario_id, estado, fecha_creacion, observaciones
+            FROM cita
+            WHERE id = ?
+            """;
 
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					citas.add(mapearCita(rs));
-				}
-			}
+        try (PreparedStatement ps = conexionBD.prepareStatement(sql)) {
+            ps.setInt(1, idCita);
 
-		} catch (SQLException e) {
-			System.err.println("Error al buscar citas por cliente: " + e.getMessage());
-		}
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    return null;
+                }
 
-		return citas;
-	}
+                return mapearCita(rs, conexionBD);
+            }
 
-	/**
-	 * Recupera todas las citas asignadas a un empleado.
-	 *
-	 * Los resultados se devuelven ordenados por fecha de creación en orden
-	 * descendente.
-	 *
-	 * @param empleadoId identificador del empleado.
-	 * @param conexionBD conexión activa contra la base de datos.
-	 *
-	 * @return lista de citas asociadas al empleado.
-	 */
-	public static List<Cita> buscarCitasPorEmpleado(int empleadoId, Connection conexionBD) {
-		List<Cita> citas = new ArrayList<>();
+        } catch (SQLException e) {
+            System.err.println("Error al buscar cita por ID: " + e.getMessage());
+            return null;
+        }
+    }
 
-		String sql = """
-				SELECT id, cliente_id, empleado_id, horario_id, estado, fecha_creacion, observaciones
-				FROM cita
-				WHERE empleado_id = ?
-				ORDER BY fecha_creacion DESC
-				""";
+    public static ArrayList<Cita> buscarCitasPorCliente(int clienteId, Connection conexionBD) {
+        ArrayList<Cita> citas = new ArrayList<>();
 
-		try (PreparedStatement ps = conexionBD.prepareStatement(sql)) {
-			ps.setInt(1, empleadoId);
+        String sql = """
+            SELECT id, cliente_id, empleado_id, horario_id, estado, fecha_creacion, observaciones
+            FROM cita
+            WHERE cliente_id = ?
+            ORDER BY fecha_creacion DESC
+            """;
 
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					citas.add(mapearCita(rs));
-				}
-			}
+        try (PreparedStatement ps = conexionBD.prepareStatement(sql)) {
+            ps.setInt(1, clienteId);
 
-		} catch (SQLException e) {
-			System.err.println("Error al buscar citas por empleado: " + e.getMessage());
-		}
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    citas.add(mapearCita(rs, conexionBD));
+                }
+            }
 
-		return citas;
-	}
+        } catch (SQLException e) {
+            System.err.println("Error al buscar citas por cliente: " + e.getMessage());
+        }
 
-	/**
-	 * Registra una nueva cita en el sistema.
-	 *
-	 * La cita se crea inicialmente con estado PENDIENTE.
-	 *
-	 * Este método únicamente crea el registro de la cita. La actualización de
-	 * disponibilidad del horario debe gestionarse mediante una transacción
-	 * independiente.
-	 *
-	 * @param clienteId     identificador del cliente.
-	 * @param empleadoId    identificador del empleado.
-	 * @param horarioId     identificador del horario reservado.
-	 * @param observaciones observaciones adicionales.
-	 * @param conexionBD    conexión activa contra la base de datos.
-	 *
-	 * @return true si la inserción fue realizada correctamente;
-	 *         false en caso contrario.
-	 */
-	public static boolean crearCita(int clienteId, int empleadoId, int horarioId, String observaciones,
-			Connection conexionBD) {
+        return citas;
+    }
 
-		String sqlInsert = """
-				INSERT INTO cita
-				(cliente_id, empleado_id, horario_id, estado, fecha_creacion, observaciones)
-				VALUES (?, ?, ?, 'PENDIENTE', NOW(), ?)
-				""";
+    public static ArrayList<Cita> buscarCitasPorEmpleado(int empleadoId, Connection conexionBD) {
+        ArrayList<Cita> citas = new ArrayList<>();
 
-		try (PreparedStatement ps = conexionBD.prepareStatement(sqlInsert)) {
-			ps.setInt(1, clienteId);
-			ps.setInt(2, empleadoId);
-			ps.setInt(3, horarioId);
-			ps.setString(4, observaciones);
+        String sql = """
+            SELECT id, cliente_id, empleado_id, horario_id, estado, fecha_creacion, observaciones
+            FROM cita
+            WHERE empleado_id = ?
+            ORDER BY fecha_creacion DESC
+            """;
 
-			return ps.executeUpdate() > 0;
+        try (PreparedStatement ps = conexionBD.prepareStatement(sql)) {
+            ps.setInt(1, empleadoId);
 
-		} catch (SQLException e) {
-			System.err.println("Error al crear cita: " + e.getMessage());
-			return false;
-		}
-	}
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    citas.add(mapearCita(rs, conexionBD));
+                }
+            }
 
-	/**
-	 * Modifica el estado de una cita existente.
-	 *
-	 * Los estados válidos son los definidos por el campo ENUM de la tabla cita.
-	 *
-	 * @param idCita      identificador de la cita.
-	 * @param nuevoEstado nuevo estado a asignar.
-	 * @param conexionBD  conexión activa contra la base de datos.
-	 *
-	 * @return true si la actualización tuvo éxito; false en caso contrario.
-	 */
-	public static boolean actualizarEstado(int idCita, String nuevoEstado, Connection conexionBD) {
-		String sql = """
-				UPDATE cita
-				SET estado = ?
-				WHERE id = ?
-				""";
+        } catch (SQLException e) {
+            System.err.println("Error al buscar citas por empleado: " + e.getMessage());
+        }
 
-		try (PreparedStatement ps = conexionBD.prepareStatement(sql)) {
-			ps.setString(1, nuevoEstado);
-			ps.setInt(2, idCita);
+        return citas;
+    }
 
-			return ps.executeUpdate() > 0;
+    public static boolean crearCita(Cliente cliente, Personal empleado, Horario horario,
+                                   String observaciones, Connection conexionBD) {
 
-		} catch (SQLException e) {
-			System.err.println("Error al actualizar estado de cita: " + e.getMessage());
-			return false;
-		}
-	}
+        if (cliente == null || empleado == null || horario == null) {
+            return false;
+        }
 
-	/**
-	 * Cancela una cita existente.
-	 *
-	 * Internamente establece el estado de la cita a CANCELADA.
-	 *
-	 * @param idCita     identificador de la cita.
-	 * @param conexionBD conexión activa contra la base de datos.
-	 *
-	 * @return true si la operación se realizó correctamente; false en caso contrario.
-	 */
-	public static boolean cancelarCita(int idCita, Connection conexionBD) {
-		return actualizarEstado(idCita, "CANCELADA", conexionBD);
-	}
+        String sqlInsert = """
+            INSERT INTO cita
+            (cliente_id, empleado_id, horario_id, estado, fecha_creacion, observaciones)
+            VALUES (?, ?, ?, 'PENDIENTE', NOW(), ?)
+            """;
 
-	private static Cita mapearCita(ResultSet rs) throws SQLException {
-		return new Cita(rs.getInt("id"), rs.getInt("cliente_id"), rs.getInt("empleado_id"), rs.getInt("horario_id"),
-				rs.getString("estado"), rs.getTimestamp("fecha_creacion").toLocalDateTime(),
-				rs.getString("observaciones"));
-	}
+        try (PreparedStatement ps = conexionBD.prepareStatement(sqlInsert)) {
+            ps.setInt(1, cliente.getId());
+            ps.setInt(2, empleado.getId());
+            ps.setInt(3, horario.getId());
+            ps.setString(4, observaciones);
 
-	@Override
-	public String toString() {
-		return "Cita [id=" + id + ", clienteId=" + clienteId + ", empleadoId=" + empleadoId + ", horarioId=" + horarioId
-				+ ", estado=" + estado + ", fechaCreacion=" + fechaCreacion + ", observaciones=" + observaciones + "]";
-	}
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            System.err.println("Error al crear cita: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public static boolean actualizarEstado(int idCita, String nuevoEstado, Connection conexionBD) {
+        String sql = """
+            UPDATE cita
+            SET estado = ?
+            WHERE id = ?
+            """;
+
+        try (PreparedStatement ps = conexionBD.prepareStatement(sql)) {
+            ps.setString(1, nuevoEstado);
+            ps.setInt(2, idCita);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            System.err.println("Error al actualizar estado de cita: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public static boolean cancelarCita(int idCita, Connection conexionBD) {
+        return actualizarEstado(idCita, "CANCELADA", conexionBD);
+    }
+
+    private static Cita mapearCita(ResultSet rs, Connection conexionBD) throws SQLException {
+        int clienteId = rs.getInt("cliente_id");
+        int empleadoId = rs.getInt("empleado_id");
+        int horarioId = rs.getInt("horario_id");
+
+        Cliente cliente = Cliente.obtenerFiltradosClientes(clienteId, conexionBD);
+        Personal empleado = Personal.obtenerPersonalPorId(empleadoId, conexionBD);
+        Horario horario = Horario.buscarHorarioPorId(horarioId, conexionBD);
+
+        return new Cita(
+                rs.getInt("id"),
+                cliente,
+                empleado,
+                horario,
+                rs.getString("estado"),
+                rs.getTimestamp("fecha_creacion").toLocalDateTime(),
+                rs.getString("observaciones")
+        );
+    }
+
+    @Override
+    public String toString() {
+        return "Cita [id=" + id +
+                ", cliente=" + cliente +
+                ", empleado=" + empleado +
+                ", horario=" + horario +
+                ", estado=" + estado +
+                ", fechaCreacion=" + fechaCreacion +
+                ", observaciones=" + observaciones +
+                "]";
+    }
 }

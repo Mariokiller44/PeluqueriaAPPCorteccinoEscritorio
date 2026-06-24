@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 /**
  * Representa a un miembro del personal de la peluquería.
@@ -41,6 +42,41 @@ public class Personal extends Usuario {
 	}
 
 	/**
+	 * Metodo que busca todos los empleados en el sistema.
+	 * @param conexionBD
+	 * @return el listado con todos los empleados, en caso contrario o de un fallo devolvera null
+	 */
+	public static ArrayList<Personal> buscarTodoElPersonal(Connection conexionBD) {
+		ArrayList<Personal> personalLista = new ArrayList<>();
+
+		String sql = """
+				SELECT u.id, u.nombre, u.apellidos, u.email, u.telefono, u.cuenta, u.contrasenia,
+				       p.tipo, p.salario_personal
+				FROM Usuario u
+				INNER JOIN Perfiles_Usuario p ON u.id = p.usuario_id
+				WHERE p.tipo <> 'CLIENTE'
+				""";
+
+		try (PreparedStatement ps = conexionBD.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+
+			while (rs.next()) {
+				Personal personal = new Personal();
+
+				mapearUsuario(rs, personal);
+				personal.setTipo(rs.getString("tipo"));
+				personal.setSalario(rs.getDouble("salario_personal"));
+
+				personalLista.add(personal);
+			}
+
+		} catch (SQLException e) {
+			System.err.println("Error al buscar personal: " + e.getMessage());
+		}
+
+		return personalLista;
+	}
+
+	/**
 	 * Recupera un empleado a partir de su identificador.
 	 *
 	 * Este método obtiene los datos generales del usuario y la información
@@ -58,12 +94,7 @@ public class Personal extends Usuario {
 			return null;
 		}
 
-		String sql = """
-				SELECT tipo, salario_personal
-				FROM Perfiles_Usuario
-				WHERE usuario_id = ?
-				  AND tipo <> 'CLIENTE'
-				""";
+		String sql = "SELECT u.id, u.nombre, u.apellidos, u.email, u.telefono, u.cuenta, u.contrasenia, p.tipo, p.salario_personal FROM Usuario u INNER JOIN Perfiles_Usuario p ON u.id = p.usuario_id WHERE  usuario_id = ? AND tipo <> 'CLIENTE'";
 
 		try (PreparedStatement ps = conexionBD.prepareStatement(sql)) {
 			ps.setInt(1, idPersonal);
@@ -74,15 +105,7 @@ public class Personal extends Usuario {
 				}
 
 				Personal personal = new Personal();
-
-				personal.setId(usuario.getId());
-				personal.setNombre(usuario.getNombre());
-				personal.setApellidos(usuario.getApellidos());
-				personal.setEmail(usuario.getEmail());
-				personal.setTelefono(usuario.getTelefono());
-				personal.setCuenta(usuario.getCuenta());
-				personal.setContrasenia(usuario.getContrasenia());
-
+				mapearUsuario(rs, personal);
 				personal.setTipo(rs.getString("tipo"));
 				personal.setSalario(rs.getDouble("salario_personal"));
 

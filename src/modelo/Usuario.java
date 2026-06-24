@@ -23,8 +23,8 @@ import com.mysql.cj.protocol.Resultset;
  *
  * La información se almacena en la tabla {@code Usuario}.
  *
- * Las clases Cliente y Personal extienden esta clase añadiendo
- * sus características específicas.
+ * Las clases Cliente y Personal extienden esta clase añadiendo sus
+ * características específicas.
  *
  * @author Mario
  * @version 1.0.3
@@ -63,7 +63,7 @@ public class Usuario {
 	 * @param id
 	 * @return true si se consiguió, false en caso contrario.
 	 */
-	public boolean inicializarUsuario(int id, Connection conexionBD) {
+	protected boolean inicializarUsuario(int id, Connection conexionBD) {
 		boolean flag = false;
 		Usuario devo;
 		try {
@@ -117,8 +117,6 @@ public class Usuario {
 		this.apellidos = apellidos;
 	}
 
-	// <editor-fold defaultstate="collapsed" desc="Métodos de acceso y modificación
-	// de los atributos">
 	/**
 	 * Obtiene todos los empleados registrados en el sistema.
 	 *
@@ -127,64 +125,28 @@ public class Usuario {
 	 * @return lista de usuarios que son empleados. Si no existen registros,
 	 *         devuelve una lista vacía.
 	 */
-	protected static ArrayList<Usuario> buscarTodosPersonal(Connection conexionBD) {
+	protected static ArrayList<Usuario> buscarTodosUsuarios(Connection conexionBD) {
+		ArrayList<Usuario> usuarios = new ArrayList<>();
 
-		ArrayList<Usuario> devo = new ArrayList<Usuario>();
-		String sql = "SELECT usuario_id FROM Perfiles_Usuario WHERE tipo LIKE 'Personal'";
-		PreparedStatement sentencia;
-		ResultSet resultadoConsulta;
-		try {
-			sentencia = conexionBD.prepareStatement(sql);
-			resultadoConsulta = sentencia.executeQuery();
-			while (resultadoConsulta.next()) {
-				Usuario personal = Usuario.buscarUsuarioPorId(resultadoConsulta.getInt("usuario_id"), conexionBD);
-				devo.add(personal);
+		String sql = "SELECT id, nombre, apellidos, email, telefono, cuenta, contrasenia FROM Usuario";
+
+		try (PreparedStatement ps = conexionBD.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+
+			while (rs.next()) {
+				Usuario usuario = new Usuario();
+				mapearUsuario(rs,usuario);
+
+				usuarios.add(usuario);
 			}
-		} catch (SQLException sqle) {
-			// TODO: handle exception
-			System.out.println("Error al buscar la lista de empleados. " + sqle.getMessage());
-		} catch (Exception e) {
-			// TODO: handle exception
-			System.out.println("Error general del metodo. " + e.getMessage());
 
+		} catch (SQLException e) {
+			System.err.println("Error al buscar usuarios: " + e.getMessage());
 		}
 
-		return devo;
+		return usuarios;
 	}
 
-	/**
-	 * Obtiene todos los clientes registrados en el sistema.
-	 *
-	 * @param conexionBD conexión activa contra la base de datos.
-	 *
-	 * @return lista de usuarios que son clientes. Si no existen registros, devuelve
-	 *         una lista vacía.
-	 */
-	protected static ArrayList<Usuario> buscarTodosClientes(Connection conexionBD) {
-
-		ArrayList<Usuario> devo = new ArrayList<Usuario>();
-		String sql = "SELECT usuario_id FROM Perfiles_Usuario WHERE tipo LIKE 'Cliente'";
-		PreparedStatement sentencia;
-		ResultSet resultadoConsulta;
-		try {
-			sentencia = conexionBD.prepareStatement(sql);
-			resultadoConsulta = sentencia.executeQuery();
-			while (resultadoConsulta.next()) {
-				Usuario cliente = Usuario.buscarUsuarioPorId(resultadoConsulta.getInt("usuario_id"), conexionBD);
-				devo.add(cliente);
-			}
-		} catch (SQLException sqle) {
-			// TODO: handle exception
-			System.out.println("Error al buscar la lista de empleados. " + sqle.getMessage());
-		} catch (Exception e) {
-			// TODO: handle exception
-			System.out.println("Error general del metodo. " + e.getMessage());
-
-		}
-
-		return devo;
-	}
-
+	
 	/**
 	 * Método estático para buscar el usuario por su ID
 	 * 
@@ -203,7 +165,7 @@ public class Usuario {
 			resultadoConsulta = sentencia.executeQuery();
 
 			while (resultadoConsulta.next()) {
-				usuario = mapearUsuario(resultadoConsulta);
+				mapearUsuario(resultadoConsulta,usuario);
 			}
 		} catch (SQLException sqle) {
 			// TODO: handle exception
@@ -221,8 +183,8 @@ public class Usuario {
 	 * @param cuenta
 	 * @param conexionBD
 	 */
-	public static Usuario buscarIdPorCuenta(String cuenta, Connection conexionBD) {
 
+	public static Usuario buscarIdPorCuenta(String cuenta, Connection conexionBD) {
 		String sql = "SELECT id FROM Usuario WHERE cuenta = ?";
 		Usuario devo = null;
 		try (PreparedStatement sentencia = conexionBD.prepareStatement(sql)) {
@@ -259,8 +221,7 @@ public class Usuario {
 	 * @param contrasenia nueva contraseña.
 	 * @param conexionBD  conexión activa contra la base de datos.
 	 *
-	 * @return true si se actualizó correctamente; false en caso
-	 *         contrario.
+	 * @return true si se actualizó correctamente; false en caso contrario.
 	 */
 	public static boolean actualizarUsuario(int id, String nombre, String apellidos, String email, String telefono,
 			String cuenta, String contrasenia, Connection conexionBD) {
@@ -450,18 +411,18 @@ public class Usuario {
 	 * @return Usuario si se mapea bien, en caso contrario devuelve nulo.
 	 * @throws SQLException si ocurre una excepcion a la hora del result set
 	 */
-	private static Usuario mapearUsuario(ResultSet rs) throws SQLException {
-		Usuario usuario = new Usuario();
-
-		usuario.setId(rs.getInt("id"));
-		usuario.setNombre(rs.getString("nombre"));
-		usuario.setApellidos(rs.getString("apellidos"));
-		usuario.setEmail(rs.getString("email"));
-		usuario.setTelefono(rs.getString("telefono"));
-		usuario.setCuenta(rs.getString("cuenta"));
-		usuario.setContrasenia(rs.getString("contrasenia"));
-
-		return usuario;
+	protected static void mapearUsuario(ResultSet rs, Usuario usuario) throws SQLException {
+		try {
+			usuario.setId(rs.getInt("id"));
+			usuario.setNombre(rs.getString("nombre"));
+			usuario.setApellidos(rs.getString("apellidos"));
+			usuario.setEmail(rs.getString("email"));
+			usuario.setTelefono(rs.getString("telefono"));
+			usuario.setCuenta(rs.getString("cuenta"));
+			usuario.setContrasenia(rs.getString("contrasenia"));
+		} catch (Exception e) {
+			System.out.println("Error al mapear usuario. " + e.getMessage());
+		}
 	}
 
 	private static String generarMD5(String texto) {
@@ -499,7 +460,7 @@ public class Usuario {
 	 */
 	@Override
 	public String toString() {
-		return "Usuario [id=" + id + ", nombre=" + nombre + ", apellidos=" + apellidos + ", email=" + email
-				+ ", telefono=" + telefono + ", cuenta=" + cuenta + "]";
+		return "Usuario [id=" + getId() + ", nombre=" + getNombre()+ ", apellidos=" + getApellidos() + ", email=" + getEmail()
+				+ ", telefono=" + getTelefono() + ", cuenta=" + getCuenta() + "]";
 	}
 }

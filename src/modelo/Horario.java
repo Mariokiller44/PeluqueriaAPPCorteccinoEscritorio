@@ -2,6 +2,7 @@ package modelo;
 
 import java.sql.*;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,20 +21,20 @@ public class Horario {
 
 	private int id;
 	private LocalDateTime fechaHora;
-	private int usuarioId;
-	private int servicioId;
+	private Personal personal;
+	private Servicio servicio;
 	private int duracionMinutos;
 	private boolean disponible;
 
 	public Horario() {
 	}
 
-	public Horario(int id, LocalDateTime fechaHora, int usuarioId, int servicioId, int duracionMinutos,
+	public Horario(int id, LocalDateTime fechaHora, Personal personal, Servicio servicio, int duracionMinutos,
 			boolean disponible) {
 		this.id = id;
 		this.fechaHora = fechaHora;
-		this.usuarioId = usuarioId;
-		this.servicioId = servicioId;
+		this.personal = personal;
+		this.servicio = servicio;
 		this.duracionMinutos = duracionMinutos;
 		this.disponible = disponible;
 	}
@@ -54,20 +55,20 @@ public class Horario {
 		this.fechaHora = fechaHora;
 	}
 
-	public int getUsuarioId() {
-		return usuarioId;
+	public Personal getPersonal() {
+		return personal;
 	}
 
-	public void setUsuarioId(int usuarioId) {
-		this.usuarioId = usuarioId;
+	public void setPersonal(Personal personal) {
+		this.personal = personal;
 	}
 
-	public int getServicioId() {
-		return servicioId;
+	public Servicio getServicio() {
+		return servicio;
 	}
 
-	public void setServicioId(int servicioId) {
-		this.servicioId = servicioId;
+	public void setServicio(Servicio servicio) {
+		this.servicio = servicio;
 	}
 
 	public int getDuracionMinutos() {
@@ -107,7 +108,7 @@ public class Horario {
 			try (ResultSet rs = ps.executeQuery()) {
 				if (!rs.next())
 					return null;
-				return mapearHorario(rs);
+				return mapearHorario(rs, conexionBD);
 			}
 
 		} catch (SQLException e) {
@@ -119,8 +120,8 @@ public class Horario {
 	/**
 	 * Obtiene todos los horarios que actualmente pueden ser reservados.
 	 *
-	 * Un horario disponible es aquel cuyo campo disponible tiene valor
-	 * verdadero en la base de datos.
+	 * Un horario disponible es aquel cuyo campo disponible tiene valor verdadero en
+	 * la base de datos.
 	 *
 	 * @param conexionBD conexión activa contra la base de datos.
 	 *
@@ -140,7 +141,7 @@ public class Horario {
 		try (PreparedStatement ps = conexionBD.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
 			while (rs.next()) {
-				horarios.add(mapearHorario(rs));
+				horarios.add(mapearHorario(rs, conexionBD));
 			}
 
 		} catch (SQLException e) {
@@ -175,7 +176,7 @@ public class Horario {
 
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next()) {
-					horarios.add(mapearHorario(rs));
+					horarios.add(mapearHorario(rs, conexionBD));
 				}
 			}
 
@@ -199,8 +200,7 @@ public class Horario {
 	 * @param disponible      estado de disponibilidad.
 	 * @param conexionBD      conexión activa contra la base de datos.
 	 *
-	 * @return true si se modificó al menos un registro; false en
-	 *         caso contrario.
+	 * @return true si se modificó al menos un registro; false en caso contrario.
 	 */
 	public static boolean actualizarHorario(int idHorario, LocalDateTime fechaHora, int usuarioId, int servicioId,
 			int duracionMinutos, boolean disponible, Connection conexionBD) {
@@ -261,14 +261,25 @@ public class Horario {
 		}
 	}
 
-	private static Horario mapearHorario(ResultSet rs) throws SQLException {
-		return new Horario(rs.getInt("id"), rs.getTimestamp("fecha_hora").toLocalDateTime(), rs.getInt("usuario_id"),
-				rs.getInt("servicio_id"), rs.getInt("duracion_minutos"), rs.getBoolean("disponible"));
+	private static Horario mapearHorario(ResultSet rs, Connection conexionBD) throws SQLException {
+		int usuarioId = rs.getInt("usuario_id");
+		int servicioId = rs.getInt("servicio_id");
+
+		Personal personal = Personal.obtenerPersonalPorId(usuarioId, conexionBD);
+		Servicio servicio = Servicio.buscarServicioPorId(servicioId, conexionBD);
+
+		return new Horario(rs.getInt("id"), rs.getTimestamp("fecha_hora").toLocalDateTime(), personal, servicio,
+				rs.getInt("duracion_minutos"), rs.getBoolean("disponible"));
+	}
+
+	public String getFechaFormateada() {
+		DateTimeFormatter formato = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+		return fechaHora.format(formato);
 	}
 
 	@Override
 	public String toString() {
-		return "Horario [id=" + id + ", fechaHora=" + fechaHora + ", usuarioId=" + usuarioId + ", servicioId="
-				+ servicioId + ", duracionMinutos=" + duracionMinutos + ", disponible=" + disponible + "]";
+		return "Horario [id=" + id + ", fechaHora=" + fechaHora + ", personal=" + personal + ", servicio=" + servicio
+				+ ", duracionMinutos=" + duracionMinutos + ", disponible=" + disponible + "]";
 	}
 }
