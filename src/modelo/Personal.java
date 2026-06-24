@@ -11,8 +11,7 @@ import java.sql.SQLException;
  * Incluye la información específica relacionada con el puesto desempeñado y el
  * salario asociado.
  *
- * Los datos específicos del personal se almacenan en la tabla
- * {@code Perfiles_Usuario}.
+ * Los datos específicos del personal se almacenan en la tabla Perfiles_Usuario.
  *
  * @author Mario
  * @version 1.0.3
@@ -50,7 +49,7 @@ public class Personal extends Usuario {
 	 * @param idPersonal identificador del empleado.
 	 * @param conexionBD conexión activa contra la base de datos.
 	 *
-	 * @return el empleado encontrado o {@code null} si no existe.
+	 * @return el empleado encontrado o null si no existe.
 	 */
 	public static Personal obtenerPersonalPorId(int idPersonal, Connection conexionBD) {
 		Usuario usuario = Usuario.buscarUsuarioPorId(idPersonal, conexionBD);

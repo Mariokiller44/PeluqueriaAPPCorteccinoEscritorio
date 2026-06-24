@@ -11,7 +11,7 @@ import java.util.List;
  *
  * Un horario puede estar disponible o reservado mediante una cita.
  *
- * La información se almacena en la tabla {@code horario}.
+ * La información se almacena en la tabla horario.
  *
  * @author Mario
  * @version 1.0.3
@@ -92,7 +92,7 @@ public class Horario {
 	 * @param idHorario  identificador único del horario.
 	 * @param conexionBD conexión activa contra la base de datos.
 	 *
-	 * @return el horario encontrado o {@code null} si no existe.
+	 * @return el horario encontrado o null si no existe.
 	 */
 	public static Horario buscarHorarioPorId(int idHorario, Connection conexionBD) {
 		String sql = """
@@ -119,7 +119,7 @@ public class Horario {
 	/**
 	 * Obtiene todos los horarios que actualmente pueden ser reservados.
 	 *
-	 * Un horario disponible es aquel cuyo campo {@code disponible} tiene valor
+	 * Un horario disponible es aquel cuyo campo disponible tiene valor
 	 * verdadero en la base de datos.
 	 *
 	 * @param conexionBD conexión activa contra la base de datos.
@@ -199,7 +199,7 @@ public class Horario {
 	 * @param disponible      estado de disponibilidad.
 	 * @param conexionBD      conexión activa contra la base de datos.
 	 *
-	 * @return {@code true} si se modificó al menos un registro; {@code false} en
+	 * @return true si se modificó al menos un registro; false en
 	 *         caso contrario.
 	 */
 	public static boolean actualizarHorario(int idHorario, LocalDateTime fechaHora, int usuarioId, int servicioId,
@@ -240,8 +240,7 @@ public class Horario {
 	 * @param disponible nuevo estado.
 	 * @param conexionBD conexión activa contra la base de datos.
 	 *
-	 * @return {@code true} si la actualización tuvo éxito; {@code false} en caso
-	 *         contrario.
+	 * @return true si la actualización tuvo éxito; false en caso contrario.
 	 */
 	public static boolean marcarDisponibilidad(int idHorario, boolean disponible, Connection conexionBD) {
 		String sql = """

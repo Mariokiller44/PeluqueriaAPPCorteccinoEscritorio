@@ -23,7 +23,7 @@ import com.mysql.cj.protocol.Resultset;
  *
  * La información se almacena en la tabla {@code Usuario}.
  *
- * Las clases {@link Cliente} y {@link Personal} extienden esta clase añadiendo
+ * Las clases Cliente y Personal extienden esta clase añadiendo
  * sus características específicas.
  *
  * @author Mario
@@ -53,7 +53,6 @@ public class Usuario {
 	 * 
 	 * @param conexionBD Conexion a la Base de Datos
 	 */
-
 	public Usuario(int id, Connection conexion) {
 		inicializarUsuario(id, conexion);
 	}
@@ -221,7 +220,6 @@ public class Usuario {
 	 * 
 	 * @param cuenta
 	 * @param conexionBD
-	 * @throws SQLException
 	 */
 	public static Usuario buscarIdPorCuenta(String cuenta, Connection conexionBD) {
 
@@ -246,31 +244,6 @@ public class Usuario {
 		return devo;
 	}
 
-	public static int buscarIdPorNombreApellidos(String nombre, String apellidos, Connection conexionBD) {
-		String sql = """
-				SELECT id
-				FROM Usuario
-				WHERE nombre = ?
-				  AND apellidos = ?
-				""";
-
-		try (PreparedStatement ps = conexionBD.prepareStatement(sql)) {
-			ps.setString(1, nombre);
-			ps.setString(2, apellidos);
-
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next()) {
-					return rs.getInt("id");
-				}
-			}
-
-		} catch (SQLException e) {
-			System.err.println("Error al buscar ID por nombre y apellidos: " + e.getMessage());
-		}
-
-		return -1;
-	}
-
 	/**
 	 * Actualiza los datos generales de un usuario.
 	 *
@@ -286,7 +259,7 @@ public class Usuario {
 	 * @param contrasenia nueva contraseña.
 	 * @param conexionBD  conexión activa contra la base de datos.
 	 *
-	 * @return {@code true} si se actualizó correctamente; {@code false} en caso
+	 * @return true si se actualizó correctamente; false en caso
 	 *         contrario.
 	 */
 	public static boolean actualizarUsuario(int id, String nombre, String apellidos, String email, String telefono,

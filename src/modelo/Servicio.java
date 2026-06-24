@@ -10,7 +10,7 @@ import java.util.List;
  * Un servicio puede utilizar un producto asociado y dispone de un precio
  * configurado.
  *
- * La información se almacena en la tabla {@code servicios}.
+ * La información se almacena en la tabla Servicios.
  *
  * @author Mario
  * @version 1.0.3
@@ -75,7 +75,7 @@ public class Servicio {
 	 * @param idServicio identificador del servicio.
 	 * @param conexionBD conexión activa contra la base de datos.
 	 *
-	 * @return el servicio encontrado o {@code null} si no existe.
+	 * @return el servicio encontrado o null si no existe.
 	 */
 	public static Servicio buscarServicioPorId(int idServicio, Connection conexionBD) {
 		String sql = """
@@ -139,7 +139,7 @@ public class Servicio {
 	 * @param precio      precio del servicio.
 	 * @param conexionBD  conexión activa contra la base de datos.
 	 *
-	 * @return identificador del servicio o {@code -1} si no existe coincidencia.
+	 * @return identificador del servicio o -1 si no existe coincidencia.
 	 */
 	public static int buscarIdServicio(String descripcion, double precio, Connection conexionBD) {
 		String sql = """
@@ -178,8 +178,8 @@ public class Servicio {
 	 * @param precio      nuevo precio.
 	 * @param conexionBD  conexión activa contra la base de datos.
 	 *
-	 * @return {@code true} si la actualización se realizó correctamente;
-	 *         {@code false} en caso contrario.
+	 * @return true si la actualización se realizó correctamente;
+	 *         false en caso contrario.
 	 */
 	public static boolean actualizarServicio(int idServicio, String descripcion, int productoId, double precio,
 			Connection conexionBD) {

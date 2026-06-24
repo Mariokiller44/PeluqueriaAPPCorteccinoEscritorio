@@ -20,15 +20,13 @@ public class Cita {
 	 * determinados.
 	 *
 	 * Una cita puede encontrarse en diferentes estados:
+	 * PENDIENTE
+	 * CONFIRMADA
+	 * COMPLETADA
+	 * CANCELADA
+	 * 
 	 *
-	 * <ul>
-	 * <li>PENDIENTE</li>
-	 * <li>CONFIRMADA</li>
-	 * <li>COMPLETADA</li>
-	 * <li>CANCELADA</li>
-	 * </ul>
-	 *
-	 * La información se almacena en la tabla {@code cita}.
+	 * La información se almacena en la tabla cita.
 	 *
 	 * @author Mario
 	 * @version 1.0.3
@@ -109,7 +107,7 @@ public class Cita {
 	 * @param idCita     identificador de la cita.
 	 * @param conexionBD conexión activa contra la base de datos.
 	 *
-	 * @return la cita encontrada o {@code null} si no existe.
+	 * @return la cita encontrada o null si no existe.
 	 */
 	public static Cita buscarCitaPorId(int idCita, Connection conexionBD) {
 		String sql = """
@@ -210,7 +208,7 @@ public class Cita {
 	/**
 	 * Registra una nueva cita en el sistema.
 	 *
-	 * La cita se crea inicialmente con estado {@code PENDIENTE}.
+	 * La cita se crea inicialmente con estado PENDIENTE.
 	 *
 	 * Este método únicamente crea el registro de la cita. La actualización de
 	 * disponibilidad del horario debe gestionarse mediante una transacción
@@ -222,8 +220,8 @@ public class Cita {
 	 * @param observaciones observaciones adicionales.
 	 * @param conexionBD    conexión activa contra la base de datos.
 	 *
-	 * @return {@code true} si la inserción fue realizada correctamente;
-	 *         {@code false} en caso contrario.
+	 * @return true si la inserción fue realizada correctamente;
+	 *         false en caso contrario.
 	 */
 	public static boolean crearCita(int clienteId, int empleadoId, int horarioId, String observaciones,
 			Connection conexionBD) {
@@ -251,15 +249,13 @@ public class Cita {
 	/**
 	 * Modifica el estado de una cita existente.
 	 *
-	 * Los estados válidos son los definidos por el campo ENUM de la tabla
-	 * {@code cita}.
+	 * Los estados válidos son los definidos por el campo ENUM de la tabla cita.
 	 *
 	 * @param idCita      identificador de la cita.
 	 * @param nuevoEstado nuevo estado a asignar.
 	 * @param conexionBD  conexión activa contra la base de datos.
 	 *
-	 * @return {@code true} si la actualización tuvo éxito; {@code false} en caso
-	 *         contrario.
+	 * @return true si la actualización tuvo éxito; false en caso contrario.
 	 */
 	public static boolean actualizarEstado(int idCita, String nuevoEstado, Connection conexionBD) {
 		String sql = """
@@ -283,13 +279,12 @@ public class Cita {
 	/**
 	 * Cancela una cita existente.
 	 *
-	 * Internamente establece el estado de la cita a {@code CANCELADA}.
+	 * Internamente establece el estado de la cita a CANCELADA.
 	 *
 	 * @param idCita     identificador de la cita.
 	 * @param conexionBD conexión activa contra la base de datos.
 	 *
-	 * @return {@code true} si la operación se realizó correctamente; {@code false}
-	 *         en caso contrario.
+	 * @return true si la operación se realizó correctamente; false en caso contrario.
 	 */
 	public static boolean cancelarCita(int idCita, Connection conexionBD) {
 		return actualizarEstado(idCita, "CANCELADA", conexionBD);

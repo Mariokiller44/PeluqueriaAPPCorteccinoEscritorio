@@ -10,7 +10,7 @@ import java.util.List;
  *
  * Cada producto dispone de un nombre y una cantidad disponible en stock.
  *
- * La información se almacena en la tabla {@code productos}.
+ * La información se almacena en la tabla productos.
  *
  * @author Mario
  * @version 1.0.3
@@ -60,7 +60,7 @@ public class Producto {
 	 * @param idProducto identificador del producto.
 	 * @param conexionBD conexión activa contra la base de datos.
 	 *
-	 * @return el producto encontrado o {@code null} si no existe.
+	 * @return el producto encontrado o null si no existe.
 	 */
 	public static Producto buscarProductoPorId(int idProducto, Connection conexionBD) {
 		String sql = """
@@ -124,7 +124,7 @@ public class Producto {
 	 * @param nuevoStock nueva cantidad disponible.
 	 * @param conexionBD conexión activa contra la base de datos.
 	 *
-	 * @return {@code true} si la actualización tuvo éxito; {@code false} en caso
+	 * @return true si la actualización tuvo éxito; false en caso
 	 *         contrario.
 	 */
 	public static boolean actualizarStock(int idProducto, int nuevoStock, Connection conexionBD) {
