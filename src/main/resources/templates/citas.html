@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<!--
+    citas.html – Página "Mis Citas"
+    ================================
+    Ruta:     GET /citas?id=X&cuenta=Y
+    Muestra la lista de citas del usuario con un sistema de filtrado
+    por estado (Todas / Próximas / Completadas / Canceladas).
+    Requiere en el modelo: ${usuario} (objeto Usuario).
+    ================================
+-->
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Citas – Al Corteccino</title>
+    <!-- Hoja de estilos global -->
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+
+<!-- Capa oscura de fondo para el sidebar en móvil -->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- Barra superior móvil con botón hamburguesa -->
+<div class="mobile-bar">
+    <button class="hamburger" onclick="openSidebar()">
+        <span></span><span></span><span></span>
+    </button>
+    <span style="font-weight:700;font-size:15px;margin-left:10px;color:#1a2e24">Mis Citas</span>
+</div>
+
+<!-- Contenedor principal: sidebar + contenido -->
+<div class="app-layout">
+
+    <!--
+        Sidebar con 'citas' como página activa.
+        El fragmento resaltará el ítem "Mis Citas" en el menú lateral.
+    -->
+    <aside th:replace="~{fragments :: sidebar('citas')}"></aside>
+
+    <main class="main-content">
+
+        <!-- Cabecera de página con título y botón de nueva cita -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Mis Citas</h1>
+                <p class="page-sub">Gestiona tus reservas en Al Corteccino</p>
+            </div>
+            <!-- Botón de reserva (funcionalidad pendiente de implementar) -->
+            <button class="btn btn-primary" onclick="alert('La reserva online estara disponible proximamente.')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Nueva cita
+            </button>
+        </div>
+
+        <div class="page-body">
+
+            <!-- ── RESUMEN RÁPIDO ─────────────────────────────────── -->
+            <!-- Cuatro tarjetas de métricas compactas para esta página -->
+            <div class="stats-row" style="margin-bottom:22px">
+                <!-- Próximas citas pendientes -->
+                <div class="stat-card">
+                    <div class="stat-icon icon-blue">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">Proximas citas</div>
+                </div>
+                <!-- Citas ya realizadas -->
+                <div class="stat-card">
+                    <div class="stat-icon icon-green">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="stat-value">2</div>
+                    <div class="stat-label">Completadas</div>
+                </div>
+                <!-- Total de citas en el mes -->
+                <div class="stat-card">
+                    <div class="stat-icon icon-amber">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    </div>
+                    <div class="stat-value">5</div>
+                    <div class="stat-label">Total este mes</div>
+                </div>
+                <!-- Gasto acumulado en citas este mes -->
+                <div class="stat-card">
+                    <div class="stat-icon icon-purple">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                    <div class="stat-value">€60</div>
+                    <div class="stat-label">Gasto este mes</div>
+                </div>
+            </div>
+
+            <!-- ── PESTAÑAS DE FILTRO ─────────────────────────────── -->
+            <!--
+                Al hacer clic en un botón se llama a filtrar(this, 'estado').
+                La función JS oculta/muestra las tarjetas según data-status.
+                La clase .active se aplica al botón seleccionado.
+            -->
+            <div class="filter-tabs">
+                <button class="filter-tab active" onclick="filtrar(this,'todas')">Todas (5)</button>
+                <button class="filter-tab" onclick="filtrar(this,'proxima')">Proximas (3)</button>
+                <button class="filter-tab" onclick="filtrar(this,'completada')">Completadas (2)</button>
+                <button class="filter-tab" onclick="filtrar(this,'cancelada')">Canceladas (0)</button>
+            </div>
+
+            <!-- ── LISTA DE CITAS ─────────────────────────────────── -->
+            <!--
+                data-status identifica el estado de cada cita para el filtrado JS.
+                Valores: 'proxima', 'completada', 'cancelada'.
+            -->
+            <div id="citas-list">
+
+                <!-- ─ Cita 1: próxima, confirmada ─ -->
+                <div class="cita-card" data-status="proxima">
+                    <!-- Caja de fecha: día grande + mes en mayúscula -->
+                    <div class="date-box">
+                        <div class="date-day">28</div>
+                        <div class="date-month">Jun</div>
+                    </div>
+                    <!-- Información principal de la cita -->
+                    <div class="cita-info">
+                        <div class="cita-svc">Corte de cabello</div>
+                        <!-- Detalles secundarios separados por puntos medios -->
+                        <div class="cita-meta">
+                            <span>11:00 – 11:30</span>
+                            <span>·</span>
+                            <span>Mario Garcia</span>
+                            <span>·</span>
+                            <span>€14</span>
+                        </div>
+                    </div>
+                    <!-- Badge de estado azul = confirmada -->
+                    <span class="badge badge-info">Confirmada</span>
+                    <!-- Botones de gestión de la cita -->
+                    <div class="cita-acts">
+                        <button class="btn btn-sm btn-outline" onclick="alert('Modificar cita')">Modificar</button>
+                        <button class="btn btn-sm btn-danger-soft" onclick="alert('Cancelar cita')">Cancelar</button>
+                    </div>
+                </div>
+
+                <!-- ─ Cita 2: próxima, pendiente ─ -->
+                <div class="cita-card" data-status="proxima">
+                    <div class="date-box">
+                        <div class="date-day">5</div>
+                        <div class="date-month">Jul</div>
+                    </div>
+                    <div class="cita-info">
+                        <div class="cita-svc">Arreglo de barba</div>
+                        <div class="cita-meta">
+                            <span>10:30 – 11:00</span>
+                            <span>·</span>
+                            <span>Mario Garcia</span>
+                            <span>·</span>
+                            <span>€10</span>
+                        </div>
+                    </div>
+                    <!-- Badge naranja = pendiente de confirmar -->
+                    <span class="badge badge-warning">Pendiente</span>
+                    <div class="cita-acts">
+                        <button class="btn btn-sm btn-outline" onclick="alert('Modificar cita')">Modificar</button>
+                        <button class="btn btn-sm btn-danger-soft" onclick="alert('Cancelar cita')">Cancelar</button>
+                    </div>
+                </div>
+
+                <!-- ─ Cita 3: próxima, pendiente ─ -->
+                <div class="cita-card" data-status="proxima">
+                    <div class="date-box">
+                        <div class="date-day">15</div>
+                        <div class="date-month">Jul</div>
+                    </div>
+                    <div class="cita-info">
+                        <div class="cita-svc">Corte + Arreglo de barba</div>
+                        <div class="cita-meta">
+                            <span>12:00 – 13:00</span>
+                            <span>·</span>
+                            <span>Laura Sanz</span>
+                            <span>·</span>
+                            <span>€22</span>
+                        </div>
+                    </div>
+                    <span class="badge badge-warning">Pendiente</span>
+                    <div class="cita-acts">
+                        <button class="btn btn-sm btn-outline" onclick="alert('Modificar cita')">Modificar</button>
+                        <button class="btn btn-sm btn-danger-soft" onclick="alert('Cancelar cita')">Cancelar</button>
+                    </div>
+                </div>
+
+                <!-- ─ Cita 4: completada ─ -->
+                <!--
+                    Las citas completadas tienen un date-box con fondo gris
+                    para diferenciarlas visualmente de las próximas.
+                -->
+                <div class="cita-card" data-status="completada">
+                    <div class="date-box" style="background:#f0f5f2">
+                        <div class="date-day" style="color:var(--text-muted)">23</div>
+                        <div class="date-month">Jun</div>
+                    </div>
+                    <div class="cita-info">
+                        <div class="cita-svc">Corte de cabello</div>
+                        <div class="cita-meta">
+                            <span>10:00 – 10:30</span>
+                            <span>·</span>
+                            <span>Mario Garcia</span>
+                            <span>·</span>
+                            <span>€14</span>
+                        </div>
+                    </div>
+                    <!-- Badge verde = completada -->
+                    <span class="badge badge-success">Completada</span>
+                    <div class="cita-acts">
+                        <!-- Solo el botón "Repetir" para citas ya realizadas -->
+                        <button class="btn btn-sm btn-ghost" onclick="alert('Repetir cita')">Repetir</button>
+                    </div>
+                </div>
+
+                <!-- ─ Cita 5: completada ─ -->
+                <div class="cita-card" data-status="completada">
+                    <div class="date-box" style="background:#f0f5f2">
+                        <div class="date-day" style="color:var(--text-muted)">15</div>
+                        <div class="date-month">Jun</div>
+                    </div>
+                    <div class="cita-info">
+                        <div class="cita-svc">Hidratacion profunda</div>
+                        <div class="cita-meta">
+                            <span>11:00 – 11:45</span>
+                            <span>·</span>
+                            <span>Laura Sanz</span>
+                            <span>·</span>
+                            <span>€22</span>
+                        </div>
+                    </div>
+                    <span class="badge badge-success">Completada</span>
+                    <div class="cita-acts">
+                        <button class="btn btn-sm btn-ghost" onclick="alert('Repetir cita')">Repetir</button>
+                    </div>
+                </div>
+
+                <!-- Estado vacío: se muestra solo cuando ninguna cita coincide con el filtro -->
+                <div id="empty-state" class="empty-state" style="display:none">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <p>No hay citas en esta categoria</p>
+                </div>
+
+            </div><!-- /citas-list -->
+
+        </div><!-- /page-body -->
+    </main>
+</div><!-- /app-layout -->
+
+<script>
+    // Abre el sidebar añadiendo la clase 'on' al sidebar y al overlay
+    function openSidebar() {
+        document.getElementById('sidebar').classList.add('on');
+        document.getElementById('overlay').classList.add('on');
+    }
+
+    // Cierra el sidebar eliminando la clase 'on'
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('on');
+        document.getElementById('overlay').classList.remove('on');
+    }
+
+    /**
+     * Filtra las tarjetas de citas según el estado seleccionado.
+     * @param {HTMLElement} btn    - El botón de pestaña que se pulsó
+     * @param {string}      status - Estado a mostrar: 'todas', 'proxima', 'completada', 'cancelada'
+     */
+    function filtrar(btn, status) {
+        // Quita la clase activa de todas las pestañas
+        document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+        // Marca la pestaña pulsada como activa
+        btn.classList.add('active');
+
+        let visible = 0;
+
+        // Recorre todas las tarjetas y muestra/oculta según data-status
+        document.querySelectorAll('.cita-card').forEach(c => {
+            const mostrar = status === 'todas' || c.dataset.status === status;
+            c.style.display = mostrar ? 'flex' : 'none';
+            if (mostrar) visible++;
+        });
+
+        // Muestra el estado vacío si no hay citas que coincidan
+        document.getElementById('empty-state').style.display = visible === 0 ? 'block' : 'none';
+    }
+</script>
+</body>
+</html>

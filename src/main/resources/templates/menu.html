@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<!--
+    menu.html – Dashboard principal del usuario
+    ============================================
+    Rutas:
+        GET /        (después de POST /login, el controlador redirige aquí directamente)
+        GET /menu?id=X&cuenta=Y  (navegación directa con parámetros del usuario)
+    Muestra: estadísticas, próximas citas, acciones rápidas y actividad reciente.
+    Requiere en el modelo: ${usuario} (objeto Usuario).
+    ============================================
+-->
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard – Al Corteccino</title>
+    <!-- Hoja de estilos global servida como recurso estático de Spring Boot -->
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+
+<!--
+    Capa de oscurecimiento para cuando el sidebar está abierto en móvil.
+    Al hacer clic sobre ella se llama a closeSidebar() para cerrarlo.
+-->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!--
+    Barra superior visible solo en pantallas pequeñas (≤768px, controlado por CSS).
+    Contiene el botón hamburguesa para abrir/cerrar el sidebar.
+-->
+<div class="mobile-bar">
+    <button class="hamburger" onclick="openSidebar()">
+        <!-- Tres líneas del ícono hamburguesa -->
+        <span></span><span></span><span></span>
+    </button>
+    <span style="font-weight:700;font-size:15px;margin-left:10px;color:#1a2e24">Al Corteccino</span>
+</div>
+
+<!-- Contenedor principal: sidebar (fijo) + contenido (flexible) -->
+<div class="app-layout">
+
+    <!--
+        Incluye el fragmento 'sidebar' definido en fragments.html.
+        El parámetro 'menu' indica qué ítem del sidebar debe resaltarse.
+        th:replace sustituye completamente este elemento por el fragmento.
+    -->
+    <aside th:replace="~{fragments :: sidebar('menu')}"></aside>
+
+    <!-- ── CONTENIDO PRINCIPAL ──────────────────────────────────── -->
+    <main class="main-content">
+
+        <!-- Cabecera de la página: saludo + botón de acción principal -->
+        <div class="page-header">
+            <div>
+                <!--
+                    th:text concatena texto estático con el nombre del usuario
+                    del modelo. Resultado: "Hola, Juan!" si nombre es "Juan".
+                -->
+                <h1 class="page-title" th:text="'Hola, ' + ${usuario.nombre} + '!'">Hola!</h1>
+                <p class="page-sub">Resumen de tu actividad en Al Corteccino</p>
+            </div>
+            <!-- Enlace a la página de citas con los parámetros del usuario -->
+            <a th:href="@{/citas(id=${usuario.id},cuenta=${usuario.cuenta})}" class="btn btn-primary">
+                <!-- Icono + (suma) para representar "nueva" acción -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Reservar cita
+            </a>
+        </div>
+
+        <div class="page-body">
+
+            <!-- ── FILA DE ESTADÍSTICAS ──────────────────────────── -->
+            <!--
+                Grid de 4 tarjetas con métricas del usuario.
+                Datos actualmente estáticos (placeholder); en una versión
+                futura se poblarían desde el modelo del controlador.
+            -->
+            <div class="stats-row">
+                <!-- Stat 1: Citas este mes -->
+                <div class="stat-card">
+                    <div class="stat-icon icon-green">
+                        <!-- Icono de calendario -->
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    </div>
+                    <div class="stat-value">8</div>
+                    <div class="stat-label">Citas este mes</div>
+                    <div class="stat-trend">+2 respecto al mes anterior</div>
+                </div>
+
+                <!-- Stat 2: Próxima cita -->
+                <div class="stat-card">
+                    <div class="stat-icon icon-blue">
+                        <!-- Icono de reloj -->
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                    <div class="stat-value">Vie</div>
+                    <div class="stat-label">Proxima cita</div>
+                    <div class="stat-trend" style="color:var(--info)">28 Jun · 11:00</div>
+                </div>
+
+                <!-- Stat 3: Servicio favorito -->
+                <div class="stat-card">
+                    <div class="stat-icon icon-amber">
+                        <!-- Icono de estrella -->
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    </div>
+                    <div class="stat-value">Corte</div>
+                    <div class="stat-label">Servicio favorito</div>
+                    <div class="stat-trend" style="color:var(--warning)">Reservado 5 veces</div>
+                </div>
+
+                <!-- Stat 4: Puntos de fidelidad -->
+                <div class="stat-card">
+                    <div class="stat-icon icon-purple">
+                        <!-- Icono de moneda / signo $ -->
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                    <div class="stat-value">240</div>
+                    <div class="stat-label">Puntos fidelidad</div>
+                    <div class="stat-trend" style="color:#7c3aed">+60 este mes</div>
+                </div>
+            </div>
+
+            <!-- ── GRID DE DOS COLUMNAS ──────────────────────────── -->
+            <!--
+                Columna izquierda (2/3): tabla de próximas citas.
+                Columna derecha (1/3): cuatro botones de acciones rápidas.
+            -->
+            <div class="two-col">
+
+                <!-- Tabla de próximas citas -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Proximas citas</span>
+                        <!-- Enlace "Ver todas" navega a la página completa de citas -->
+                        <a th:href="@{/citas(id=${usuario.id},cuenta=${usuario.cuenta})}" class="card-link">Ver todas →</a>
+                    </div>
+                    <!-- padding:0 para que la tabla ocupe el ancho completo sin márgenes internos -->
+                    <div style="padding:0">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>Servicio</th>
+                                <th>Fecha</th>
+                                <th>Hora</th>
+                                <th>Estado</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <!-- Filas de ejemplo (datos estáticos / placeholder) -->
+                            <tr>
+                                <td><strong>Corte de cabello</strong></td>
+                                <td>28 Jun 2026</td>
+                                <td>11:00</td>
+                                <!-- Badge azul = cita confirmada -->
+                                <td><span class="badge badge-info">Confirmada</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Arreglo de barba</strong></td>
+                                <td>5 Jul 2026</td>
+                                <td>10:30</td>
+                                <!-- Badge naranja = cita pendiente de confirmación -->
+                                <td><span class="badge badge-warning">Pendiente</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Corte + Barba</strong></td>
+                                <td>15 Jul 2026</td>
+                                <td>12:00</td>
+                                <td><span class="badge badge-warning">Pendiente</span></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Acciones rápidas: 4 botones en grid 2×2 -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Acciones rapidas</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="quick-actions">
+                            <!-- Botón: Nueva cita → navega a /citas -->
+                            <a th:href="@{/citas(id=${usuario.id},cuenta=${usuario.cuenta})}" class="q-action">
+                                <!-- Icono de calendario con + para nueva reserva -->
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="15" x2="12" y2="19"/><line x1="10" y1="17" x2="14" y2="17"/></svg>
+                                Nueva cita
+                            </a>
+                            <!-- Botón: Ver servicios → navega a /servicios -->
+                            <a th:href="@{/servicios(id=${usuario.id},cuenta=${usuario.cuenta})}" class="q-action">
+                                <!-- Icono de tijeras -->
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+                                Ver servicios
+                            </a>
+                            <!-- Botón: Mi perfil → navega a /perfil -->
+                            <a th:href="@{/perfil(id=${usuario.id},cuenta=${usuario.cuenta})}" class="q-action">
+                                <!-- Icono de persona -->
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                Mi perfil
+                            </a>
+                            <!-- Botón: Contactar → enlace a teléfono -->
+                            <a href="tel:+34600000000" class="q-action">
+                                <!-- Icono de teléfono -->
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.6 19.79 19.79 0 0 1 1.61 5.03 2 2 0 0 1 3.6 2.84h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 10.1a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 17z"/></svg>
+                                Contactar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ── ACTIVIDAD RECIENTE ─────────────────────────────── -->
+            <!-- Lista de los últimos eventos del usuario (datos estáticos / placeholder) -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Actividad reciente</span>
+                </div>
+                <div class="card-body">
+                    <ul class="activity-list">
+                        <!-- Ítem: cita completada (punto verde) -->
+                        <li class="activity-item">
+                            <div class="act-dot dot-green"></div>
+                            <div style="flex:1">
+                                <div class="act-text">Cita de <strong>Corte de cabello</strong> completada correctamente</div>
+                                <div class="act-time">Hace 3 dias · 10:00</div>
+                            </div>
+                            <!-- Badge verde = estado completado -->
+                            <span class="badge badge-success">Completada</span>
+                        </li>
+                        <!-- Ítem: nueva reserva (punto azul) -->
+                        <li class="activity-item">
+                            <div class="act-dot dot-blue"></div>
+                            <div style="flex:1">
+                                <div class="act-text">Nueva cita reservada para el <strong>28 de junio</strong></div>
+                                <div class="act-time">Hace 2 dias</div>
+                            </div>
+                            <!-- Badge azul = reserva realizada -->
+                            <span class="badge badge-info">Reservada</span>
+                        </li>
+                        <!-- Ítem: cambio de perfil (punto naranja) -->
+                        <li class="activity-item">
+                            <div class="act-dot dot-amber"></div>
+                            <div style="flex:1">
+                                <div class="act-text">Datos de perfil actualizados correctamente</div>
+                                <div class="act-time">Hace 1 semana</div>
+                            </div>
+                            <span class="badge badge-gray">Perfil</span>
+                        </li>
+                        <!-- Ítem: puntos ganados (punto verde) -->
+                        <li class="activity-item">
+                            <div class="act-dot dot-green"></div>
+                            <div style="flex:1">
+                                <div class="act-text"><strong>+60 puntos de fidelidad</strong> por tu ultima visita</div>
+                                <div class="act-time">Hace 1 semana</div>
+                            </div>
+                            <span class="badge badge-purple">+60 pts</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+        </div><!-- /page-body -->
+    </main>
+</div><!-- /app-layout -->
+
+<script>
+    // Abre el sidebar en móvil: añade la clase 'on' al sidebar y al overlay
+    function openSidebar() {
+        document.getElementById('sidebar').classList.add('on');
+        document.getElementById('overlay').classList.add('on');
+    }
+
+    // Cierra el sidebar en móvil: elimina la clase 'on' de ambos elementos
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('on');
+        document.getElementById('overlay').classList.remove('on');
+    }
+</script>
+</body>
+</html>

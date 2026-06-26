@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<!--
+    fragments.html – Fragmentos Thymeleaf reutilizables de Al Corteccino
+    =====================================================================
+    Este archivo no se sirve directamente como página; solo contiene
+    fragmentos que otras plantillas incluyen con la directiva:
+        th:replace="~{fragments :: nombreFragmento(args)}"
+    =====================================================================
+-->
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+    ============================================================
+    FRAGMENTO: sidebar(active)
+    ============================================================
+    Define la barra lateral de navegación compartida por todas
+    las páginas autenticadas (menu, citas, servicios, perfil).
+
+    Parámetro 'active': cadena que indica qué ítem del menú
+    debe aparecer resaltado. Valores posibles:
+        'menu'      → Dashboard
+        'citas'     → Mis Citas
+        'servicios' → Servicios
+        'perfil'    → Mi Perfil
+
+    Uso en otras plantillas:
+        <aside th:replace="~{fragments :: sidebar('menu')}"></aside>
+
+    Variables del modelo requeridas: ${usuario} (objeto Usuario).
+    ============================================================
+-->
+<aside th:fragment="sidebar(active)" class="sidebar" id="sidebar">
+
+    <!-- ── MARCA / LOGO ─────────────────────────────────────────── -->
+    <!-- Enlace al dashboard con el logo y nombre de la peluquería -->
+    <div class="sidebar-brand">
+        <!--
+            @{/menu(id=${usuario.id},cuenta=${usuario.cuenta})}
+            Construye la URL con los parámetros del usuario logueado,
+            de modo que el servidor pueda identificar la sesión activa.
+        -->
+        <a th:href="@{/menu(id=${usuario.id},cuenta=${usuario.cuenta})}" class="brand-logo">
+            <!-- Icono de tijeras como símbolo de la peluquería -->
+            <div class="brand-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
+                    <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+                    <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+                    <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+                </svg>
+            </div>
+            <!-- Nombre y subtítulo del negocio -->
+            <div>
+                <div class="brand-name">Al Corteccino</div>
+                <div class="brand-sub">Peluquería &amp; Barbería</div>
+            </div>
+        </a>
+    </div>
+
+    <!-- ── NAVEGACIÓN PRINCIPAL ──────────────────────────────────── -->
+    <nav class="sidebar-nav">
+        <div class="nav-label">Principal</div>
+
+        <!--
+            Ítem de navegación: Dashboard
+            th:class evalúa la condición y aplica 'nav-item active'
+            si la página actual es 'menu', o solo 'nav-item' si no.
+            Esto resalta visualmente la página en la que se encuentra el usuario.
+        -->
+        <a th:href="@{/menu(id=${usuario.id},cuenta=${usuario.cuenta})}"
+           th:class="${active == 'menu'} ? 'nav-item active' : 'nav-item'">
+            <!-- Icono de cuadrícula (4 cuadrados) = vista general / dashboard -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+            </svg>
+            Dashboard
+        </a>
+
+        <!-- Ítem: Mis Citas (activo cuando active == 'citas') -->
+        <a th:href="@{/citas(id=${usuario.id},cuenta=${usuario.cuenta})}"
+           th:class="${active == 'citas'} ? 'nav-item active' : 'nav-item'">
+            <!-- Icono de calendario -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            Mis Citas
+        </a>
+
+        <!-- Ítem: Servicios (activo cuando active == 'servicios') -->
+        <a th:href="@{/servicios(id=${usuario.id},cuenta=${usuario.cuenta})}"
+           th:class="${active == 'servicios'} ? 'nav-item active' : 'nav-item'">
+            <!-- Icono de tijeras = servicios de peluquería -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
+                <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+                <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+                <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+            </svg>
+            Servicios
+        </a>
+
+        <!-- Ítem: Mi Perfil (activo cuando active == 'perfil') -->
+        <a th:href="@{/perfil(id=${usuario.id},cuenta=${usuario.cuenta})}"
+           th:class="${active == 'perfil'} ? 'nav-item active' : 'nav-item'">
+            <!-- Icono de silueta de persona -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+            </svg>
+            Mi Perfil
+        </a>
+    </nav>
+
+    <!-- ── PIE DEL SIDEBAR: USUARIO ACTUAL + CERRAR SESIÓN ────────── -->
+    <div class="sidebar-footer">
+        <!-- Mini tarjeta del usuario con avatar circular e información -->
+        <div class="user-mini">
+            <!--
+                th:text con .substring(0,1).toUpperCase() extrae la primera
+                letra del nombre y la pone en mayúscula para el avatar.
+            -->
+            <div class="user-av" th:text="${usuario.nombre.substring(0,1).toUpperCase()}">U</div>
+            <div style="min-width:0">
+                <!-- Nombre completo del usuario -->
+                <div class="user-mini-name" th:text="${usuario.nombre + ' ' + usuario.apellidos}">Usuario</div>
+                <!-- Nombre de cuenta precedido de @ -->
+                <div class="user-mini-acct" th:text="'@' + ${usuario.cuenta}">@cuenta</div>
+            </div>
+        </div>
+
+        <!-- Botón de cerrar sesión: redirige a la página de inicio (/) -->
+        <a th:href="@{/}" class="logout-btn">
+            <!-- Icono de salida (flecha hacia fuera) -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Cerrar sesión
+        </a>
+    </div>
+
+</aside>
+
+</body>
+</html>

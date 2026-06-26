@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<!--
+    servicios.html – Catálogo de servicios de Al Corteccino
+    =========================================================
+    Ruta:     GET /servicios?id=X&cuenta=Y
+    Muestra todos los servicios disponibles agrupados por categoría.
+    El usuario puede filtrar por categoría mediante los chips.
+    La reserva online es un placeholder (futura funcionalidad).
+    Requiere en el modelo: ${usuario} (objeto Usuario).
+    =========================================================
+-->
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servicios – Al Corteccino</title>
+    <!-- Hoja de estilos global -->
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+
+<!-- Capa oscura de fondo para el sidebar en móvil -->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- Barra superior móvil con botón hamburguesa -->
+<div class="mobile-bar">
+    <button class="hamburger" onclick="openSidebar()">
+        <span></span><span></span><span></span>
+    </button>
+    <span style="font-weight:700;font-size:15px;margin-left:10px;color:#1a2e24">Servicios</span>
+</div>
+
+<!-- Contenedor principal: sidebar + contenido -->
+<div class="app-layout">
+
+    <!--
+        Sidebar con 'servicios' como página activa.
+        El fragmento resaltará el ítem "Servicios" en el menú lateral.
+    -->
+    <aside th:replace="~{fragments :: sidebar('servicios')}"></aside>
+
+    <main class="main-content">
+
+        <!-- Cabecera de la página -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Servicios</h1>
+                <p class="page-sub">Todos nuestros servicios de peluqueria y barberia</p>
+            </div>
+        </div>
+
+        <div class="page-body">
+
+            <!-- ── CHIPS DE CATEGORÍA ─────────────────────────────── -->
+            <!--
+                Botones tipo píldora para filtrar las tarjetas de servicio.
+                Al hacer clic se llama a filtrarCat(this, 'categoria').
+                data-cat en las tarjetas debe coincidir con el valor pasado.
+                Categorías: 'todos', 'corte', 'barba', 'color', 'tratamiento'.
+            -->
+            <div class="cat-chips">
+                <button class="chip active" onclick="filtrarCat(this,'todos')">Todos</button>
+                <button class="chip" onclick="filtrarCat(this,'corte')">Corte de cabello</button>
+                <!-- &amp; es la entidad HTML para el carácter & -->
+                <button class="chip" onclick="filtrarCat(this,'barba')">Barba &amp; Afeitado</button>
+                <button class="chip" onclick="filtrarCat(this,'color')">Color &amp; Mechas</button>
+                <button class="chip" onclick="filtrarCat(this,'tratamiento')">Tratamientos</button>
+            </div>
+
+            <!-- ── GRID DE TARJETAS DE SERVICIO ──────────────────── -->
+            <!--
+                Grid responsivo: auto-fill con mínimo 240px por columna.
+                Cada tarjeta tiene data-cat con la categoría correspondiente
+                para que la función JS filtrarCat() pueda ocultarlas/mostrarlas.
+
+                Estructura de cada tarjeta (.svc-card):
+                    1. Icono SVG categorizado por color
+                    2. Nombre del servicio
+                    3. Descripción
+                    4. Footer: precio + duración + botón "Reservar"
+            -->
+            <div class="services-grid">
+
+                <!-- ═══════════ CATEGORÍA: CORTE DE CABELLO ═══════════ -->
+
+                <!-- Servicio: Corte clásico -->
+                <div class="svc-card" data-cat="corte">
+                    <!-- Icono de tijeras (verde corporativo) -->
+                    <div class="svc-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+                    </div>
+                    <div class="svc-name">Corte clasico</div>
+                    <div class="svc-desc">Corte personalizado adaptado a tu estilo y tipo de cabello con acabado profesional.</div>
+                    <!-- Footer: precio + duración a la izquierda, botón a la derecha -->
+                    <div class="svc-footer">
+                        <div><div class="svc-price">€14</div><div class="svc-dur">30 minutos</div></div>
+                        <button class="btn btn-primary btn-sm" onclick="reservar('Corte clasico')">Reservar</button>
+                    </div>
+                </div>
+
+                <!-- Servicio: Corte + Secado -->
+                <div class="svc-card" data-cat="corte">
+                    <!-- Icono de casa (representa estilo completo/hogar) -->
+                    <div class="svc-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    </div>
+                    <div class="svc-name">Corte + Secado</div>
+                    <div class="svc-desc">Corte y acabado profesional con secado y styling incluidos para un look perfecto.</div>
+                    <div class="svc-footer">
+                        <div><div class="svc-price">€18</div><div class="svc-dur">45 minutos</div></div>
+                        <button class="btn btn-primary btn-sm" onclick="reservar('Corte + Secado')">Reservar</button>
+                    </div>
+                </div>
+
+                <!-- Servicio: Corte infantil -->
+                <div class="svc-card" data-cat="corte">
+                    <!-- Icono de grupo de personas (público infantil) -->
+                    <div class="svc-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
+                    <div class="svc-name">Corte infantil</div>
+                    <div class="svc-desc">Corte especial para los mas pequenos con toda la paciencia que se merecen.</div>
+                    <div class="svc-footer">
+                        <div><div class="svc-price">€10</div><div class="svc-dur">20 minutos</div></div>
+                        <button class="btn btn-primary btn-sm" onclick="reservar('Corte infantil')">Reservar</button>
+                    </div>
+                </div>
+
+                <!-- ═══════════ CATEGORÍA: BARBA & AFEITADO ═══════════ -->
+                <!--
+                    Los iconos de esta categoría usan fondo azul (#eff6ff)
+                    para diferenciarlos visualmente de los de Corte (verde).
+                -->
+
+                <!-- Servicio: Arreglo de barba -->
+                <div class="svc-card" data-cat="barba">
+                    <!-- Icono azul de tijeras (categoría barba) -->
+                    <div class="svc-icon" style="background:#eff6ff;color:var(--info)">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+                    </div>
+                    <div class="svc-name">Arreglo de barba</div>
+                    <div class="svc-desc">Perfilado y recorte de barba para un acabado impecable y lineas bien definidas.</div>
+                    <div class="svc-footer">
+                        <div><div class="svc-price">€10</div><div class="svc-dur">25 minutos</div></div>
+                        <button class="btn btn-primary btn-sm" onclick="reservar('Arreglo de barba')">Reservar</button>
+                    </div>
+                </div>
+
+                <!-- Servicio: Afeitado clásico -->
+                <div class="svc-card" data-cat="barba">
+                    <!-- Icono de cara sonriente (afeitado = cuidado facial) -->
+                    <div class="svc-icon" style="background:#eff6ff;color:var(--info)">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                    </div>
+                    <div class="svc-name">Afeitado clasico</div>
+                    <div class="svc-desc">Afeitado a navaja con pano caliente y productos hidratantes de primera calidad.</div>
+                    <div class="svc-footer">
+                        <div><div class="svc-price">€12</div><div class="svc-dur">20 minutos</div></div>
+                        <button class="btn btn-primary btn-sm" onclick="reservar('Afeitado clasico')">Reservar</button>
+                    </div>
+                </div>
+
+                <!-- Servicio: Pack Corte + Barba (combinado) -->
+                <div class="svc-card" data-cat="barba">
+                    <div class="svc-icon" style="background:#eff6ff;color:var(--info)">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+                    </div>
+                    <div class="svc-name">Pack Corte + Barba</div>
+                    <div class="svc-desc">El combo completo: corte de cabello y tratamiento integral de barba y afeitado.</div>
+                    <div class="svc-footer">
+                        <div><div class="svc-price">€22</div><div class="svc-dur">55 minutos</div></div>
+                        <button class="btn btn-primary btn-sm" onclick="reservar('Pack Corte + Barba')">Reservar</button>
+                    </div>
+                </div>
+
+                <!-- ═══════════ CATEGORÍA: COLOR & MECHAS ═══════════ -->
+                <!--
+                    Iconos con fondo ámbar (#fffbeb) para esta categoría.
+                    &amp; es necesario en HTML para representar el carácter &.
+                -->
+
+                <!-- Servicio: Tinte completo -->
+                <div class="svc-card" data-cat="color">
+                    <!-- Icono de onda (representa la vibración del color) -->
+                    <div class="svc-icon" style="background:#fffbeb;color:var(--warning)">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    </div>
+                    <div class="svc-name">Tinte completo</div>
+                    <div class="svc-desc">Coloracion completa con tintes de calidad. Version sin amoniaco disponible bajo consulta.</div>
+                    <div class="svc-footer">
+                        <div><div class="svc-price">€35</div><div class="svc-dur">90 minutos</div></div>
+                        <button class="btn btn-primary btn-sm" onclick="reservar('Tinte completo')">Reservar</button>
+                    </div>
+                </div>
+
+                <!-- Servicio: Mechas & Balayage -->
+                <div class="svc-card" data-cat="color">
+                    <!-- Icono de gota de agua (representa el color fluido) -->
+                    <div class="svc-icon" style="background:#fffbeb;color:var(--warning)">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+                    </div>
+                    <!-- &amp; en el texto también necesita ser escapado en HTML -->
+                    <div class="svc-name">Mechas &amp; Balayage</div>
+                    <div class="svc-desc">Tecnica de mechas californianas o balayage para un efecto natural y muy luminoso.</div>
+                    <div class="svc-footer">
+                        <div><div class="svc-price">€45</div><div class="svc-dur">2 horas</div></div>
+                        <button class="btn btn-primary btn-sm" onclick="reservar('Mechas y Balayage')">Reservar</button>
+                    </div>
+                </div>
+
+                <!-- Servicio: Decoloración -->
+                <div class="svc-card" data-cat="color">
+                    <!-- Icono de advertencia (proceso más agresivo) -->
+                    <div class="svc-icon" style="background:#fffbeb;color:var(--warning)">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    </div>
+                    <div class="svc-name">Decoloracion</div>
+                    <div class="svc-desc">Decoloracion completa para cambios de look radicales. Incluye tratamiento hidratante post-proceso.</div>
+                    <div class="svc-footer">
+                        <div><div class="svc-price">€55</div><div class="svc-dur">2.5 horas</div></div>
+                        <button class="btn btn-primary btn-sm" onclick="reservar('Decoloracion')">Reservar</button>
+                    </div>
+                </div>
+
+                <!-- ═══════════ CATEGORÍA: TRATAMIENTOS ═══════════ -->
+                <!--
+                    Iconos con fondo morado (#f5f3ff) para esta categoría.
+                -->
+
+                <!-- Servicio: Hidratación profunda -->
+                <div class="svc-card" data-cat="tratamiento">
+                    <!-- Icono de corazón (cuidado / bienestar capilar) -->
+                    <div class="svc-icon" style="background:#f5f3ff;color:#7c3aed">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                    </div>
+                    <div class="svc-name">Hidratacion profunda</div>
+                    <div class="svc-desc">Tratamiento intensivo de hidratacion ideal para cabello seco, danado o sin brillo.</div>
+                    <div class="svc-footer">
+                        <div><div class="svc-price">€22</div><div class="svc-dur">45 minutos</div></div>
+                        <button class="btn btn-primary btn-sm" onclick="reservar('Hidratacion profunda')">Reservar</button>
+                    </div>
+                </div>
+
+                <!-- Servicio: Keratina brasileña -->
+                <div class="svc-card" data-cat="tratamiento">
+                    <!-- Icono de globo terráqueo (origen brasileño) -->
+                    <div class="svc-icon" style="background:#f5f3ff;color:#7c3aed">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22C6.5 22 2 17.5 2 12S6.5 2 12 2s10 4.5 10 10-4.5 10-10 10z"/><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72"/></svg>
+                    </div>
+                    <div class="svc-name">Keratina brasilena</div>
+                    <div class="svc-desc">Alisado y nutricion profunda con keratina para un cabello liso, brillante y sin frizz.</div>
+                    <div class="svc-footer">
+                        <div><div class="svc-price">€60</div><div class="svc-dur">3 horas</div></div>
+                        <button class="btn btn-primary btn-sm" onclick="reservar('Keratina brasilena')">Reservar</button>
+                    </div>
+                </div>
+
+                <!-- Servicio: Mascarilla capilar -->
+                <div class="svc-card" data-cat="tratamiento">
+                    <!-- Icono de gota (hidratación / mascarilla) -->
+                    <div class="svc-icon" style="background:#f5f3ff;color:#7c3aed">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+                    </div>
+                    <div class="svc-name">Mascarilla capilar</div>
+                    <div class="svc-desc">Mascarilla nutritiva con ingredientes naturales para revitalizar y fortalecer tu cabello.</div>
+                    <div class="svc-footer">
+                        <div><div class="svc-price">€18</div><div class="svc-dur">30 minutos</div></div>
+                        <button class="btn btn-primary btn-sm" onclick="reservar('Mascarilla capilar')">Reservar</button>
+                    </div>
+                </div>
+
+            </div><!-- /services-grid -->
+        </div><!-- /page-body -->
+    </main>
+</div><!-- /app-layout -->
+
+<script>
+    // Abre el sidebar en móvil añadiendo la clase 'on'
+    function openSidebar() {
+        document.getElementById('sidebar').classList.add('on');
+        document.getElementById('overlay').classList.add('on');
+    }
+
+    // Cierra el sidebar en móvil eliminando la clase 'on'
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('on');
+        document.getElementById('overlay').classList.remove('on');
+    }
+
+    /**
+     * Filtra las tarjetas de servicio por categoría.
+     * @param {HTMLElement} btn - El chip de categoría pulsado
+     * @param {string}      cat - Categoría: 'todos', 'corte', 'barba', 'color', 'tratamiento'
+     */
+    function filtrarCat(btn, cat) {
+        // Quita la clase activa de todos los chips
+        document.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
+        // Activa el chip seleccionado
+        btn.classList.add('active');
+
+        // Muestra/oculta las tarjetas según su atributo data-cat
+        document.querySelectorAll('.svc-card').forEach(c => {
+            c.style.display = (cat === 'todos' || c.dataset.cat === cat) ? 'flex' : 'none';
+        });
+    }
+
+    /**
+     * Muestra un aviso temporal cuando el usuario intenta reservar un servicio.
+     * Cuando la funcionalidad de reserva esté implementada en el backend,
+     * esta función debería redirigir al formulario de reserva correspondiente.
+     * @param {string} servicio - Nombre del servicio seleccionado
+     */
+    function reservar(servicio) {
+        alert('Reserva de "' + servicio + '" proximamente disponible. Por ahora puedes llamarnos o visitarnos.');
+    }
+</script>
+</body>
+</html>

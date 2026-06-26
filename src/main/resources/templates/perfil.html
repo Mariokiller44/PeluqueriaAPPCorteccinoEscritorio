@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<!--
+    perfil.html – Página "Mi Perfil"
+    ==================================
+    Rutas:
+        GET  /perfil?id=X&cuenta=Y        → muestra el formulario
+        POST /perfil/guardar              → procesa los cambios (en InicioController)
+    Permite al usuario editar sus datos personales y cambiar su contraseña.
+
+    Lógica de contraseña:
+        - Si el campo "nueva contraseña" se deja en blanco, el controlador llama a
+          actualizarDatosSinContrasenia() y NO modifica el hash almacenado.
+        - Si se rellena, llama a actualizarUsuario() que sí hashea con MD5.
+
+    Flash attributes (enviados por RedirectAttributes tras el POST):
+        ${exito} → mensaje de éxito (alerta verde)
+        ${error} → mensaje de error (alerta roja)
+
+    Requiere en el modelo: ${usuario} (objeto Usuario).
+    ==================================
+-->
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil – Al Corteccino</title>
+    <!-- Hoja de estilos global -->
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+
+<!-- Capa oscura de fondo para el sidebar en móvil -->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- Barra superior móvil con botón hamburguesa -->
+<div class="mobile-bar">
+    <button class="hamburger" onclick="openSidebar()">
+        <span></span><span></span><span></span>
+    </button>
+    <span style="font-weight:700;font-size:15px;margin-left:10px;color:#1a2e24">Mi Perfil</span>
+</div>
+
+<!-- Contenedor principal: sidebar + contenido -->
+<div class="app-layout">
+
+    <!--
+        Sidebar con 'perfil' como página activa.
+        El fragmento resaltará el ítem "Mi Perfil" en el menú lateral.
+    -->
+    <aside th:replace="~{fragments :: sidebar('perfil')}"></aside>
+
+    <main class="main-content">
+
+        <!-- Cabecera de la página -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Mi Perfil</h1>
+                <p class="page-sub">Gestiona tu informacion personal y preferencias</p>
+            </div>
+        </div>
+
+        <div class="page-body">
+
+            <!-- ── ALERTAS DE RESULTADO ──────────────────────────── -->
+            <!--
+                Estas alertas se muestran después de enviar el formulario.
+                El controlador las inyecta como RedirectAttributes (flash attributes),
+                que se conservan durante un único ciclo de redirección.
+                th:if="${exito}" → solo se renderiza si existe el atributo en el modelo.
+            -->
+            <div th:if="${exito}" class="alert alert-success">
+                <!-- Icono de check mark (confirmación) -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <!-- th:text inserta el mensaje de éxito del modelo -->
+                <span th:text="${exito}">Cambios guardados correctamente.</span>
+            </div>
+
+            <div th:if="${error}" class="alert alert-danger">
+                <!-- Icono de X (error / fallo) -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                <!-- th:text inserta el mensaje de error del modelo -->
+                <span th:text="${error}">No se pudo actualizar el perfil.</span>
+            </div>
+
+            <!-- ── CABECERA DE PERFIL (HERO) ──────────────────────── -->
+            <!--
+                Banda con degradado verde que muestra el avatar (inicial del
+                nombre) y el nombre completo del usuario.
+            -->
+            <div class="profile-hero">
+                <!--
+                    Avatar circular con la inicial en mayúscula.
+                    .substring(0,1) extrae el primer carácter del nombre.
+                    .toUpperCase() lo convierte a mayúscula.
+                    Resultado: "J" si el nombre es "Juan".
+                -->
+                <div class="profile-av-lg" th:text="${usuario.nombre.substring(0,1).toUpperCase()}">U</div>
+                <div>
+                    <!-- Nombre + apellidos del usuario del modelo -->
+                    <h2 th:text="${usuario.nombre + ' ' + usuario.apellidos}">Nombre Apellidos</h2>
+                    <!-- @ + cuenta + rol fijo -->
+                    <p th:text="'@' + ${usuario.cuenta} + '  ·  Cliente Al Corteccino'">@cuenta · Cliente</p>
+                </div>
+            </div>
+
+            <!-- ── GRID: FORMULARIO (izq.) + RESUMEN (der.) ──────── -->
+            <!--
+                .perfil-grid: dos columnas en escritorio (1fr + 340px),
+                una sola columna en móvil (ver media query en styles.css).
+            -->
+            <div class="perfil-grid">
+
+                <!-- ─ COLUMNA IZQUIERDA: Formulario de edición ─ -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Informacion personal</span>
+                    </div>
+                    <div class="card-body">
+                        <!--
+                            Formulario que envía los datos al POST /perfil/guardar.
+                            onsubmit llama a validarFormulario() antes de enviar;
+                            si devuelve false, el envío se cancela.
+                        -->
+                        <form th:action="@{/perfil/guardar}" method="post" onsubmit="return validarFormulario()">
+
+                            <!--
+                                Campo oculto con el ID del usuario.
+                                El controlador lo usa en actualizarDatosSinContrasenia(usuario)
+                                para identificar qué registro actualizar en la BD:
+                                    WHERE id = ?  → ps.setInt(6, usuario.getId())
+                            -->
+                            <input type="hidden" name="id" th:value="${usuario.id}">
+
+                            <!-- ─ Sección: Datos personales ─ -->
+                            <div class="form-section">
+                                <div class="form-section-title">Datos personales</div>
+
+                                <!-- Fila de dos columnas: nombre y apellidos -->
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Nombre</label>
+                                        <!--
+                                            th:value rellena el campo con el valor actual del usuario.
+                                            name="nombre" coincide con el campo del objeto Usuario
+                                            que Spring MVC enlaza al @ModelAttribute del controlador.
+                                        -->
+                                        <input type="text" name="nombre" class="form-control"
+                                               th:value="${usuario.nombre}" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Apellidos</label>
+                                        <input type="text" name="apellidos" class="form-control"
+                                               th:value="${usuario.apellidos}">
+                                    </div>
+                                </div>
+
+                                <!-- Fila de dos columnas: email y teléfono -->
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Correo electronico</label>
+                                        <input type="email" name="email" class="form-control"
+                                               th:value="${usuario.email}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Telefono</label>
+                                        <input type="tel" name="telefono" class="form-control"
+                                               th:value="${usuario.telefono}">
+                                    </div>
+                                </div>
+
+                                <!-- Campo de nombre de usuario (cuenta) -->
+                                <div class="form-group">
+                                    <label class="form-label">Nombre de usuario</label>
+                                    <!--
+                                        El campo visible está deshabilitado (disabled):
+                                        el usuario puede verlo pero no modificarlo.
+                                        Los campos disabled NO se incluyen en el envío del formulario,
+                                        por eso se añade un input hidden debajo con el mismo valor.
+                                    -->
+                                    <input type="text" class="form-control" disabled th:value="${usuario.cuenta}">
+                                    <div class="form-hint">El nombre de usuario no se puede modificar.</div>
+
+                                    <!--
+                                        Campo oculto que sí se envía con el formulario.
+                                        Así el controlador recibe el valor de 'cuenta'
+                                        para construir el objeto Usuario correctamente.
+                                    -->
+                                    <input type="hidden" name="cuenta" th:value="${usuario.cuenta}">
+                                </div>
+                            </div>
+
+                            <!-- ─ Sección: Cambio de contraseña ─ -->
+                            <div class="form-section">
+                                <div class="form-section-title">Cambiar contrasena</div>
+
+                                <!-- Fila: nueva contraseña + confirmación -->
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Nueva contrasena</label>
+                                        <!--
+                                            Si este campo se deja vacío, el controlador
+                                            llamará a actualizarDatosSinContrasenia() (sin cambiar la contraseña).
+                                            Si se rellena, llamará a actualizarUsuario() que aplica el hash MD5.
+                                        -->
+                                        <input type="password" name="contrasenia" id="nuevaPass" class="form-control"
+                                               placeholder="Dejar vacio para no cambiar">
+                                        <div class="form-hint">Minimo 6 caracteres.</div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Confirmar contrasena</label>
+                                        <!--
+                                            Este campo solo existe para validación en el cliente (JS).
+                                            No tiene name, así que no se envía al servidor.
+                                        -->
+                                        <input type="password" id="confirmarPass" class="form-control"
+                                               placeholder="Repetir nueva contrasena">
+                                    </div>
+                                </div>
+
+                                <!--
+                                    Alerta de error de validación de contraseña.
+                                    Se muestra/oculta mediante JavaScript en validarFormulario().
+                                    style="display:none" la oculta por defecto.
+                                -->
+                                <div id="pass-error" class="alert alert-danger" style="display:none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                    Las contrasenas no coinciden.
+                                </div>
+                            </div>
+
+                            <!-- Botones de acción: cancelar (vuelve al dashboard) + guardar -->
+                            <div style="display:flex;gap:10px;justify-content:flex-end">
+                                <!-- Enlace de cancelar: navega de vuelta al dashboard sin guardar -->
+                                <a th:href="@{/menu(id=${usuario.id},cuenta=${usuario.cuenta})}"
+                                   class="btn btn-ghost">Cancelar</a>
+                                <!-- Botón de envío del formulario -->
+                                <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                            </div>
+
+                        </form>
+                    </div>
+                </div><!-- /card formulario -->
+
+                <!-- ─ COLUMNA DERECHA: Resumen + Datos + Zona peligrosa ─ -->
+                <div style="display:flex;flex-direction:column;gap:16px">
+
+                    <!-- Tarjeta: resumen numérico de la cuenta -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Resumen de cuenta</span>
+                        </div>
+                        <div class="card-body">
+                            <!-- Fila: ID del usuario (del modelo) -->
+                            <div class="info-row">
+                                <span class="info-row-label">ID de usuario</span>
+                                <!--
+                                    th:text concatena el carácter '#' con el id del usuario.
+                                    Resultado: "#1" si id es 1.
+                                -->
+                                <strong class="info-row-val" th:text="'#' + ${usuario.id}">#1</strong>
+                            </div>
+                            <!-- Filas con datos estáticos (placeholder hasta integrar la BD) -->
+                            <div class="info-row">
+                                <span class="info-row-label">Citas totales</span>
+                                <strong class="info-row-val">8</strong>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-row-label">Puntos acumulados</span>
+                                <strong class="info-row-val" style="color:var(--primary)">240 pts</strong>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-row-label">Estado</span>
+                                <!-- Badge verde para indicar cuenta activa -->
+                                <span class="badge badge-success">Activo</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta: datos de contacto (solo lectura) -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Datos de contacto</span>
+                        </div>
+                        <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+                            <!-- Email del usuario -->
+                            <div>
+                                <div style="font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:4px">Correo electronico</div>
+                                <!--
+                                    Expresión condicional Thymeleaf:
+                                    Si el email no es nulo ni vacío, muestra su valor.
+                                    Si no, muestra el texto "No especificado".
+                                    #strings.isEmpty() pertenece a las utilidades de Thymeleaf.
+                                -->
+                                <div style="font-size:13.5px;font-weight:500"
+                                     th:text="${usuario.email != null and !#strings.isEmpty(usuario.email) ? usuario.email : 'No especificado'}">
+                                    email@ejemplo.com
+                                </div>
+                            </div>
+                            <!-- Teléfono del usuario con la misma lógica condicional -->
+                            <div>
+                                <div style="font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:4px">Telefono</div>
+                                <div style="font-size:13.5px;font-weight:500"
+                                     th:text="${usuario.telefono != null and !#strings.isEmpty(usuario.telefono) ? usuario.telefono : 'No especificado'}">
+                                    000-000-000
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta: zona de peligro (acción irreversible) -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Zona de peligro</span>
+                        </div>
+                        <div class="card-body">
+                            <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px">
+                                Eliminar tu cuenta es una accion permanente e irreversible.
+                            </p>
+                            <!-- Botón rojo suave que redirige al administrador (pendiente de implementar) -->
+                            <button class="btn btn-danger-soft btn-sm"
+                                    onclick="alert('Contacta con el administrador para eliminar tu cuenta.')">
+                                Eliminar cuenta
+                            </button>
+                        </div>
+                    </div>
+
+                </div><!-- /columna derecha -->
+            </div><!-- /perfil-grid -->
+
+        </div><!-- /page-body -->
+    </main>
+</div><!-- /app-layout -->
+
+<script>
+    // Abre el sidebar en móvil añadiendo la clase 'on'
+    function openSidebar() {
+        document.getElementById('sidebar').classList.add('on');
+        document.getElementById('overlay').classList.add('on');
+    }
+
+    // Cierra el sidebar en móvil eliminando la clase 'on'
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('on');
+        document.getElementById('overlay').classList.remove('on');
+    }
+
+    /**
+     * Valida el formulario de perfil antes de enviarlo al servidor.
+     * Comprueba que las dos contraseñas coincidan si se ha rellenado alguna.
+     * @returns {boolean} true = el formulario se envía; false = se cancela el envío
+     */
+    function validarFormulario() {
+        const nueva     = document.getElementById('nuevaPass').value;
+        const confirmar = document.getElementById('confirmarPass').value;
+        const errEl     = document.getElementById('pass-error');
+
+        // Solo validar si el usuario quiere cambiar la contraseña (campo no vacío)
+        if (nueva && nueva !== confirmar) {
+            // Muestra la alerta de error y cancela el envío del formulario
+            errEl.style.display = 'flex';
+            return false;
+        }
+
+        // Oculta el error (por si estaba visible de un intento anterior)
+        errEl.style.display = 'none';
+        return true;  // permite el envío del formulario
+    }
+</script>
+</body>
+</html>
