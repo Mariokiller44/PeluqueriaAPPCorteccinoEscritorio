@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<!--
+    servicios-vip.html – Catálogo de Servicios (Diseño VIP)
+    ==========================================================
+    Ruta sugerida: GET /servicios-vip?id=X&cuenta=Y  (rol = CLIENTE_VIP)
+    Diseño: sidebar negro/dorado, precios con descuento VIP visible,
+            sección exclusiva de tratamientos premium para miembros VIP.
+    Requiere en el modelo: ${usuario} (objeto Usuario).
+    ==========================================================
+-->
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servicios VIP – Al Corteccino</title>
+    <!-- Hoja de estilos global: layout, tarjetas de servicio, chips, botones -->
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <!-- Override VIP: --primary → dorado, sidebar → negro. Siempre activo aquí -->
+    <link rel="stylesheet" th:href="@{/css/styles-vip-sidebar.css}">
+    <style>
+        /* Banner de descuento VIP encima del catálogo */
+        .vip-discount-bar {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: linear-gradient(90deg, #0d0f14, #1a1500);
+            border: 1px solid rgba(245,158,11,.22);
+            border-radius: 12px;
+            padding: 14px 20px;
+            margin-bottom: 22px;
+            color: #fef3c7;
+            font-size: 13.5px;
+            line-height: 1.5;
+        }
+        .vip-discount-bar strong { color: #f59e0b; }
+
+        /* Badge "VIP" sobre las tarjetas de servicio exclusivo */
+        .svc-vip-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: linear-gradient(135deg, #d97706, #f59e0b);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 9px;
+            border-radius: 20px;
+            letter-spacing: .3px;
+        }
+        /* Tarjeta de servicio: posición relativa para el badge absoluto */
+        .svc-card { position: relative; }
+
+        /* Bloque de precio: precio original tachado + precio VIP abajo */
+        .svc-price-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
+        .svc-price-orig {
+            text-decoration: line-through;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+        /* El precio VIP hereda el color var(--primary) que ya es dorado */
+
+        /* Sección de tratamientos exclusivos: encabezado diferenciado */
+        .section-title-exclusive {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 32px 0 16px;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .section-title-exclusive::before,
+        .section-title-exclusive::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(245,158,11,.35), transparent);
+        }
+        /* Tarjeta exclusiva VIP: borde dorado sutil */
+        .svc-card.exclusive {
+            border-color: rgba(245,158,11,.35);
+            background: linear-gradient(135deg, #fffbeb 0%, #fff 60%);
+        }
+    </style>
+</head>
+<body>
+
+<!-- Overlay móvil para cerrar el sidebar -->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- Barra superior en móvil -->
+<div class="mobile-bar">
+    <button class="hamburger" onclick="openSidebar()">
+        <span></span><span></span><span></span>
+    </button>
+    <span style="font-weight:700;font-size:15px;margin-left:10px;color:#1a2e24">Servicios VIP ✦</span>
+</div>
+
+<div class="app-layout">
+
+    <!-- ── SIDEBAR VIP ────────────────────────────────────────── -->
+    <aside class="sidebar" id="sidebar">
+
+        <div class="sidebar-brand">
+            <a th:href="@{/menu(id=${usuario.id},cuenta=${usuario.cuenta})}" class="brand-logo">
+                <div class="brand-icon">✂</div>
+                <div>
+                    <div class="brand-name">Al Corteccino</div>
+                    <div class="brand-sub">Programa VIP ✦</div>
+                </div>
+            </a>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-label">Mi espacio VIP</div>
+
+            <!-- Panel principal -->
+            <a th:href="@{/menu(id=${usuario.id},cuenta=${usuario.cuenta})}" class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                Panel principal
+            </a>
+
+            <!-- Mis Citas VIP -->
+            <a th:href="@{/citas-vip(id=${usuario.id},cuenta=${usuario.cuenta})}" class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                Mis Citas VIP
+            </a>
+
+            <!-- Servicios VIP (activo en esta página) -->
+            <a class="nav-item active">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="6" cy="6" r="3"/>
+                    <circle cx="6" cy="18" r="3"/>
+                    <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+                    <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+                    <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+                </svg>
+                Servicios VIP
+            </a>
+
+            <!-- Mi Perfil VIP -->
+            <a th:href="@{/perfil-vip(id=${usuario.id},cuenta=${usuario.cuenta})}" class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                Mi Perfil VIP
+            </a>
+
+            <div class="nav-label" style="margin-top:12px">Cuenta</div>
+
+            <a href="/logout" class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Cerrar sesion
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-mini">
+                <div class="user-av"
+                     th:text="${usuario.nombre.substring(0,1).toUpperCase()}">U</div>
+                <div style="flex:1;min-width:0">
+                    <div class="user-mini-name"
+                         th:text="${usuario.nombre + ' ' + usuario.apellidos}">Usuario VIP</div>
+                    <div class="user-mini-acct">Miembro VIP ✦</div>
+                </div>
+                <button class="logout-btn" onclick="location.href='/logout'" title="Cerrar sesion">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ── CONTENIDO PRINCIPAL ────────────────────────────────── -->
+    <main class="main-content">
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Servicios VIP ✦</h1>
+                <p class="page-sub">Catalogo completo con tu descuento exclusivo del 15 %</p>
+            </div>
+        </div>
+
+        <div class="page-body">
+
+            <!-- ── BANNER DESCUENTO VIP ──────────────────────────── -->
+            <div class="vip-discount-bar">
+                <span style="font-size:22px;flex-shrink:0">💎</span>
+                <span>
+                    Como miembro <strong>VIP Oro</strong>, tu <strong>descuento del 15 %</strong>
+                    se aplica automáticamente a todos los servicios.
+                    Los tratamientos marcados como <strong>Exclusivo VIP</strong> solo
+                    están disponibles para miembros.
+                </span>
+            </div>
+
+            <!-- ── FILTRO POR CATEGORÍA ──────────────────────────── -->
+            <!--
+                Los chips activos se colorean en dorado gracias a --primary: #f59e0b
+                heredado de styles-vip-sidebar.css via la variable CSS global.
+            -->
+            <div class="chip-row">
+                <span class="chip active" onclick="filtrarCat(this,'todos')">Todos</span>
+                <span class="chip" onclick="filtrarCat(this,'corte')">Cortes</span>
+                <span class="chip" onclick="filtrarCat(this,'barba')">Barba</span>
+                <span class="chip" onclick="filtrarCat(this,'tratamiento')">Tratamientos</span>
+                <span class="chip" onclick="filtrarCat(this,'coloracion')">Coloracion</span>
+                <span class="chip" onclick="filtrarCat(this,'exclusivo')">Solo VIP</span>
+            </div>
+
+            <!-- ── TARJETAS DE SERVICIO ──────────────────────────── -->
+            <!--
+                Cada tarjeta usa data-cat para el filtro por categoría.
+                Se muestra el precio original tachado y el precio VIP en dorado.
+            -->
+            <div class="svc-grid">
+
+                <!-- ── CATEGORÍA: CORTES ─────────────────────────── -->
+                <div class="svc-card" data-cat="corte">
+                    <div class="svc-icon">✂</div>
+                    <div class="svc-name">Corte de cabello</div>
+                    <div class="svc-desc">Corte personalizado con lavado y secado</div>
+                    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto">
+                        <span class="svc-dur">30 min</span>
+                        <div class="svc-price-wrap">
+                            <span class="svc-price-orig">€14</span>
+                            <span class="svc-price">€11.90</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-sm"
+                            onclick="reservar('Corte de cabello')">Reservar VIP</button>
+                </div>
+
+                <div class="svc-card" data-cat="corte">
+                    <div class="svc-icon">✂</div>
+                    <div class="svc-name">Corte + secado</div>
+                    <div class="svc-desc">Corte adaptado a tu tipo de cabello con acabado profesional</div>
+                    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto">
+                        <span class="svc-dur">45 min</span>
+                        <div class="svc-price-wrap">
+                            <span class="svc-price-orig">€18</span>
+                            <span class="svc-price">€15.30</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-sm"
+                            onclick="reservar('Corte + secado')">Reservar VIP</button>
+                </div>
+
+                <div class="svc-card" data-cat="corte">
+                    <div class="svc-icon">✂</div>
+                    <div class="svc-name">Corte infantil</div>
+                    <div class="svc-desc">Para ninos hasta 12 anos, ambiente tranquilo</div>
+                    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto">
+                        <span class="svc-dur">25 min</span>
+                        <div class="svc-price-wrap">
+                            <span class="svc-price-orig">€10</span>
+                            <span class="svc-price">€8.50</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-sm"
+                            onclick="reservar('Corte infantil')">Reservar VIP</button>
+                </div>
+
+                <!-- ── CATEGORÍA: BARBA ──────────────────────────── -->
+                <div class="svc-card" data-cat="barba">
+                    <div class="svc-icon">🪒</div>
+                    <div class="svc-name">Arreglo de barba</div>
+                    <div class="svc-desc">Perfilado, relleno y acabado con cera natural</div>
+                    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto">
+                        <span class="svc-dur">30 min</span>
+                        <div class="svc-price-wrap">
+                            <span class="svc-price-orig">€10</span>
+                            <span class="svc-price">€8.50</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-sm"
+                            onclick="reservar('Arreglo de barba')">Reservar VIP</button>
+                </div>
+
+                <div class="svc-card" data-cat="barba">
+                    <div class="svc-icon">🪒</div>
+                    <div class="svc-name">Corte + arreglo barba</div>
+                    <div class="svc-desc">Servicio combinado: corte y barba en una sola sesion</div>
+                    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto">
+                        <span class="svc-dur">60 min</span>
+                        <div class="svc-price-wrap">
+                            <span class="svc-price-orig">€22</span>
+                            <span class="svc-price">€18.70</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-sm"
+                            onclick="reservar('Corte + arreglo barba')">Reservar VIP</button>
+                </div>
+
+                <!-- ── CATEGORÍA: TRATAMIENTOS ───────────────────── -->
+                <div class="svc-card" data-cat="tratamiento">
+                    <div class="svc-icon">💧</div>
+                    <div class="svc-name">Hidratacion profunda</div>
+                    <div class="svc-desc">Mascarilla nutritiva con vapor para cabello dañado</div>
+                    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto">
+                        <span class="svc-dur">45 min</span>
+                        <div class="svc-price-wrap">
+                            <span class="svc-price-orig">€25</span>
+                            <span class="svc-price">€21.25</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-sm"
+                            onclick="reservar('Hidratacion profunda')">Reservar VIP</button>
+                </div>
+
+                <div class="svc-card" data-cat="tratamiento">
+                    <div class="svc-icon">🌿</div>
+                    <div class="svc-name">Tratamiento anti-caida</div>
+                    <div class="svc-desc">Ampolla capilar + masaje con aceites esenciales</div>
+                    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto">
+                        <span class="svc-dur">50 min</span>
+                        <div class="svc-price-wrap">
+                            <span class="svc-price-orig">€30</span>
+                            <span class="svc-price">€25.50</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-sm"
+                            onclick="reservar('Tratamiento anti-caida')">Reservar VIP</button>
+                </div>
+
+                <!-- ── CATEGORÍA: COLORACION ─────────────────────── -->
+                <div class="svc-card" data-cat="coloracion">
+                    <div class="svc-icon">🎨</div>
+                    <div class="svc-name">Tinte completo</div>
+                    <div class="svc-desc">Coloracion uniforme con proteccion del cabello</div>
+                    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto">
+                        <span class="svc-dur">90 min</span>
+                        <div class="svc-price-wrap">
+                            <span class="svc-price-orig">€40</span>
+                            <span class="svc-price">€34.00</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-sm"
+                            onclick="reservar('Tinte completo')">Reservar VIP</button>
+                </div>
+
+                <div class="svc-card" data-cat="coloracion">
+                    <div class="svc-icon">✨</div>
+                    <div class="svc-name">Mechas / Balayage</div>
+                    <div class="svc-desc">Tecnica degradada de iluminacion natural</div>
+                    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto">
+                        <span class="svc-dur">120 min</span>
+                        <div class="svc-price-wrap">
+                            <span class="svc-price-orig">€55</span>
+                            <span class="svc-price">€46.75</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-sm"
+                            onclick="reservar('Mechas Balayage')">Reservar VIP</button>
+                </div>
+
+            </div><!-- /svc-grid -->
+
+            <!-- ── SECCIÓN EXCLUSIVA VIP ─────────────────────────── -->
+            <!--
+                Tratamientos premium disponibles únicamente para miembros VIP.
+                Muestran el badge "Exclusivo VIP" en la esquina superior derecha.
+            -->
+            <div class="section-title-exclusive">
+                👑 Tratamientos Exclusivos VIP
+            </div>
+
+            <div class="svc-grid">
+
+                <!-- Keratina Premium – solo VIP -->
+                <div class="svc-card exclusive" data-cat="exclusivo">
+                    <span class="svc-vip-badge">Exclusivo VIP</span>
+                    <div class="svc-icon">💎</div>
+                    <div class="svc-name">Tratamiento Keratina Premium</div>
+                    <div class="svc-desc">
+                        Alisado semipermanente con keratina de alta concentracion.
+                        Resultado: cabello liso, brillante y sin frizz hasta 4 meses.
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto">
+                        <span class="svc-dur">90 min</span>
+                        <div class="svc-price-wrap">
+                            <span class="svc-price-orig">€60</span>
+                            <span class="svc-price">€51.00</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-sm"
+                            onclick="reservar('Tratamiento Keratina Premium')">Reservar VIP</button>
+                </div>
+
+                <!-- Ritual Oro – solo VIP -->
+                <div class="svc-card exclusive" data-cat="exclusivo">
+                    <span class="svc-vip-badge">Exclusivo VIP</span>
+                    <div class="svc-icon">✨</div>
+                    <div class="svc-name">Ritual Oro VIP</div>
+                    <div class="svc-desc">
+                        Experiencia completa: corte, barba, mascarilla capilar con particulas de oro
+                        y masaje craneal. El tratamiento estrella de la casa.
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto">
+                        <span class="svc-dur">120 min</span>
+                        <div class="svc-price-wrap">
+                            <span class="svc-price-orig">€85</span>
+                            <span class="svc-price">€72.25</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-sm"
+                            onclick="reservar('Ritual Oro VIP')">Reservar VIP</button>
+                </div>
+
+                <!-- Consultoría imagen – solo VIP -->
+                <div class="svc-card exclusive" data-cat="exclusivo">
+                    <span class="svc-vip-badge">Exclusivo VIP</span>
+                    <div class="svc-icon">🎯</div>
+                    <div class="svc-name">Consultoria de imagen</div>
+                    <div class="svc-desc">
+                        Sesion privada con nuestro experto para definir el estilo
+                        ideal segun tu morfologia y tipo de cabello.
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto">
+                        <span class="svc-dur">60 min</span>
+                        <div class="svc-price-wrap">
+                            <span class="svc-price-orig">€45</span>
+                            <span class="svc-price">€38.25</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-sm"
+                            onclick="reservar('Consultoria de imagen')">Reservar VIP</button>
+                </div>
+
+            </div><!-- /svc-grid exclusivos -->
+        </div><!-- /page-body -->
+    </main>
+</div><!-- /app-layout -->
+
+<script>
+    function openSidebar() {
+        document.getElementById('sidebar').classList.add('on');
+        document.getElementById('overlay').classList.add('on');
+    }
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('on');
+        document.getElementById('overlay').classList.remove('on');
+    }
+
+    /**
+     * Filtra tarjetas de servicio por categoría (data-cat).
+     * @param {HTMLElement} chip - Chip de categoría pulsado
+     * @param {string}      cat  - Valor de data-cat a mostrar; 'todos' muestra todo
+     */
+    function filtrarCat(chip, cat) {
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        document.querySelectorAll('.svc-card').forEach(card => {
+            card.style.display = (cat === 'todos' || card.dataset.cat === cat) ? '' : 'none';
+        });
+    }
+
+    /**
+     * Acción de reservar (placeholder hasta integrar el backend).
+     * @param {string} servicio - Nombre del servicio seleccionado
+     */
+    function reservar(servicio) {
+        alert('Reserva VIP prioritaria: ' + servicio + '\nTu estilista Mario Garcia confirmara en breve.');
+    }
+</script>
+</body>
+</html>

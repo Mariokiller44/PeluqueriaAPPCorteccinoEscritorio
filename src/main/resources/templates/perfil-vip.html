@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<!--
+    perfil-vip.html – Mi Perfil (Diseño VIP)
+    ==========================================
+    Ruta sugerida: GET /perfil-vip?id=X&cuenta=Y  (rol = CLIENTE_VIP)
+    POST de guardado: /perfil/guardar  (mismo endpoint que perfil.html)
+
+    Diseño: sidebar negro/dorado, hero dorado, tarjeta de membresía VIP
+            en la columna derecha con nivel, puntos y beneficios activos.
+    Requiere en el modelo: ${usuario} (objeto Usuario).
+    ==========================================
+-->
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil VIP – Al Corteccino</title>
+    <!-- Hoja de estilos global: layout, formulario, utilidades -->
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <!-- Override VIP: --primary → dorado, sidebar → negro. Siempre activo aquí -->
+    <link rel="stylesheet" th:href="@{/css/styles-vip-sidebar.css}">
+    <style>
+        /* Tarjeta de membresía VIP: fondo oscuro con degradado dorado -->
+        .vip-membership-card {
+            background: linear-gradient(135deg, #0d0f14 0%, #1c1200 60%, #0d0f14 100%);
+            border: 1px solid rgba(245,158,11,.3);
+            border-radius: 16px;
+            padding: 22px;
+            color: #f1f5f9;
+            position: relative;
+            overflow: hidden;
+        }
+        /* Marca de agua decorativa en la tarjeta de membresía */
+        .vip-membership-card::before {
+            content: '✦';
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 80px;
+            color: rgba(245,158,11,.07);
+            line-height: 1;
+        }
+        .vip-card-level {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #d97706, #f59e0b);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 20px;
+            letter-spacing: .5px;
+            margin-bottom: 14px;
+        }
+        .vip-card-name {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .vip-card-since {
+            font-size: 12.5px;
+            color: #94a3b8;
+            margin-bottom: 18px;
+        }
+        /* Fila de estadísticas dentro de la tarjeta */
+        .vip-card-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+        .vip-stat {
+            background: rgba(255,255,255,.05);
+            border: 1px solid rgba(245,158,11,.1);
+            border-radius: 10px;
+            padding: 10px 14px;
+        }
+        .vip-stat-val { font-size: 18px; font-weight: 700; color: #f59e0b; }
+        .vip-stat-lbl { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+
+        /* Lista de beneficios activos -->
+        .vip-benefits-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+        .vip-benefit-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 7px 0;
+            border-bottom: 1px solid rgba(245,158,11,.08);
+            font-size: 13px;
+            color: #cbd5e1;
+        }
+        .vip-benefit-item:last-child { border-bottom: none; }
+        .vip-benefit-icon { color: #f59e0b; font-size: 14px; flex-shrink: 0; }
+
+        /* Fecha de renovación -->
+        .vip-renewal {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(245,158,11,.12);
+            font-size: 12.5px;
+        }
+        .vip-renewal-date { color: #f59e0b; font-weight: 700; }
+    </style>
+</head>
+<body>
+
+<!-- Overlay móvil para cerrar el sidebar -->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- Barra superior en móvil -->
+<div class="mobile-bar">
+    <button class="hamburger" onclick="openSidebar()">
+        <span></span><span></span><span></span>
+    </button>
+    <span style="font-weight:700;font-size:15px;margin-left:10px;color:#1a2e24">Mi Perfil VIP ✦</span>
+</div>
+
+<div class="app-layout">
+
+    <!-- ── SIDEBAR VIP ────────────────────────────────────────── -->
+    <aside class="sidebar" id="sidebar">
+
+        <div class="sidebar-brand">
+            <a th:href="@{/menu(id=${usuario.id},cuenta=${usuario.cuenta})}" class="brand-logo">
+                <div class="brand-icon">✂</div>
+                <div>
+                    <div class="brand-name">Al Corteccino</div>
+                    <div class="brand-sub">Programa VIP ✦</div>
+                </div>
+            </a>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-label">Mi espacio VIP</div>
+
+            <!-- Panel principal -->
+            <a th:href="@{/menu(id=${usuario.id},cuenta=${usuario.cuenta})}" class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                Panel principal
+            </a>
+
+            <!-- Mis Citas VIP -->
+            <a th:href="@{/citas-vip(id=${usuario.id},cuenta=${usuario.cuenta})}" class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                Mis Citas VIP
+            </a>
+
+            <!-- Servicios VIP -->
+            <a th:href="@{/servicios-vip(id=${usuario.id},cuenta=${usuario.cuenta})}" class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="6" cy="6" r="3"/>
+                    <circle cx="6" cy="18" r="3"/>
+                    <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+                    <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+                    <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+                </svg>
+                Servicios VIP
+            </a>
+
+            <!-- Mi Perfil VIP (activo en esta página) -->
+            <a class="nav-item active">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                Mi Perfil VIP
+            </a>
+
+            <div class="nav-label" style="margin-top:12px">Cuenta</div>
+
+            <a href="/logout" class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Cerrar sesion
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-mini">
+                <div class="user-av"
+                     th:text="${usuario.nombre.substring(0,1).toUpperCase()}">U</div>
+                <div style="flex:1;min-width:0">
+                    <div class="user-mini-name"
+                         th:text="${usuario.nombre + ' ' + usuario.apellidos}">Usuario VIP</div>
+                    <div class="user-mini-acct">Miembro VIP ✦</div>
+                </div>
+                <button class="logout-btn" onclick="location.href='/logout'" title="Cerrar sesion">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ── CONTENIDO PRINCIPAL ────────────────────────────────── -->
+    <main class="main-content">
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Mi Perfil VIP ✦</h1>
+                <p class="page-sub">Informacion personal y detalles de tu membresia</p>
+            </div>
+        </div>
+
+        <div class="page-body">
+
+            <!-- ── ALERTAS DE RESULTADO (idénticas a perfil.html) ── -->
+            <div th:if="${exito}" class="alert alert-success">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <span th:text="${exito}">Cambios guardados correctamente.</span>
+            </div>
+            <div th:if="${error}" class="alert alert-danger">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                <span th:text="${error}">No se pudo actualizar el perfil.</span>
+            </div>
+
+            <!-- ── HERO VIP: degradado dorado en lugar del verde estándar ── -->
+            <!--
+                El profile-hero hereda su gradiente de var(--primary) que ya es
+                dorado (#f59e0b) gracias a styles-vip-sidebar.css.
+                No se necesita CSS adicional.
+            -->
+            <div class="profile-hero">
+                <div class="profile-av-lg"
+                     th:text="${usuario.nombre.substring(0,1).toUpperCase()}">U</div>
+                <div>
+                    <h2 th:text="${usuario.nombre + ' ' + usuario.apellidos}">Nombre Apellidos</h2>
+                    <!-- Rol VIP en el subtítulo del hero -->
+                    <p th:text="'@' + ${usuario.cuenta} + '  ·  Miembro VIP Oro ✦'">@cuenta · VIP</p>
+                </div>
+            </div>
+
+            <!-- ── GRID: FORMULARIO (izq.) + MEMBRESÍA VIP (der.) ──── -->
+            <div class="perfil-grid">
+
+                <!-- ─ COLUMNA IZQUIERDA: Formulario idéntico a perfil.html ─ -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Informacion personal</span>
+                    </div>
+                    <div class="card-body">
+                        <!--
+                            El action apunta al mismo endpoint que perfil.html.
+                            La lógica de contraseña (vacío → sin cambio, relleno → hash MD5)
+                            es la misma del backend en InicioController.
+                        -->
+                        <form th:action="@{/perfil/guardar}" method="post"
+                              onsubmit="return validarFormulario()">
+
+                            <!-- ID del usuario (necesario para UPDATE en BD) -->
+                            <input type="hidden" name="id" th:value="${usuario.id}">
+
+                            <!-- ─ Datos personales ─ -->
+                            <div class="form-section">
+                                <div class="form-section-title">Datos personales</div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Nombre</label>
+                                        <input type="text" name="nombre" class="form-control"
+                                               th:value="${usuario.nombre}" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Apellidos</label>
+                                        <input type="text" name="apellidos" class="form-control"
+                                               th:value="${usuario.apellidos}">
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Correo electronico</label>
+                                        <input type="email" name="email" class="form-control"
+                                               th:value="${usuario.email}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Telefono</label>
+                                        <input type="tel" name="telefono" class="form-control"
+                                               th:value="${usuario.telefono}">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Nombre de usuario</label>
+                                    <!-- Deshabilitado: visible pero no editable ni enviado -->
+                                    <input type="text" class="form-control" disabled
+                                           th:value="${usuario.cuenta}">
+                                    <div class="form-hint">El nombre de usuario no se puede modificar.</div>
+                                    <!-- Hidden para que el valor se incluya en el POST -->
+                                    <input type="hidden" name="cuenta" th:value="${usuario.cuenta}">
+                                </div>
+                            </div>
+
+                            <!-- ─ Cambio de contraseña ─ -->
+                            <div class="form-section">
+                                <div class="form-section-title">Cambiar contrasena</div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Nueva contrasena</label>
+                                        <input type="password" name="contrasenia" id="nuevaPass"
+                                               class="form-control"
+                                               placeholder="Dejar vacio para no cambiar">
+                                        <div class="form-hint">Minimo 6 caracteres.</div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Confirmar contrasena</label>
+                                        <!-- Sin name: solo se usa para validación JS en cliente -->
+                                        <input type="password" id="confirmarPass" class="form-control"
+                                               placeholder="Repetir nueva contrasena">
+                                    </div>
+                                </div>
+                                <div id="pass-error" class="alert alert-danger" style="display:none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                    Las contrasenas no coinciden.
+                                </div>
+                            </div>
+
+                            <div style="display:flex;gap:10px;justify-content:flex-end">
+                                <a th:href="@{/menu(id=${usuario.id},cuenta=${usuario.cuenta})}"
+                                   class="btn btn-ghost">Cancelar</a>
+                                <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                            </div>
+
+                        </form>
+                    </div>
+                </div><!-- /card formulario -->
+
+                <!-- ─ COLUMNA DERECHA: Tarjeta de membresía VIP ─ -->
+                <div style="display:flex;flex-direction:column;gap:16px">
+
+                    <!-- Tarjeta de membresía VIP oscura con degradado dorado -->
+                    <div class="vip-membership-card">
+                        <div class="vip-card-level">👑 VIP ORO</div>
+                        <div class="vip-card-name"
+                             th:text="${usuario.nombre + ' ' + usuario.apellidos}">Nombre VIP</div>
+                        <div class="vip-card-since">Miembro desde enero 2025</div>
+
+                        <!-- Estadísticas de la membresía -->
+                        <div class="vip-card-stats">
+                            <div class="vip-stat">
+                                <div class="vip-stat-val">1.840</div>
+                                <div class="vip-stat-lbl">Puntos acumulados</div>
+                            </div>
+                            <div class="vip-stat">
+                                <div class="vip-stat-val">€12.40</div>
+                                <div class="vip-stat-lbl">Ahorro este mes</div>
+                            </div>
+                            <div class="vip-stat">
+                                <div class="vip-stat-val">18</div>
+                                <div class="vip-stat-lbl">Citas historico</div>
+                            </div>
+                            <div class="vip-stat">
+                                <div class="vip-stat-val">15 %</div>
+                                <div class="vip-stat-lbl">Descuento activo</div>
+                            </div>
+                        </div>
+
+                        <!-- Beneficios activos de la membresía -->
+                        <div class="vip-benefits-title">Beneficios activos</div>
+                        <div class="vip-benefit-item">
+                            <span class="vip-benefit-icon">✦</span>
+                            15 % de descuento en todos los servicios
+                        </div>
+                        <div class="vip-benefit-item">
+                            <span class="vip-benefit-icon">✦</span>
+                            Prioridad de reserva en la agenda
+                        </div>
+                        <div class="vip-benefit-item">
+                            <span class="vip-benefit-icon">✦</span>
+                            Estilista dedicado: Mario Garcia
+                        </div>
+                        <div class="vip-benefit-item">
+                            <span class="vip-benefit-icon">✦</span>
+                            Acceso a tratamientos exclusivos VIP
+                        </div>
+                        <div class="vip-benefit-item">
+                            <span class="vip-benefit-icon">✦</span>
+                            Invitaciones a eventos de la marca
+                        </div>
+
+                        <!-- Fecha de renovación de la membresía -->
+                        <div class="vip-renewal">
+                            <span style="color:#94a3b8;font-size:12.5px">Renovacion automatica</span>
+                            <span class="vip-renewal-date">15 enero 2027</span>
+                        </div>
+                    </div>
+
+                    <!-- Historial de puntos -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Historial de puntos</span>
+                            <span class="badge badge-success">+1.840 pts</span>
+                        </div>
+                        <div class="card-body">
+                            <!-- Cada fila muestra movimiento de puntos por cita -->
+                            <div class="info-row">
+                                <span class="info-row-label">Corte de cabello – 23 Jun</span>
+                                <strong class="info-row-val"
+                                        style="color:var(--primary)">+120 pts</strong>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-row-label">Hidratacion profunda – 10 Jun</span>
+                                <strong class="info-row-val"
+                                        style="color:var(--primary)">+210 pts</strong>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-row-label">Ritual Oro VIP – 28 May</span>
+                                <strong class="info-row-val"
+                                        style="color:var(--primary)">+720 pts</strong>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-row-label">Corte + barba – 15 May</span>
+                                <strong class="info-row-val"
+                                        style="color:var(--primary)">+187 pts</strong>
+                            </div>
+                            <a href="#" class="card-link" style="display:block;text-align:right;margin-top:10px">
+                                Ver historial completo →
+                            </a>
+                        </div>
+                    </div>
+
+                </div><!-- /columna derecha -->
+            </div><!-- /perfil-grid -->
+
+        </div><!-- /page-body -->
+    </main>
+</div><!-- /app-layout -->
+
+<script>
+    function openSidebar() {
+        document.getElementById('sidebar').classList.add('on');
+        document.getElementById('overlay').classList.add('on');
+    }
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('on');
+        document.getElementById('overlay').classList.remove('on');
+    }
+
+    /**
+     * Valida que las contraseñas coincidan antes de enviar el formulario.
+     * @returns {boolean} false cancela el envío; true lo permite
+     */
+    function validarFormulario() {
+        const nueva     = document.getElementById('nuevaPass').value;
+        const confirmar = document.getElementById('confirmarPass').value;
+        const errEl     = document.getElementById('pass-error');
+        if (nueva && nueva !== confirmar) {
+            errEl.style.display = 'flex';
+            return false;
+        }
+        errEl.style.display = 'none';
+        return true;
+    }
+</script>
+</body>
+</html>

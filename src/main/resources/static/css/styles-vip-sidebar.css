@@ -1,0 +1,160 @@
+/* ============================================================
+   styles-vip-sidebar.css  –  Override completo del tema VIP
+   ============================================================
+   Se carga DESPUÉS de styles.css, solo cuando ?vip=true está en la URL:
+       <link th:if="${param.vip != null}" rel="stylesheet"
+             th:href="@{/css/styles-vip-sidebar.css}">
+
+   Estrategia en dos capas:
+
+   CAPA 1 – Variables CSS globales
+     Sobreescribir --primary (verde → dorado) propaga el cambio
+     automáticamente a TODO lo que usa var(--primary) en styles.css:
+       · filter-tab.active, chip.active        → dorado
+       · btn-primary, btn-outline              → dorado
+       · date-box, date-day                   → dorado (citas)
+       · svc-icon, svc-price                  → dorado (servicios)
+       · chip de categoría activo             → dorado
+       · profile-hero gradient                → dorado
+       · form-control focus border            → dorado
+       · q-action hover                       → dorado
+       · card-link, stat-trend                → dorado
+       · cita-card:hover border               → dorado
+
+   CAPA 2 – Overrides explícitos del sidebar
+     El sidebar tiene fondo OSCURO (#0d0f14), por lo que los colores
+     de texto y hover necesitan ajuste manual además del --primary.
+   ============================================================ */
+
+/* ═══════════════════════════════════════════════════════════
+   CAPA 1: VARIABLES GLOBALES → PALETA DORADA VIP
+   ═══════════════════════════════════════════════════════════ */
+:root {
+    /* Verde corporativo → Dorado premium */
+    --primary:       #f59e0b;  /* dorado principal  */
+    --primary-dark:  #d97706;  /* hover / activo    */
+    --primary-light: #fef3c7;  /* fondos suaves     */
+    --primary-mid:   #fbbf24;  /* bordes / medios   */
+
+    /* Fondo de la app ligeramente más cálido */
+    --bg:     #fafaf5;
+    /* Borde general con tinte cálido */
+    --border: #e8e2d0;
+}
+
+/*
+   El focus en .form-control usa un box-shadow con rgba hardcodeado
+   al verde en styles.css. Lo sobreescribimos al dorado aquí.
+*/
+.form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, .13);
+}
+
+/*
+   Fondo de encabezado de tabla y hover de fila: el original usa #f8fbf9
+   (tono verdoso). Lo cambiamos a un beige cálido.
+*/
+.table th { background: #faf8f2; }
+.table tbody tr:hover td { background: #faf8f2; }
+
+/*
+   Campo deshabilitado: su fondo original era #f8fbf9 (verdoso).
+   En VIP lo dejamos en un beige neutro.
+*/
+.form-control:disabled { background: #faf9f5; }
+.form-control::placeholder { color: #c9bb9a; }
+
+/* ═══════════════════════════════════════════════════════════
+   CAPA 2: SIDEBAR OSCURO + DETALLES DORADOS
+   ═══════════════════════════════════════════════════════════
+   El sidebar necesita fondo oscuro (#0d0f14).
+   Con --primary ya en dorado, algunos valores del sidebar
+   serían: fondo blanco → verde activo. Los sobreescribimos
+   para el entorno oscuro.
+   ═══════════════════════════════════════════════════════════ */
+
+/* Fondo oscuro profundo y borde dorado tenue */
+.sidebar {
+    background: #0d0f14;
+    border-right: 1px solid rgba(245, 158, 11, .14);
+}
+
+/* Separador inferior del logo en dorado tenue */
+.sidebar-brand {
+    border-bottom-color: rgba(245, 158, 11, .12);
+}
+
+/*
+   Icono de marca: degradado dorado con resplandor.
+   Sin este override quedaría dorado sólido (por --primary),
+   pero queremos el degradado + glow para el efecto premium.
+*/
+.brand-icon {
+    background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+    box-shadow: 0 0 18px rgba(245, 158, 11, .4);
+}
+
+/* Nombre de la marca en blanco (en el fondo oscuro) */
+.brand-name { color: #f1f5f9; }
+
+/* Subtítulo en dorado con plena opacidad */
+.brand-sub  { color: #f59e0b; font-weight: 600; opacity: 1; }
+
+/* Etiqueta de sección: gris medio sobre fondo oscuro */
+.nav-label { color: #334155; }
+
+/* Ítem de nav normal: texto gris azulado sobre fondo oscuro */
+.nav-item { color: #94a3b8; }
+
+/*
+   Hover: el --primary ya es dorado, pero queremos fondo
+   semitransparente en lugar del sólido que daría var(--primary-light).
+*/
+.nav-item:hover {
+    background: rgba(245, 158, 11, .1);
+    color: #f59e0b;
+}
+
+/*
+   Activo: borde dorado con fondo semitransparente.
+   Sin este override sería fondo sólido dorado con texto blanco
+   (porque .nav-item.active { background: var(--primary); color: #fff; }).
+   Para el fondo oscuro preferimos el estilo translúcido.
+*/
+.nav-item.active {
+    background: rgba(245, 158, 11, .18);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, .28);
+    box-shadow: none;
+}
+
+/* Separador superior del pie del sidebar */
+.sidebar-footer {
+    border-top-color: rgba(245, 158, 11, .1);
+}
+
+/* Fila de usuario: fondo sutilmente diferenciado del sidebar oscuro */
+.user-mini {
+    background: rgba(255, 255, 255, .04);
+    border-radius: 9px;
+}
+
+/*
+   Avatar: degradado dorado con aura.
+   Sin override quedaría dorado sólido plano.
+*/
+.user-av {
+    background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+    box-shadow: 0 0 12px rgba(245, 158, 11, .3);
+}
+
+/* Nombre del usuario en blanco sobre fondo oscuro */
+.user-mini-name { color: #f1f5f9; }
+
+/* Cuenta (@usuario) en dorado — el subtítulo del nivel VIP */
+.user-mini-acct { color: #f59e0b; font-weight: 600; opacity: .85; }
+
+/* Botón de logout: discreto sobre fondo oscuro */
+.logout-btn       { color: #475569; }
+.logout-btn:hover { background: rgba(255, 255, 255, .06); color: #94a3b8; }

@@ -5,16 +5,20 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.alcorteccino.peluqueria.model.Usuario;
-import com.alcorteccino.peluqueria.service.UsuarioService;
+import com.alcorteccino.peluqueria.model.*;
+import com.alcorteccino.peluqueria.service.*;
 
 @Controller
 public class InicioController {
 
-    private final UsuarioService usuarioService;
+    private final UsuarioService usuarioServicio;
+    private final PersonalService personalServicio;
+    private final ClienteService clienteServicio;
 
-    public InicioController(UsuarioService usuarioService) {
-        this.usuarioService = usuarioService;
+    public InicioController(UsuarioService usuarioService,PersonalService personalService, ClienteService clienteService) {
+        this.usuarioServicio = usuarioService;
+		this.personalServicio = personalService;
+		this.clienteServicio = clienteService;
     }
 
     @GetMapping("/")
@@ -26,15 +30,28 @@ public class InicioController {
     public String login(@RequestParam String cuenta,
                         @RequestParam String contrasenia,
                         Model model) {
-        Usuario usuario = usuarioService.autenticar(cuenta, contrasenia);
-
-        if (usuario == null) {
-            model.addAttribute("error", "Cuenta o contrasena incorrecta.");
-            return "inicio";
-        }
-
+        Usuario usuario = usuarioServicio.autenticar(cuenta, contrasenia);
+        Personal personal= personalServicio.obtenerPersonalPorId(usuario.getId());
+        Cliente cliente= clienteServicio.obtenerClientePorId(usuario.getId());
         model.addAttribute("usuario", usuario);
-        return "menu";
+        
+        if (usuario == null) {
+            model.addAttribute("error", "Cuenta o contraseña incorrecta.");
+            return "inicio";
+        } else if (cliente!=null) {
+        	if (cliente.getCategoria().equals("VIP")) {
+        		model.addAttribute("vip", "true");
+				return "menu-vip";
+			}else {
+				return "menu-cliente";				
+			}
+		}else {
+			return "menu-personal";
+		}
+    }
+    @GetMapping("/logout")
+    public String cerrarSesion() {
+    	return "inicio";
     }
 
     @GetMapping("/menu")
@@ -42,7 +59,19 @@ public class InicioController {
                        @RequestParam(required = false) String cuenta,
                        Model model) {
         model.addAttribute("usuario", resolverUsuario(id, cuenta));
-        return "menu";
+        Personal personal= personalServicio.obtenerPersonalPorId(id);
+        Cliente cliente= clienteServicio.obtenerClientePorId(id);
+        if (cliente !=null) {
+        	if (cliente.getCategoria().equals("VIP")) {
+        		model.addAttribute("vip", "true");
+        		return "menu-vip";
+        	}else {
+        		return "menu-cliente";				
+        	}
+        }else {
+        	return "menu-personal";
+			
+		}
     }
 
     @GetMapping("/citas")
@@ -50,6 +79,12 @@ public class InicioController {
                         @RequestParam(required = false) String cuenta,
                         Model model) {
         model.addAttribute("usuario", resolverUsuario(id, cuenta));
+        
+        Personal personal= personalServicio.obtenerPersonalPorId(id);
+        Cliente cliente= clienteServicio.obtenerClientePorId(id);
+        if (cliente!=null) {
+			model.addAttribute(cliente.getCategoria());
+		}
         return "citas";
     }
 
@@ -75,9 +110,9 @@ public class InicioController {
         boolean ok;
 
         if (usuario.getContrasenia() != null && !usuario.getContrasenia().isBlank()) {
-            ok = usuarioService.actualizarUsuario(usuario);
+            ok = usuarioServicio.actualizarUsuario(usuario);
         } else {
-            ok = usuarioService.actualizarDatosSinContrasenia(usuario);
+            ok = usuarioServicio.actualizarDatosSinContrasenia(usuario);
         }
 
         ra.addAttribute("id", usuario.getId());
@@ -96,11 +131,11 @@ public class InicioController {
         Usuario usuario = null;
 
         if (id != null) {
-            usuario = usuarioService.buscarUsuarioPorId(id);
+            usuario = usuarioServicio.buscarUsuarioPorId(id);
         }
 
         if (usuario == null && cuenta != null && !cuenta.isBlank()) {
-            usuario = usuarioService.buscarUsuarioPorCuenta(cuenta);
+            usuario = usuarioServicio.buscarUsuarioPorCuenta(cuenta);
         }
 
         if (usuario == null) {

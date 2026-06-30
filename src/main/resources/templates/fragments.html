@@ -30,7 +30,14 @@
     Variables del modelo requeridas: ${usuario} (objeto Usuario).
     ============================================================
 -->
-<aside th:fragment="sidebar(active)" class="sidebar" id="sidebar">
+<!--
+    th:with="esVip=${param.vip != null}" evalúa si la petición actual incluye
+    ?vip=true en la URL. Si es así, todos los enlaces del sidebar propagarán
+    ese parámetro para que las páginas destino carguen el override VIP.
+    Esta variable solo existe dentro de este fragmento (scope local).
+-->
+<aside th:fragment="sidebar(active)" th:with="esVip=${param.vip != null}"
+       class="sidebar" id="sidebar">
 
     <!-- ── MARCA / LOGO ─────────────────────────────────────────── -->
     <!-- Enlace al dashboard con el logo y nombre de la peluquería -->
@@ -40,7 +47,12 @@
             Construye la URL con los parámetros del usuario logueado,
             de modo que el servidor pueda identificar la sesión activa.
         -->
-        <a th:href="@{/menu(id=${usuario.id},cuenta=${usuario.cuenta})}" class="brand-logo">
+        <!--
+            Enlace al dashboard. Si esVip es true, propaga ?vip=true para mantener
+            el tema dorado en la página destino.
+        -->
+        <a th:href="${esVip} ? @{/menu(id=${usuario.id},cuenta=${usuario.cuenta},vip=true)} : @{/menu(id=${usuario.id},cuenta=${usuario.cuenta})}"
+           class="brand-logo">
             <!-- Icono de tijeras como símbolo de la peluquería -->
             <div class="brand-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -60,30 +72,43 @@
     </div>
 
     <!-- ── NAVEGACIÓN PRINCIPAL ──────────────────────────────────── -->
+    <!--
+        La estructura replica exactamente los dashboards:
+          - Normal → igual que menu-cliente.html ("Menu" + "Cuenta")
+          - VIP    → igual que menu-vip.html ("Mi espacio VIP" + "Cuenta")
+        Solo cambian las etiquetas de los grupos y los textos condicionales.
+    -->
     <nav class="sidebar-nav">
-        <div class="nav-label">Principal</div>
+
+        <!-- ── GRUPO PRINCIPAL ──────────────────────────────────────
+             Normal: "Menu"         (igual que menu-cliente.html)
+             VIP:    "Mi espacio VIP" (igual que menu-vip.html)
+        ──────────────────────────────────────────────────────────── -->
+        <div class="nav-label"
+             th:text="${esVip} ? 'Mi espacio VIP' : 'Menu'">Menu</div>
 
         <!--
-            Ítem de navegación: Dashboard
-            th:class evalúa la condición y aplica 'nav-item active'
-            si la página actual es 'menu', o solo 'nav-item' si no.
-            Esto resalta visualmente la página en la que se encuentra el usuario.
+            Dashboard: en modo normal se llama "Inicio" (menu-cliente.html),
+            en modo VIP se llama "Panel principal" (menu-vip.html).
         -->
-        <a th:href="@{/menu(id=${usuario.id},cuenta=${usuario.cuenta})}"
+        <a th:href="${esVip} ? @{/menu(id=${usuario.id},cuenta=${usuario.cuenta},vip=true)} : @{/menu(id=${usuario.id},cuenta=${usuario.cuenta})}"
            th:class="${active == 'menu'} ? 'nav-item active' : 'nav-item'">
-            <!-- Icono de cuadrícula (4 cuadrados) = vista general / dashboard -->
+            <!-- Icono inicio -->
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-                <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
             </svg>
-            Dashboard
+            <span th:text="${esVip} ? 'Panel principal' : 'Inicio'">Inicio</span>
         </a>
 
-        <!-- Ítem: Mis Citas (activo cuando active == 'citas') -->
-        <a th:href="@{/citas(id=${usuario.id},cuenta=${usuario.cuenta})}"
+        <!--
+            Mis Citas: en modo normal "Mis Citas", en VIP "Mis Citas VIP".
+            Activo cuando active == 'citas'.
+        -->
+        <a th:href="${esVip} ? @{/citas(id=${usuario.id},cuenta=${usuario.cuenta},vip=true)} : @{/citas(id=${usuario.id},cuenta=${usuario.cuenta})}"
            th:class="${active == 'citas'} ? 'nav-item active' : 'nav-item'">
-            <!-- Icono de calendario -->
+            <!-- Icono calendario -->
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -91,13 +116,13 @@
                 <line x1="8" y1="2" x2="8" y2="6"/>
                 <line x1="3" y1="10" x2="21" y2="10"/>
             </svg>
-            Mis Citas
+            <span th:text="${esVip} ? 'Mis Citas VIP' : 'Mis Citas'">Mis Citas</span>
         </a>
 
-        <!-- Ítem: Servicios (activo cuando active == 'servicios') -->
-        <a th:href="@{/servicios(id=${usuario.id},cuenta=${usuario.cuenta})}"
+        <!-- Servicios: igual en ambos dashboards -->
+        <a th:href="${esVip} ? @{/servicios(id=${usuario.id},cuenta=${usuario.cuenta},vip=true)} : @{/servicios(id=${usuario.id},cuenta=${usuario.cuenta})}"
            th:class="${active == 'servicios'} ? 'nav-item active' : 'nav-item'">
-            <!-- Icono de tijeras = servicios de peluquería -->
+            <!-- Icono tijeras -->
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
@@ -108,10 +133,31 @@
             Servicios
         </a>
 
-        <!-- Ítem: Mi Perfil (activo cuando active == 'perfil') -->
-        <a th:href="@{/perfil(id=${usuario.id},cuenta=${usuario.cuenta})}"
+        <!--
+            Beneficios VIP: solo visible en modo VIP (igual que menu-vip.html).
+            th:if elimina el nodo del DOM cuando no es VIP.
+        -->
+        <a th:if="${esVip}"
+           th:href="@{/menu(id=${usuario.id},cuenta=${usuario.cuenta},vip=true)}"
+           th:class="${active == 'beneficios'} ? 'nav-item active' : 'nav-item'"
+           onclick="alert('Beneficios VIP – proximamente')">
+            <!-- Icono estrella -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+            Beneficios VIP
+        </a>
+
+        <!-- ── GRUPO CUENTA ──────────────────────────────────────────
+             Igual en ambos dashboards (menu-cliente.html y menu-vip.html).
+        ──────────────────────────────────────────────────────────── -->
+        <div class="nav-label" style="margin-top:12px">Cuenta</div>
+
+        <!-- Mi Perfil: activo cuando active == 'perfil' -->
+        <a th:href="${esVip} ? @{/perfil(id=${usuario.id},cuenta=${usuario.cuenta},vip=true)} : @{/perfil(id=${usuario.id},cuenta=${usuario.cuenta})}"
            th:class="${active == 'perfil'} ? 'nav-item active' : 'nav-item'">
-            <!-- Icono de silueta de persona -->
+            <!-- Icono persona -->
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -119,6 +165,22 @@
             </svg>
             Mi Perfil
         </a>
+
+        <!--
+            Cerrar sesion: presente en el grupo "Cuenta" de ambos dashboards.
+            La URL apunta a la raíz "/" (misma lógica que el botón del footer).
+        -->
+        <a th:href="@{/}" class="nav-item">
+            <!-- Icono salida -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Cerrar sesion
+        </a>
+
     </nav>
 
     <!-- ── PIE DEL SIDEBAR: USUARIO ACTUAL + CERRAR SESIÓN ────────── -->
@@ -138,7 +200,7 @@
             </div>
         </div>
 
-        <!-- Botón de cerrar sesión: redirige a la página de inicio (/) -->
+        <!-- Botón de cerrar sesión: siempre redirige a la página de inicio -->
         <a th:href="@{/}" class="logout-btn">
             <!-- Icono de salida (flecha hacia fuera) -->
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"

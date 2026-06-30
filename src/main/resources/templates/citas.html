@@ -15,6 +15,11 @@
     <title>Mis Citas – Al Corteccino</title>
     <!-- Hoja de estilos global -->
     <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <!--
+        Override VIP: solo se carga cuando la URL contiene ?vip=true.
+        Colorea el sidebar con el tema negro/dorado sin tocar las tarjetas de citas.
+    -->
+    <link th:if="${param.vip != null}" rel="stylesheet" th:href="@{/css/styles-vip-sidebar.css}">
 </head>
 <body>
 

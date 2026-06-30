@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<!--
+    menu-gerente.html – Dashboard para Gerente / Encargado
+    ========================================================
+    Ruta sugerida: GET /panel?id=X&cuenta=Y  (rol = GERENTE | ENCARGADO)
+    Diseño: oscuro denso, KPIs, gráfico de barras CSS, tabla de personal.
+    Requiere en el modelo: ${usuario} (objeto Usuario).
+    ========================================================
+-->
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Gerencia – Al Corteccino</title>
+    <link rel="stylesheet" th:href="@{/css/styles-gerente.css}">
+</head>
+<body>
+
+<!-- Overlay móvil -->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- Barra superior móvil -->
+<div class="mobile-bar">
+    <button class="hamburger" onclick="openSidebar()">
+        <span></span><span></span><span></span>
+    </button>
+    <span style="font-weight:700;font-size:15px;color:#0f172a">Panel de gerencia</span>
+</div>
+
+<div class="app-layout">
+
+    <!-- ── SIDEBAR GERENTE ───────────────────────────────────── -->
+    <aside class="sidebar" id="sidebar">
+
+        <!-- Logotipo -->
+        <div class="sidebar-brand">
+            <div class="brand-mark">AC</div>
+            <div>
+                <div class="brand-name">Al Corteccino</div>
+                <div class="brand-sub">Gerencia</div>
+            </div>
+        </div>
+
+        <!-- Indicador de turno activo -->
+        <div class="shift-indicator">
+            <span class="shift-label">Turno activo</span>
+            <span class="shift-time">09:00 – 19:30</span>
+        </div>
+
+        <div class="nav-group">
+            <span class="nav-group-label">Vision general</span>
+
+            <a class="nav-item active" href="#">
+                <!-- Icono panel/home -->
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                Panel principal
+            </a>
+
+            <a class="nav-item" href="#">
+                <!-- Icono gráfico/analítica -->
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                Analitica
+            </a>
+
+            <a class="nav-item" href="#">
+                <!-- Icono calendario/citas -->
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Citas del dia
+                <!-- Punto rojo de alerta -->
+                <span class="nav-alert"></span>
+            </a>
+        </div>
+
+        <div class="nav-group">
+            <span class="nav-group-label">Gestion</span>
+
+            <a class="nav-item" href="#">
+                <!-- Icono grupo/personal -->
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Personal
+            </a>
+
+            <a class="nav-item" href="#">
+                <!-- Icono personas/clientes -->
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Clientes
+            </a>
+
+            <a class="nav-item" href="#">
+                <!-- Icono tijeras/servicios -->
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+                Servicios
+            </a>
+        </div>
+
+        <div class="nav-group">
+            <span class="nav-group-label">Reportes</span>
+
+            <a class="nav-item" href="#">
+                <!-- Icono documento/reporte -->
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                Reportes
+            </a>
+
+            <a class="nav-item" href="#">
+                <!-- Icono engranaje/config -->
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+                Configuracion
+            </a>
+
+            <a class="nav-item" href="/logout">
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Cerrar sesion
+            </a>
+        </div>
+
+        <!-- Pie del sidebar -->
+        <div class="sidebar-footer">
+            <div class="user-row">
+                <div class="u-avatar" th:text="${usuario.nombre.substring(0,1).toUpperCase()}">G</div>
+                <div style="flex:1;min-width:0">
+                    <div class="u-name" th:text="${usuario.nombre + ' ' + usuario.apellidos}">Gerente</div>
+                    <div class="u-role">Gerente / Encargado</div>
+                </div>
+                <button class="logout-btn" onclick="location.href='/logout'">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ── CONTENIDO PRINCIPAL ──────────────────────────────── -->
+    <main class="main-content">
+
+        <!-- Cabecera con selector de periodo -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Panel de gerencia</h1>
+                <p class="page-sub">Lunes, 30 de junio de 2026 · Datos en tiempo real</p>
+            </div>
+            <div class="header-actions">
+                <!-- Selector de periodo para los gráficos -->
+                <select class="period-selector" onchange="actualizarPeriodo(this.value)">
+                    <option value="hoy">Hoy</option>
+                    <option value="semana">Esta semana</option>
+                    <option value="mes" selected>Este mes</option>
+                    <option value="anno">Este ano</option>
+                </select>
+                <button class="btn btn-primary" onclick="alert('Exportar reporte PDF')">
+                    <!-- Icono descarga -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Exportar
+                </button>
+            </div>
+        </div>
+
+        <!-- ── KPIs PRINCIPALES ──────────────────────────────── -->
+        <div class="kpi-row">
+            <!-- Ingresos del mes -->
+            <div class="kpi-card kpi-purple">
+                <div class="kpi-header">
+                    <span class="kpi-label">Ingresos del mes</span>
+                    <div class="kpi-icon icon-purple">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                </div>
+                <div class="kpi-val">€4 820</div>
+                <div class="kpi-trend">
+                    <span class="trend-up">▲ 12.4%</span>
+                    <span class="trend-lbl">vs mes anterior</span>
+                </div>
+            </div>
+            <!-- Clientes atendidos -->
+            <div class="kpi-card kpi-green">
+                <div class="kpi-header">
+                    <span class="kpi-label">Clientes este mes</span>
+                    <div class="kpi-icon icon-green">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
+                </div>
+                <div class="kpi-val">286</div>
+                <div class="kpi-trend">
+                    <span class="trend-up">▲ 8.1%</span>
+                    <span class="trend-lbl">vs mes anterior</span>
+                </div>
+            </div>
+            <!-- Ocupación del local -->
+            <div class="kpi-card kpi-blue">
+                <div class="kpi-header">
+                    <span class="kpi-label">Ocupacion media</span>
+                    <div class="kpi-icon icon-blue">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    </div>
+                </div>
+                <div class="kpi-val">78%</div>
+                <div class="kpi-trend">
+                    <span class="trend-up">▲ 3%</span>
+                    <span class="trend-lbl">vs mes anterior</span>
+                </div>
+            </div>
+            <!-- Ticket medio -->
+            <div class="kpi-card kpi-amber">
+                <div class="kpi-header">
+                    <span class="kpi-label">Ticket medio</span>
+                    <div class="kpi-icon icon-amber">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                    </div>
+                </div>
+                <div class="kpi-val">€16.85</div>
+                <div class="kpi-trend">
+                    <span class="trend-dn">▼ 1.2%</span>
+                    <span class="trend-lbl">vs mes anterior</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── GRÁFICO DE INGRESOS (barras CSS) ──────────────── -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <span class="chart-title">Ingresos y citas – ultimas 7 semanas</span>
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:#7c3aed"></div> Ingresos
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:#0284c7"></div> Citas
+                    </div>
+                </div>
+            </div>
+            <div class="chart-body">
+                <div class="bar-chart">
+                    <!-- Cada bar-group es una semana; la altura CSS representa el valor -->
+                    <div class="bar-group">
+                        <div class="bar-wrap">
+                            <div class="bar bar-ingresos" style="height:55px" title="€2 600"></div>
+                            <div class="bar bar-citas"    style="height:38px" title="154 citas"></div>
+                        </div>
+                        <div class="bar-label">S19</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar-wrap">
+                            <div class="bar bar-ingresos" style="height:62px" title="€2 980"></div>
+                            <div class="bar bar-citas"    style="height:44px" title="177 citas"></div>
+                        </div>
+                        <div class="bar-label">S20</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar-wrap">
+                            <div class="bar bar-ingresos" style="height:48px" title="€2 290"></div>
+                            <div class="bar bar-citas"    style="height:34px" title="136 citas"></div>
+                        </div>
+                        <div class="bar-label">S21</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar-wrap">
+                            <div class="bar bar-ingresos" style="height:70px" title="€3 340"></div>
+                            <div class="bar bar-citas"    style="height:50px" title="198 citas"></div>
+                        </div>
+                        <div class="bar-label">S22</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar-wrap">
+                            <div class="bar bar-ingresos" style="height:65px" title="€3 100"></div>
+                            <div class="bar bar-citas"    style="height:47px" title="184 citas"></div>
+                        </div>
+                        <div class="bar-label">S23</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar-wrap">
+                            <div class="bar bar-ingresos" style="height:82px" title="€3 910"></div>
+                            <div class="bar bar-citas"    style="height:58px" title="232 citas"></div>
+                        </div>
+                        <div class="bar-label">S24</div>
+                    </div>
+                    <!-- Semana actual (más destacada) -->
+                    <div class="bar-group">
+                        <div class="bar-wrap">
+                            <div class="bar bar-ingresos" style="height:100px;opacity:1" title="€4 820 (mes actual)"></div>
+                            <div class="bar bar-citas"    style="height:72px;opacity:1"  title="286 citas"></div>
+                        </div>
+                        <div class="bar-label" style="font-weight:700;color:#7c3aed">Jun ✦</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── GRID PRINCIPAL ─────────────────────────────────── -->
+        <div class="main-grid">
+
+            <!-- Tabla de rendimiento del personal -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Rendimiento del personal – hoy</span>
+                    <a href="#" class="card-link">Ver detalle →</a>
+                </div>
+                <div class="card-body">
+                    <table class="staff-table">
+                        <thead>
+                            <tr>
+                                <th>Empleado</th>
+                                <th>Estado</th>
+                                <th>Citas hoy</th>
+                                <th>Progreso</th>
+                                <th>Valoracion</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="staff-name-cell">
+                                        <div class="staff-av av-1">M</div>
+                                        <div>
+                                            <div class="staff-n">Mario Garcia</div>
+                                            <div class="staff-role">Maestro barbero</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="badge badge-green">Disponible</span></td>
+                                <td><strong>6 / 8</strong></td>
+                                <td class="progress-cell">
+                                    <div class="progress-wrap">
+                                        <div class="progress-bar-bg">
+                                            <div class="progress-bar-fill" style="width:75%"></div>
+                                        </div>
+                                        <span class="progress-lbl">75%</span>
+                                    </div>
+                                </td>
+                                <td>⭐ 4.9</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="staff-name-cell">
+                                        <div class="staff-av av-2">L</div>
+                                        <div>
+                                            <div class="staff-n">Laura Sanz</div>
+                                            <div class="staff-role">Estilista senior</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="badge badge-amber">Ocupada</span></td>
+                                <td><strong>5 / 7</strong></td>
+                                <td class="progress-cell">
+                                    <div class="progress-wrap">
+                                        <div class="progress-bar-bg">
+                                            <div class="progress-bar-fill" style="width:71%;background:#0284c7"></div>
+                                        </div>
+                                        <span class="progress-lbl">71%</span>
+                                    </div>
+                                </td>
+                                <td>⭐ 4.8</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="staff-name-cell">
+                                        <div class="staff-av av-3">R</div>
+                                        <div>
+                                            <div class="staff-n">Roberto Vidal</div>
+                                            <div class="staff-role">Barbero</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="badge badge-green">Disponible</span></td>
+                                <td><strong>4 / 6</strong></td>
+                                <td class="progress-cell">
+                                    <div class="progress-wrap">
+                                        <div class="progress-bar-bg">
+                                            <div class="progress-bar-fill" style="width:67%;background:#d97706"></div>
+                                        </div>
+                                        <span class="progress-lbl">67%</span>
+                                    </div>
+                                </td>
+                                <td>⭐ 4.7</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="staff-name-cell">
+                                        <div class="staff-av av-4">S</div>
+                                        <div>
+                                            <div class="staff-n">Sofia Molina</div>
+                                            <div class="staff-role">Estilista</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="badge badge-gray">Descanso</span></td>
+                                <td><strong>3 / 5</strong></td>
+                                <td class="progress-cell">
+                                    <div class="progress-wrap">
+                                        <div class="progress-bar-bg">
+                                            <div class="progress-bar-fill" style="width:60%;background:#94a3b8"></div>
+                                        </div>
+                                        <span class="progress-lbl">60%</span>
+                                    </div>
+                                </td>
+                                <td>⭐ 4.6</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="staff-name-cell">
+                                        <div class="staff-av av-5">P</div>
+                                        <div>
+                                            <div class="staff-n">Pablo Reyes</div>
+                                            <div class="staff-role">Aprendiz</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="badge badge-blue">En servicio</span></td>
+                                <td><strong>2 / 4</strong></td>
+                                <td class="progress-cell">
+                                    <div class="progress-wrap">
+                                        <div class="progress-bar-bg">
+                                            <div class="progress-bar-fill" style="width:50%;background:#a78bfa"></div>
+                                        </div>
+                                        <span class="progress-lbl">50%</span>
+                                    </div>
+                                </td>
+                                <td>⭐ 4.5</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Columna derecha: alertas + acciones -->
+            <div style="display:flex;flex-direction:column;gap:16px">
+
+                <!-- Alertas y acciones pendientes -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Alertas y pendientes</span>
+                        <span class="badge badge-red">3 activas</span>
+                    </div>
+                    <div class="card-body">
+
+                        <div class="alert-item">
+                            <div class="alert-dot dot-red"></div>
+                            <div class="alert-body">
+                                <div class="alert-text">Cita sin asignar a las 14:00</div>
+                                <div class="alert-time">Requiere accion inmediata</div>
+                                <div class="alert-actions">
+                                    <button class="btn-ghost-sm" onclick="alert('Asignar empleado')">Asignar</button>
+                                    <button class="btn-danger-sm" onclick="alert('Cancelar cita')">Cancelar</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert-item">
+                            <div class="alert-dot dot-amber"></div>
+                            <div class="alert-body">
+                                <div class="alert-text">Stock bajo: champu hidratante</div>
+                                <div class="alert-time">Quedan 2 unidades</div>
+                                <div class="alert-actions">
+                                    <button class="btn-ghost-sm" onclick="alert('Registrar pedido')">Pedir</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert-item">
+                            <div class="alert-dot dot-amber"></div>
+                            <div class="alert-body">
+                                <div class="alert-text">Valoracion negativa recibida</div>
+                                <div class="alert-time">Cliente: J. Lopez · hace 2 h</div>
+                                <div class="alert-actions">
+                                    <button class="btn-ghost-sm" onclick="alert('Ver valoracion')">Ver</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert-item">
+                            <div class="alert-dot dot-blue"></div>
+                            <div class="alert-body">
+                                <div class="alert-text">Reunion de equipo a las 19:30</div>
+                                <div class="alert-time">En 8 horas · sala de reuniones</div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Acciones rápidas de gestión -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Acciones de gestion</span>
+                    </div>
+                    <div class="mgmt-grid">
+
+                        <button class="mgmt-btn" onclick="alert('Nuevo empleado')">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="19" y1="10" x2="23" y2="10" style="stroke:#7c3aed"/><line x1="21" y1="8" x2="21" y2="12" style="stroke:#7c3aed"/></svg>
+                            <span class="mgmt-btn-text">Nuevo empleado</span>
+                        </button>
+
+                        <button class="mgmt-btn" onclick="alert('Gestionar horarios')">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            <span class="mgmt-btn-text">Horarios</span>
+                        </button>
+
+                        <button class="mgmt-btn" onclick="alert('Editar servicios')">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+                            <span class="mgmt-btn-text">Servicios</span>
+                        </button>
+
+                        <button class="mgmt-btn" onclick="alert('Exportar reporte')">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            <span class="mgmt-btn-text">Exportar</span>
+                        </button>
+
+                        <button class="mgmt-btn" onclick="alert('Gestionar descuentos')">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                            <span class="mgmt-btn-text">Descuentos</span>
+                        </button>
+
+                        <button class="mgmt-btn" onclick="alert('Configuracion general')">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+                            <span class="mgmt-btn-text">Configuracion</span>
+                        </button>
+
+                    </div>
+                </div>
+
+            </div><!-- /columna derecha -->
+        </div><!-- /main-grid -->
+    </main>
+</div><!-- /app-layout -->
+
+<script>
+    function openSidebar() {
+        document.getElementById('sidebar').classList.add('on');
+        document.getElementById('overlay').classList.add('on');
+    }
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('on');
+        document.getElementById('overlay').classList.remove('on');
+    }
+
+    /* Placeholder: en producción haría una llamada al backend para recargar los KPIs */
+    function actualizarPeriodo(periodo) {
+        console.log('Periodo seleccionado:', periodo);
+        /* TODO: fetch('/api/kpi?periodo=' + periodo).then(...) */
+    }
+</script>
+</body>
+</html>

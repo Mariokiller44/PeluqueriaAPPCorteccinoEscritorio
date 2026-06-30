@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<!--
+    perfil-gerente.html – Mi Perfil (Vista Gerente / Encargado)
+    =============================================================
+    Rutas:
+        GET  /perfil-gerente?id=X&cuenta=Y   → muestra el formulario
+        POST /perfil/guardar                 → mismo endpoint que perfil.html
+
+    Tres secciones diferenciadas del estándar:
+      1. Datos personales  (idéntico a perfil.html)
+      2. Informacion del negocio (solo visibles para gerente)
+      3. Acceso administrativo / permisos
+
+    Diseño: sidebar oscuro violeta, columna derecha con info del negocio.
+    Requiere en el modelo: ${usuario} (objeto Usuario).
+    =============================================================
+-->
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil – Al Corteccino Gerencia</title>
+    <!-- Hoja de estilos global: formulario, layout, utilidades -->
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <!-- Override Gerente: --primary → violeta, sidebar → oscuro. Siempre activo aquí -->
+    <link rel="stylesheet" th:href="@{/css/styles-gerente-sidebar.css}">
+    <style>
+        /* Fila de dato del negocio: icono + etiqueta + valor -->
+        .biz-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .biz-row:last-child { border-bottom: none; }
+        .biz-icon {
+            width: 34px; height: 34px; border-radius: 9px;
+            background: var(--primary-light); color: var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .biz-icon svg { width: 16px; height: 16px; }
+        .biz-label { font-size: 11.5px; color: var(--text-muted); }
+        .biz-val   { font-size: 13.5px; font-weight: 600; }
+
+        /* Fila de permiso: nombre del rol + badge de acceso -->
+        .perm-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 13.5px;
+        }
+        .perm-row:last-child { border-bottom: none; }
+        .perm-name { font-weight: 500; }
+        .perm-sub  { font-size: 12px; color: var(--text-muted); }
+
+        /* Sección de zona peligrosa del gerente con botones admin */
+        .danger-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 14px;
+        }
+        .danger-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+            padding: 12px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            background: #fff;
+            cursor: pointer;
+            text-align: left;
+            transition: border-color .15s;
+        }
+        .danger-btn:hover { border-color: var(--primary); }
+        .danger-btn-title { font-size: 13px; font-weight: 600; }
+        .danger-btn-desc  { font-size: 11.5px; color: var(--text-muted); }
+        .danger-btn.red:hover { border-color: #dc2626; }
+        .danger-btn.red .danger-btn-title { color: #dc2626; }
+    </style>
+</head>
+<body>
+
+<!-- Overlay móvil para cerrar el sidebar -->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- Barra superior en móvil -->
+<div class="mobile-bar">
+    <button class="hamburger" onclick="openSidebar()">
+        <span></span><span></span><span></span>
+    </button>
+    <span style="font-weight:700;font-size:15px;color:#0f172a">Mi Perfil – Gerencia</span>
+</div>
+
+<div class="app-layout">
+
+    <!-- ── SIDEBAR GERENTE ────────────────────────────────────── -->
+    <aside class="sidebar" id="sidebar">
+
+        <div class="sidebar-brand">
+            <a th:href="@{/panel(id=${usuario.id},cuenta=${usuario.cuenta})}" class="brand-logo">
+                <div class="brand-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                         style="width:16px;height:16px">
+                        <path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm1-13h-2v6l5.25 3.15.75-1.23-4-2.42z"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="brand-name">Al Corteccino</div>
+                    <div class="brand-sub">Panel Gerencia ◆</div>
+                </div>
+            </a>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-label">Vision general</div>
+
+            <a th:href="@{/panel(id=${usuario.id},cuenta=${usuario.cuenta})}" class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                Panel principal
+            </a>
+
+            <div class="nav-label">Gestion</div>
+
+            <a th:href="@{/citas-gerente(id=${usuario.id},cuenta=${usuario.cuenta})}" class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                Gestion de citas
+            </a>
+
+            <a th:href="@{/servicios-gerente(id=${usuario.id},cuenta=${usuario.cuenta})}" class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="6" cy="6" r="3"/>
+                    <circle cx="6" cy="18" r="3"/>
+                    <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+                    <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+                    <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+                </svg>
+                Gestion de servicios
+            </a>
+
+            <div class="nav-label" style="margin-top:10px">Cuenta</div>
+
+            <!-- Mi Perfil Gerente (activo en esta página) -->
+            <a class="nav-item active">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                Mi Perfil
+            </a>
+
+            <a href="#" class="nav-item" onclick="alert('Exportar reporte PDF')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Exportar reportes
+            </a>
+
+            <a href="/logout" class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Cerrar sesion
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-mini">
+                <div class="user-av"
+                     th:text="${usuario.nombre.substring(0,1).toUpperCase()}">G</div>
+                <div style="flex:1;min-width:0">
+                    <div class="user-mini-name"
+                         th:text="${usuario.nombre + ' ' + usuario.apellidos}">Gerente</div>
+                    <div class="user-mini-acct">Gerente / Encargado</div>
+                </div>
+                <button class="logout-btn" onclick="location.href='/logout'" title="Cerrar sesion">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ── CONTENIDO PRINCIPAL ────────────────────────────────── -->
+    <main class="main-content">
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Mi Perfil</h1>
+                <p class="page-sub">Datos personales, informacion del negocio y acceso administrativo</p>
+            </div>
+        </div>
+
+        <div class="page-body">
+
+            <!-- ── ALERTAS DE RESULTADO ──────────────────────────── -->
+            <div th:if="${exito}" class="alert alert-success">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <span th:text="${exito}">Cambios guardados correctamente.</span>
+            </div>
+            <div th:if="${error}" class="alert alert-danger">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                <span th:text="${error}">No se pudo actualizar el perfil.</span>
+            </div>
+
+            <!-- ── HERO GERENTE: degradado violeta ───────────────── -->
+            <!--
+                El profile-hero hereda var(--primary) que ya es violeta (#7c3aed)
+                gracias a styles-gerente-sidebar.css; el degradado cambia a morado.
+            -->
+            <div class="profile-hero">
+                <div class="profile-av-lg"
+                     th:text="${usuario.nombre.substring(0,1).toUpperCase()}">G</div>
+                <div>
+                    <h2 th:text="${usuario.nombre + ' ' + usuario.apellidos}">Nombre Apellidos</h2>
+                    <p th:text="'@' + ${usuario.cuenta} + '  ·  Gerente / Encargado Al Corteccino'">
+                        @cuenta · Gerente</p>
+                </div>
+            </div>
+
+            <!-- ── GRID PRINCIPAL: FORMULARIO + COLUMNA DERECHA ─── -->
+            <div class="perfil-grid">
+
+                <!-- ─ COLUMNA IZQUIERDA: Datos personales ─ -->
+                <div style="display:flex;flex-direction:column;gap:16px">
+
+                    <!-- Formulario de datos personales (idéntico a perfil.html) -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Datos personales</span>
+                        </div>
+                        <div class="card-body">
+                            <!--
+                                Mismo endpoint POST que perfil.html.
+                                El controlador actualiza usuario en BD con los datos recibidos.
+                            -->
+                            <form th:action="@{/perfil/guardar}" method="post"
+                                  onsubmit="return validarFormulario()">
+
+                                <input type="hidden" name="id" th:value="${usuario.id}">
+
+                                <div class="form-section">
+                                    <div class="form-section-title">Informacion personal</div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label class="form-label">Nombre</label>
+                                            <input type="text" name="nombre" class="form-control"
+                                                   th:value="${usuario.nombre}" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Apellidos</label>
+                                            <input type="text" name="apellidos" class="form-control"
+                                                   th:value="${usuario.apellidos}">
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label class="form-label">Correo electronico</label>
+                                            <input type="email" name="email" class="form-control"
+                                                   th:value="${usuario.email}">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Telefono</label>
+                                            <input type="tel" name="telefono" class="form-control"
+                                                   th:value="${usuario.telefono}">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Nombre de usuario</label>
+                                        <input type="text" class="form-control" disabled
+                                               th:value="${usuario.cuenta}">
+                                        <div class="form-hint">El nombre de usuario no se puede modificar.</div>
+                                        <input type="hidden" name="cuenta" th:value="${usuario.cuenta}">
+                                    </div>
+                                </div>
+
+                                <div class="form-section">
+                                    <div class="form-section-title">Cambiar contrasena</div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label class="form-label">Nueva contrasena</label>
+                                            <input type="password" name="contrasenia" id="nuevaPass"
+                                                   class="form-control"
+                                                   placeholder="Dejar vacio para no cambiar">
+                                            <div class="form-hint">Minimo 6 caracteres.</div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Confirmar contrasena</label>
+                                            <input type="password" id="confirmarPass" class="form-control"
+                                                   placeholder="Repetir nueva contrasena">
+                                        </div>
+                                    </div>
+                                    <div id="pass-error" class="alert alert-danger" style="display:none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                        Las contrasenas no coinciden.
+                                    </div>
+                                </div>
+
+                                <div style="display:flex;gap:10px;justify-content:flex-end">
+                                    <a th:href="@{/panel(id=${usuario.id},cuenta=${usuario.cuenta})}"
+                                       class="btn btn-ghost">Cancelar</a>
+                                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Información del negocio (editable por el gerente) -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Informacion del negocio</span>
+                            <button class="btn btn-sm btn-outline"
+                                    onclick="alert('Editar informacion del negocio')">Editar</button>
+                        </div>
+                        <div class="card-body">
+
+                            <!-- Nombre del establecimiento -->
+                            <div class="biz-row">
+                                <div class="biz-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                                </div>
+                                <div>
+                                    <div class="biz-label">Nombre del establecimiento</div>
+                                    <div class="biz-val">Al Corteccino</div>
+                                </div>
+                            </div>
+
+                            <!-- Dirección -->
+                            <div class="biz-row">
+                                <div class="biz-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                </div>
+                                <div>
+                                    <div class="biz-label">Direccion</div>
+                                    <div class="biz-val">Calle Mayor 14, 28001 Madrid</div>
+                                </div>
+                            </div>
+
+                            <!-- Horario de apertura -->
+                            <div class="biz-row">
+                                <div class="biz-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                </div>
+                                <div>
+                                    <div class="biz-label">Horario</div>
+                                    <div class="biz-val">Lun – Sab · 09:00 – 20:00</div>
+                                </div>
+                            </div>
+
+                            <!-- Teléfono del negocio -->
+                            <div class="biz-row">
+                                <div class="biz-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.61 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                </div>
+                                <div>
+                                    <div class="biz-label">Telefono de contacto</div>
+                                    <div class="biz-val">+34 91 123 45 67</div>
+                                </div>
+                            </div>
+
+                            <!-- Email de contacto -->
+                            <div class="biz-row">
+                                <div class="biz-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                </div>
+                                <div>
+                                    <div class="biz-label">Correo del negocio</div>
+                                    <div class="biz-val">contacto@alcorteccino.es</div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div><!-- /columna izquierda -->
+
+                <!-- ─ COLUMNA DERECHA: Acceso y zona admin ─ -->
+                <div style="display:flex;flex-direction:column;gap:16px">
+
+                    <!-- Resumen de cuenta del gerente -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Resumen de cuenta</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="info-row">
+                                <span class="info-row-label">ID de usuario</span>
+                                <strong class="info-row-val"
+                                        th:text="'#' + ${usuario.id}">#1</strong>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-row-label">Rol</span>
+                                <!-- Badge violeta para el rol de gerente -->
+                                <span class="badge"
+                                      style="background:var(--primary-light);color:var(--primary);font-weight:600">
+                                    Gerente
+                                </span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-row-label">Empleados gestionados</span>
+                                <strong class="info-row-val">5</strong>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-row-label">Ultimo acceso</span>
+                                <strong class="info-row-val">Hoy, 09:14</strong>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-row-label">Estado</span>
+                                <span class="badge badge-success">Activo</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Permisos de acceso del rol gerente -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Permisos de acceso</span>
+                        </div>
+                        <div class="card-body">
+                            <!-- Cada fila muestra un permiso con su estado actual -->
+                            <div class="perm-row">
+                                <div>
+                                    <div class="perm-name">Panel de gerencia</div>
+                                    <div class="perm-sub">KPIs, gráficas, resumen</div>
+                                </div>
+                                <span class="badge badge-success">Activo</span>
+                            </div>
+                            <div class="perm-row">
+                                <div>
+                                    <div class="perm-name">Gestion de citas</div>
+                                    <div class="perm-sub">Ver, asignar, cancelar</div>
+                                </div>
+                                <span class="badge badge-success">Activo</span>
+                            </div>
+                            <div class="perm-row">
+                                <div>
+                                    <div class="perm-name">Gestion de servicios</div>
+                                    <div class="perm-sub">Crear, editar, desactivar</div>
+                                </div>
+                                <span class="badge badge-success">Activo</span>
+                            </div>
+                            <div class="perm-row">
+                                <div>
+                                    <div class="perm-name">Gestion de personal</div>
+                                    <div class="perm-sub">Ver rendimiento, horarios</div>
+                                </div>
+                                <span class="badge badge-success">Activo</span>
+                            </div>
+                            <div class="perm-row">
+                                <div>
+                                    <div class="perm-name">Exportacion de reportes</div>
+                                    <div class="perm-sub">PDF, CSV con datos del mes</div>
+                                </div>
+                                <span class="badge badge-success">Activo</span>
+                            </div>
+                            <div class="perm-row">
+                                <div>
+                                    <div class="perm-name">Administracion de roles</div>
+                                    <div class="perm-sub">Asignar roles a usuarios</div>
+                                </div>
+                                <!-- Solo superadmin puede modificar roles -->
+                                <span class="badge badge-warning">Restringido</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Zona de administración: acciones de alto impacto -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Herramientas de administracion</span>
+                        </div>
+                        <div class="card-body">
+                            <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px">
+                                Acciones de configuracion del sistema. Algunas requieren confirmacion.
+                            </p>
+                            <div class="danger-grid">
+                                <!-- Exportar datos en CSV -->
+                                <button class="danger-btn"
+                                        onclick="alert('Exportando datos CSV…')">
+                                    <div class="danger-btn-title">Exportar datos</div>
+                                    <div class="danger-btn-desc">CSV completo de usuarios y citas</div>
+                                </button>
+                                <!-- Gestionar cuentas de empleados -->
+                                <button class="danger-btn"
+                                        onclick="alert('Panel de gestion de cuentas')">
+                                    <div class="danger-btn-title">Gestionar cuentas</div>
+                                    <div class="danger-btn-desc">Activar / desactivar empleados</div>
+                                </button>
+                                <!-- Backup de la base de datos -->
+                                <button class="danger-btn"
+                                        onclick="alert('Iniciando copia de seguridad…')">
+                                    <div class="danger-btn-title">Copia de seguridad</div>
+                                    <div class="danger-btn-desc">Backup de la base de datos</div>
+                                </button>
+                                <!-- Borrar datos de prueba (acción destructiva) -->
+                                <button class="danger-btn red"
+                                        onclick="confirmarAccionPeligrosa()">
+                                    <div class="danger-btn-title">Limpiar datos de prueba</div>
+                                    <div class="danger-btn-desc">Elimina registros de test</div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div><!-- /columna derecha -->
+            </div><!-- /perfil-grid -->
+
+        </div><!-- /page-body -->
+    </main>
+</div><!-- /app-layout -->
+
+<script>
+    function openSidebar() {
+        document.getElementById('sidebar').classList.add('on');
+        document.getElementById('overlay').classList.add('on');
+    }
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('on');
+        document.getElementById('overlay').classList.remove('on');
+    }
+
+    /**
+     * Valida que las contraseñas coincidan antes de enviar el formulario.
+     * @returns {boolean} false cancela el envío; true lo permite
+     */
+    function validarFormulario() {
+        const nueva     = document.getElementById('nuevaPass').value;
+        const confirmar = document.getElementById('confirmarPass').value;
+        const errEl     = document.getElementById('pass-error');
+        if (nueva && nueva !== confirmar) {
+            errEl.style.display = 'flex';
+            return false;
+        }
+        errEl.style.display = 'none';
+        return true;
+    }
+
+    /* Pide confirmación doble para acciones destructivas de administración */
+    function confirmarAccionPeligrosa() {
+        if (confirm('Esta accion eliminara datos permanentemente. ¿Continuar?')) {
+            alert('Accion cancelada (integrar con backend en produccion).');
+        }
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<!--
+    citas-gerente.html – Gestión de Citas (Vista Gerente / Encargado)
+    ==================================================================
+    Ruta sugerida: GET /citas-gerente?id=X&cuenta=Y  (rol = GERENTE | ENCARGADO)
+
+    Vista completa de TODAS las citas de TODOS los clientes.
+    Incluye: filtros avanzados, asignación de personal, acciones en masa.
+
+    Diseño: sidebar oscuro violeta, tabla de gestión, barra de acciones bulk.
+    Requiere en el modelo: ${usuario} (objeto Usuario).
+    ==================================================================
+-->
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion de Citas – Al Corteccino Gerencia</title>
+    <!-- Hoja de estilos global: tabla, badges, botones, layout -->
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <!-- Override Gerente: --primary → violeta, sidebar → oscuro azul marino -->
+    <link rel="stylesheet" th:href="@{/css/styles-gerente-sidebar.css}">
+    <style>
+        /* Barra de filtros avanzados (fecha, empleado, estado) */
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-bottom: 20px;
+        }
+        .filter-bar label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+        .filter-input {
+            padding: 7px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-family: inherit;
+            color: var(--text);
+            background: #fff;
+        }
+        .filter-input:focus { outline: none; border-color: var(--primary); }
+        .filter-bar .btn { margin-left: auto; }
+
+        /* Tabla de gestión de citas */
+        .mgmt-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+        .mgmt-table th {
+            background: #f8fafc;
+            padding: 10px 14px;
+            text-align: left;
+            font-size: 11.5px;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+        }
+        .mgmt-table td {
+            padding: 13px 14px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+        .mgmt-table tbody tr:hover td { background: #f8fafc; }
+        /* Checkbox de selección de fila */
+        .mgmt-table td:first-child,
+        .mgmt-table th:first-child { width: 36px; text-align: center; }
+
+        /* Celda de cliente: avatar circular + nombre -->
+        .client-cell { display: flex; align-items: center; gap: 10px; }
+        .client-av {
+            width: 30px; height: 30px; border-radius: 50%;
+            background: var(--primary-light); color: var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 700; flex-shrink: 0;
+        }
+        .client-name  { font-weight: 600; }
+        .client-acct  { font-size: 11.5px; color: var(--text-muted); }
+
+        /* Celda de servicio con duración debajo */
+        .svc-cell-name { font-weight: 500; }
+        .svc-cell-dur  { font-size: 11.5px; color: var(--text-muted); }
+
+        /* Celda de hora: hora grande + fecha pequeña */
+        .time-cell { font-weight: 700; }
+        .date-cell { font-size: 11.5px; color: var(--text-muted); }
+
+        /* Acciones por fila (editar, cancelar) */
+        .row-actions { display: flex; gap: 6px; }
+
+        /* Barra de acciones en masa (aparece al seleccionar filas) */
+        .bulk-bar {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            background: var(--primary);
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 10px;
+            margin-bottom: 14px;
+            font-size: 13.5px;
+            font-weight: 600;
+        }
+        .bulk-bar.visible { display: flex; }
+        .bulk-actions { display: flex; gap: 8px; margin-left: auto; }
+        .btn-bulk {
+            background: rgba(255,255,255,.18);
+            border: 1px solid rgba(255,255,255,.3);
+            color: #fff; padding: 5px 13px;
+            border-radius: 7px; font-size: 12.5px;
+            font-weight: 600; cursor: pointer;
+        }
+        .btn-bulk:hover { background: rgba(255,255,255,.3); }
+    </style>
+</head>
+<body>
+
+<!-- Overlay móvil para cerrar el sidebar -->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- Barra superior en móvil -->
+<div class="mobile-bar">
+    <button class="hamburger" onclick="openSidebar()">
+        <span></span><span></span><span></span>
+    </button>
+    <span style="font-weight:700;font-size:15px;color:#0f172a">Gestion de Citas</span>
+</div>
+
+<div class="app-layout">
+
+    <!-- ── SIDEBAR GERENTE: oscuro / violeta ────────────────────── -->
+    <aside class="sidebar" id="sidebar">
+
+        <div class="sidebar-brand">
+            <a th:href="@{/panel(id=${usuario.id},cuenta=${usuario.cuenta})}" class="brand-logo">
+                <div class="brand-icon">
+                    <!-- Icono engranaje para el panel de gerencia -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                         style="width:16px;height:16px">
+                        <path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm1-13h-2v6l5.25 3.15.75-1.23-4-2.42z"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="brand-name">Al Corteccino</div>
+                    <div class="brand-sub">Panel Gerencia ◆</div>
+                </div>
+            </a>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-label">Vision general</div>
+
+            <!-- Panel principal -->
+            <a th:href="@{/panel(id=${usuario.id},cuenta=${usuario.cuenta})}" class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                Panel principal
+            </a>
+
+            <div class="nav-label">Gestion</div>
+
+            <!-- Gestion de Citas (activo en esta página) -->
+            <a class="nav-item active">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                Gestion de citas
+            </a>
+
+            <!-- Gestion de Servicios -->
+            <a th:href="@{/servicios-gerente(id=${usuario.id},cuenta=${usuario.cuenta})}" class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="6" cy="6" r="3"/>
+                    <circle cx="6" cy="18" r="3"/>
+                    <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+                    <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+                    <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+                </svg>
+                Gestion de servicios
+            </a>
+
+            <div class="nav-label" style="margin-top:10px">Cuenta</div>
+
+            <!-- Mi Perfil Gerente -->
+            <a th:href="@{/perfil-gerente(id=${usuario.id},cuenta=${usuario.cuenta})}" class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                Mi Perfil
+            </a>
+
+            <!-- Exportar reportes -->
+            <a href="#" class="nav-item" onclick="alert('Exportar reporte PDF')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Exportar reportes
+            </a>
+
+            <!-- Cerrar sesión -->
+            <a href="/logout" class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Cerrar sesion
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-mini">
+                <div class="user-av"
+                     th:text="${usuario.nombre.substring(0,1).toUpperCase()}">G</div>
+                <div style="flex:1;min-width:0">
+                    <div class="user-mini-name"
+                         th:text="${usuario.nombre + ' ' + usuario.apellidos}">Gerente</div>
+                    <div class="user-mini-acct">Gerente / Encargado</div>
+                </div>
+                <button class="logout-btn" onclick="location.href='/logout'" title="Cerrar sesion">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ── CONTENIDO PRINCIPAL ────────────────────────────────── -->
+    <main class="main-content">
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Gestion de Citas</h1>
+                <p class="page-sub">Todas las citas del dia · asignacion y control de agenda</p>
+            </div>
+            <!-- Botón para crear una cita manualmente -->
+            <button class="btn btn-primary"
+                    onclick="alert('Crear cita manualmente (funcionalidad pendiente)')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Nueva cita
+            </button>
+        </div>
+
+        <div class="page-body">
+
+            <!-- ── ESTADÍSTICAS DE GESTIÓN ──────────────────────── -->
+            <!--
+                Las citas sin asignar (rojo) requieren acción inmediata;
+                las otras ofrecen una vista rápida de la ocupación del día.
+            -->
+            <div class="stats-row" style="margin-bottom:22px">
+                <!-- Total de citas programadas hoy -->
+                <div class="stat-card">
+                    <div class="stat-icon icon-blue">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    </div>
+                    <div class="stat-value">24</div>
+                    <div class="stat-label">Citas hoy</div>
+                </div>
+                <!-- Citas sin personal asignado: alerta urgente en rojo -->
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#fee2e2;color:#dc2626">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    </div>
+                    <div class="stat-value" style="color:#dc2626">2</div>
+                    <div class="stat-label">Sin asignar</div>
+                </div>
+                <!-- Personal trabajando en este momento -->
+                <div class="stat-card">
+                    <div class="stat-icon icon-green">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
+                    <div class="stat-value">4</div>
+                    <div class="stat-label">Personal activo</div>
+                </div>
+                <!-- Ingresos estimados para el dia basados en las citas confirmadas -->
+                <div class="stat-card">
+                    <div class="stat-icon icon-purple">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                    <div class="stat-value">€384</div>
+                    <div class="stat-label">Ingreso estimado</div>
+                </div>
+            </div>
+
+            <!-- ── BARRA DE FILTROS AVANZADOS ─────────────────────── -->
+            <!--
+                Permite filtrar la tabla por fecha, personal asignado y estado.
+                filtrarTabla() recoge los tres valores y aplica visibilidad a las filas.
+            -->
+            <div class="filter-bar">
+                <label>Fecha</label>
+                <input type="date" class="filter-input" id="filtro-fecha"
+                       onchange="filtrarTabla()">
+                <label>Personal</label>
+                <select class="filter-input" id="filtro-staff" onchange="filtrarTabla()">
+                    <option value="">Todos</option>
+                    <option value="mario">Mario Garcia</option>
+                    <option value="laura">Laura Sanz</option>
+                    <option value="roberto">Roberto Vidal</option>
+                    <option value="sofia">Sofia Molina</option>
+                    <option value="sin">Sin asignar</option>
+                </select>
+                <label>Estado</label>
+                <select class="filter-input" id="filtro-estado" onchange="filtrarTabla()">
+                    <option value="">Todos</option>
+                    <option value="confirmada">Confirmada</option>
+                    <option value="pendiente">Pendiente</option>
+                    <option value="completada">Completada</option>
+                    <option value="cancelada">Cancelada</option>
+                </select>
+                <!-- Botón para limpiar todos los filtros -->
+                <button class="btn btn-ghost btn-sm" onclick="limpiarFiltros()">Limpiar</button>
+            </div>
+
+            <!-- ── BARRA DE ACCIONES EN MASA ──────────────────────── -->
+            <!--
+                Se hace visible (clase 'visible') cuando al menos un checkbox está marcado.
+                Permite cancelar o reasignar múltiples citas a la vez.
+            -->
+            <div class="bulk-bar" id="bulk-bar">
+                <span id="bulk-count">0 citas seleccionadas</span>
+                <div class="bulk-actions">
+                    <button class="btn-bulk"
+                            onclick="alert('Reasignar citas seleccionadas')">Reasignar</button>
+                    <button class="btn-bulk"
+                            onclick="alert('Cancelar citas seleccionadas')">Cancelar</button>
+                </div>
+            </div>
+
+            <!-- ── TABLA DE GESTIÓN DE CITAS ──────────────────────── -->
+            <!--
+                Cada fila tiene data-staff y data-estado para el filtrado JS.
+                El selector .staff-select permite reasignar el empleado inline.
+            -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Todas las citas – hoy, 30 de junio 2026</span>
+                    <span class="badge badge-info">24 citas</span>
+                </div>
+                <div class="card-body" style="padding:0;overflow-x:auto">
+                    <table class="mgmt-table">
+                        <thead>
+                            <tr>
+                                <!-- Checkbox de selección múltiple de cabecera -->
+                                <th><input type="checkbox" class="row-check"
+                                           id="check-all" onchange="toggleAll(this)"
+                                           style="width:16px;height:16px;cursor:pointer;accent-color:var(--primary)"></th>
+                                <th>Cliente</th>
+                                <th>Servicio</th>
+                                <th>Hora</th>
+                                <th>Personal asignado</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            <!-- ─ Fila 1: Confirmada, asignada a Mario ─ -->
+                            <tr data-staff="mario" data-estado="confirmada">
+                                <td><input type="checkbox" class="row-check"
+                                           onchange="actualizarBulk()"
+                                           style="width:16px;height:16px;cursor:pointer;accent-color:var(--primary)"></td>
+                                <td>
+                                    <div class="client-cell">
+                                        <div class="client-av">A</div>
+                                        <div>
+                                            <div class="client-name">Ana Martinez</div>
+                                            <div class="client-acct">@ana_m</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="svc-cell-name">Corte + secado</div>
+                                    <div class="svc-cell-dur">45 min</div>
+                                </td>
+                                <td>
+                                    <div class="time-cell">09:00</div>
+                                    <div class="date-cell">30 Jun 2026</div>
+                                </td>
+                                <!-- Selector inline de empleado para reasignar en tiempo real -->
+                                <td>
+                                    <select class="staff-select" onchange="actualizarAsignacion(this,'ana')">
+                                        <option value="mario" selected>Mario Garcia</option>
+                                        <option value="laura">Laura Sanz</option>
+                                        <option value="roberto">Roberto Vidal</option>
+                                        <option value="sofia">Sofia Molina</option>
+                                    </select>
+                                </td>
+                                <td><span class="badge badge-info">Confirmada</span></td>
+                                <td>
+                                    <div class="row-actions">
+                                        <button class="btn btn-sm btn-outline"
+                                                onclick="alert('Editar cita de Ana Martinez')">Editar</button>
+                                        <button class="btn btn-sm btn-danger-soft"
+                                                onclick="alert('Cancelar cita')">Cancelar</button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- ─ Fila 2: SIN asignar (urgente) ─ -->
+                            <tr data-staff="sin" data-estado="pendiente"
+                                style="background:#fff5f5">
+                                <td><input type="checkbox" class="row-check"
+                                           onchange="actualizarBulk()"
+                                           style="width:16px;height:16px;cursor:pointer;accent-color:var(--primary)"></td>
+                                <td>
+                                    <div class="client-cell">
+                                        <div class="client-av" style="background:#fee2e2;color:#dc2626">J</div>
+                                        <div>
+                                            <div class="client-name">Jose Lopez</div>
+                                            <div class="client-acct">@jose_lp</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="svc-cell-name">Arreglo de barba</div>
+                                    <div class="svc-cell-dur">30 min</div>
+                                </td>
+                                <td>
+                                    <div class="time-cell" style="color:#dc2626">10:30</div>
+                                    <div class="date-cell">30 Jun 2026</div>
+                                </td>
+                                <td>
+                                    <select class="staff-select"
+                                            style="border-color:#dc2626"
+                                            onchange="actualizarAsignacion(this,'jose')">
+                                        <!-- Sin asignar resaltado en rojo -->
+                                        <option value="sin" selected
+                                                style="color:#dc2626">⚠ Sin asignar</option>
+                                        <option value="mario">Mario Garcia</option>
+                                        <option value="laura">Laura Sanz</option>
+                                        <option value="roberto">Roberto Vidal</option>
+                                        <option value="sofia">Sofia Molina</option>
+                                    </select>
+                                </td>
+                                <td><span class="badge badge-warning">Pendiente</span></td>
+                                <td>
+                                    <div class="row-actions">
+                                        <button class="btn btn-sm btn-primary"
+                                                onclick="alert('Asignar empleado a Jose Lopez')">Asignar</button>
+                                        <button class="btn btn-sm btn-danger-soft"
+                                                onclick="alert('Cancelar cita')">Cancelar</button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- ─ Fila 3: Confirmada, Laura Sanz ─ -->
+                            <tr data-staff="laura" data-estado="confirmada">
+                                <td><input type="checkbox" class="row-check"
+                                           onchange="actualizarBulk()"
+                                           style="width:16px;height:16px;cursor:pointer;accent-color:var(--primary)"></td>
+                                <td>
+                                    <div class="client-cell">
+                                        <div class="client-av">M</div>
+                                        <div>
+                                            <div class="client-name">Maria Fernandez</div>
+                                            <div class="client-acct">@mfernandez</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="svc-cell-name">Hidratacion profunda</div>
+                                    <div class="svc-cell-dur">45 min</div>
+                                </td>
+                                <td>
+                                    <div class="time-cell">11:00</div>
+                                    <div class="date-cell">30 Jun 2026</div>
+                                </td>
+                                <td>
+                                    <select class="staff-select" onchange="actualizarAsignacion(this,'maria')">
+                                        <option value="mario">Mario Garcia</option>
+                                        <option value="laura" selected>Laura Sanz</option>
+                                        <option value="roberto">Roberto Vidal</option>
+                                        <option value="sofia">Sofia Molina</option>
+                                    </select>
+                                </td>
+                                <td><span class="badge badge-info">Confirmada</span></td>
+                                <td>
+                                    <div class="row-actions">
+                                        <button class="btn btn-sm btn-outline"
+                                                onclick="alert('Editar cita de Maria Fernandez')">Editar</button>
+                                        <button class="btn btn-sm btn-danger-soft"
+                                                onclick="alert('Cancelar cita')">Cancelar</button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- ─ Fila 4: Sin asignar (segundo urgente) ─ -->
+                            <tr data-staff="sin" data-estado="pendiente"
+                                style="background:#fff5f5">
+                                <td><input type="checkbox" class="row-check"
+                                           onchange="actualizarBulk()"
+                                           style="width:16px;height:16px;cursor:pointer;accent-color:var(--primary)"></td>
+                                <td>
+                                    <div class="client-cell">
+                                        <div class="client-av" style="background:#fee2e2;color:#dc2626">C</div>
+                                        <div>
+                                            <div class="client-name">Carlos Ruiz</div>
+                                            <div class="client-acct">@cruiz</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="svc-cell-name">Corte de cabello</div>
+                                    <div class="svc-cell-dur">30 min</div>
+                                </td>
+                                <td>
+                                    <div class="time-cell" style="color:#dc2626">14:00</div>
+                                    <div class="date-cell">30 Jun 2026</div>
+                                </td>
+                                <td>
+                                    <select class="staff-select"
+                                            style="border-color:#dc2626"
+                                            onchange="actualizarAsignacion(this,'carlos')">
+                                        <option value="sin" selected style="color:#dc2626">⚠ Sin asignar</option>
+                                        <option value="mario">Mario Garcia</option>
+                                        <option value="laura">Laura Sanz</option>
+                                        <option value="roberto">Roberto Vidal</option>
+                                        <option value="sofia">Sofia Molina</option>
+                                    </select>
+                                </td>
+                                <td><span class="badge badge-warning">Pendiente</span></td>
+                                <td>
+                                    <div class="row-actions">
+                                        <button class="btn btn-sm btn-primary"
+                                                onclick="alert('Asignar empleado a Carlos Ruiz')">Asignar</button>
+                                        <button class="btn btn-sm btn-danger-soft"
+                                                onclick="alert('Cancelar cita')">Cancelar</button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- ─ Fila 5: Completada ─ -->
+                            <tr data-staff="mario" data-estado="completada">
+                                <td><input type="checkbox" class="row-check"
+                                           onchange="actualizarBulk()"
+                                           style="width:16px;height:16px;cursor:pointer;accent-color:var(--primary)"></td>
+                                <td>
+                                    <div class="client-cell">
+                                        <div class="client-av">P</div>
+                                        <div>
+                                            <div class="client-name">Pablo Diaz</div>
+                                            <div class="client-acct">@pdiaz</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="svc-cell-name">Corte + arreglo barba</div>
+                                    <div class="svc-cell-dur">60 min</div>
+                                </td>
+                                <td>
+                                    <div class="time-cell">08:00</div>
+                                    <div class="date-cell">30 Jun 2026</div>
+                                </td>
+                                <td>
+                                    <select class="staff-select" disabled>
+                                        <option selected>Mario Garcia</option>
+                                    </select>
+                                </td>
+                                <td><span class="badge badge-success">Completada</span></td>
+                                <td>
+                                    <div class="row-actions">
+                                        <button class="btn btn-sm btn-ghost"
+                                                onclick="alert('Ver detalles de la cita')">Ver</button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div><!-- /card-body -->
+                <!-- Pie de tabla con paginación -->
+                <div style="display:flex;align-items:center;justify-content:space-between;
+                            padding:12px 18px;border-top:1px solid var(--border);
+                            font-size:13px;color:var(--text-muted)">
+                    <span>Mostrando 5 de 24 citas</span>
+                    <div style="display:flex;gap:6px">
+                        <button class="btn btn-sm btn-ghost">‹ Anterior</button>
+                        <button class="btn btn-sm btn-outline">Siguiente ›</button>
+                    </div>
+                </div>
+            </div><!-- /card tabla -->
+
+        </div><!-- /page-body -->
+    </main>
+</div><!-- /app-layout -->
+
+<script>
+    function openSidebar() {
+        document.getElementById('sidebar').classList.add('on');
+        document.getElementById('overlay').classList.add('on');
+    }
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('on');
+        document.getElementById('overlay').classList.remove('on');
+    }
+
+    /* Selección / deselección de todas las filas */
+    function toggleAll(master) {
+        document.querySelectorAll('.row-check:not(#check-all)').forEach(cb => {
+            cb.checked = master.checked;
+        });
+        actualizarBulk();
+    }
+
+    /* Actualiza la barra de acciones en masa según los checkboxes marcados */
+    function actualizarBulk() {
+        const sel  = document.querySelectorAll('.row-check:not(#check-all):checked').length;
+        const bar  = document.getElementById('bulk-bar');
+        const cnt  = document.getElementById('bulk-count');
+        cnt.textContent = sel + (sel === 1 ? ' cita seleccionada' : ' citas seleccionadas');
+        bar.classList.toggle('visible', sel > 0);
+    }
+
+    /**
+     * Filtra las filas de la tabla por staff y estado.
+     * La columna de fecha se usa como referencia pero las filas son del mismo día.
+     */
+    function filtrarTabla() {
+        const staff  = document.getElementById('filtro-staff').value;
+        const estado = document.getElementById('filtro-estado').value;
+        document.querySelectorAll('tbody tr').forEach(row => {
+            const matchStaff  = !staff  || row.dataset.staff  === staff;
+            const matchEstado = !estado || row.dataset.estado === estado;
+            row.style.display = (matchStaff && matchEstado) ? '' : 'none';
+        });
+    }
+
+    /* Limpia todos los filtros y muestra todas las filas */
+    function limpiarFiltros() {
+        document.getElementById('filtro-fecha').value  = '';
+        document.getElementById('filtro-staff').value  = '';
+        document.getElementById('filtro-estado').value = '';
+        document.querySelectorAll('tbody tr').forEach(row => row.style.display = '');
+    }
+
+    /**
+     * Placeholder para reasignación inline de empleado.
+     * @param {HTMLSelectElement} sel      - El select que cambió
+     * @param {string}            clienteId - Identificador del cliente
+     */
+    function actualizarAsignacion(sel, clienteId) {
+        console.log('Asignando cliente ' + clienteId + ' a ' + sel.value);
+        /* TODO: POST /api/citas/asignar?citaId=...&empleado=... */
+    }
+</script>
+</body>
+</html>

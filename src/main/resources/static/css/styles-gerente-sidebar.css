@@ -1,0 +1,159 @@
+/* ============================================================
+   styles-gerente-sidebar.css  –  Override del tema Gerente
+   ============================================================
+   Se carga ADEMÁS de styles.css en las páginas de gerencia
+   (citas-gerente, servicios-gerente, perfil-gerente).
+
+   Igual que styles-vip-sidebar.css: sobreescribe --primary al
+   violeta gerencial y aplica el fondo oscuro al sidebar.
+   ============================================================ */
+
+/* ── VARIABLES → PALETA GERENTE (VIOLETA OSCURO) ────────── */
+:root {
+    --primary:       #7c3aed;
+    --primary-dark:  #6d28d9;
+    --primary-light: #ede9fe;
+    --primary-mid:   #a78bfa;
+    --bg:            #f8fafc;
+    --border:        #e2e8f0;
+}
+
+/* Focus de formularios en violeta */
+.form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, .12);
+}
+
+/* Tabla en tono neutro frío */
+.table th                   { background: #f8fafc; }
+.table tbody tr:hover td    { background: #f8fafc; }
+
+/* ── SIDEBAR OSCURO GERENTE ──────────────────────────────── */
+.sidebar {
+    background: #0f172a;
+    border-right: 1px solid rgba(124, 58, 237, .12);
+}
+.sidebar-brand {
+    border-bottom-color: rgba(124, 58, 237, .1);
+}
+
+/* Icono de marca: degradado violeta con resplandor */
+.brand-icon {
+    background: linear-gradient(135deg, #6d28d9 0%, #a78bfa 100%);
+    box-shadow: 0 0 18px rgba(124, 58, 237, .45);
+}
+
+.brand-name { color: #f1f5f9; }
+.brand-sub  { color: #a78bfa; font-weight: 600; opacity: 1; }
+.nav-label  { color: #334155; }
+.nav-item   { color: #94a3b8; }
+
+.nav-item:hover {
+    background: rgba(124, 58, 237, .1);
+    color: #a78bfa;
+}
+.nav-item.active {
+    background: rgba(124, 58, 237, .2);
+    color: #a78bfa;
+    border: 1px solid rgba(124, 58, 237, .28);
+    box-shadow: none;
+}
+
+.sidebar-footer { border-top-color: rgba(124, 58, 237, .1); }
+
+.user-mini {
+    background: rgba(255, 255, 255, .04);
+    border-radius: 9px;
+}
+.user-av {
+    background: linear-gradient(135deg, #6d28d9 0%, #a78bfa 100%);
+    box-shadow: 0 0 12px rgba(124, 58, 237, .35);
+}
+.user-mini-name { color: #f1f5f9; }
+.user-mini-acct { color: #a78bfa; font-weight: 600; opacity: .85; }
+.logout-btn       { color: #475569; }
+.logout-btn:hover { background: rgba(255, 255, 255, .06); color: #94a3b8; }
+
+/* ── COMPONENTES EXTRA DE GESTIÓN ────────────────────────── */
+
+/* Badge de alerta roja para "sin asignar" / urgente */
+.badge-alert {
+    background: #fee2e2; color: #dc2626;
+    display: inline-flex; align-items: center;
+    padding: 3px 9px; border-radius: 20px;
+    font-size: 12px; font-weight: 600;
+}
+
+/* Toggle ON/OFF para activar/desactivar servicios */
+.toggle-wrap { display: flex; align-items: center; gap: 8px; }
+.toggle {
+    width: 40px; height: 22px; border-radius: 11px;
+    background: #d1d5db; border: none; cursor: pointer;
+    position: relative; transition: background .2s; flex-shrink: 0;
+}
+.toggle.on { background: var(--primary); }
+.toggle::after {
+    content: ''; position: absolute;
+    width: 16px; height: 16px; border-radius: 50%; background: #fff;
+    top: 3px; left: 3px; transition: left .2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,.2);
+}
+.toggle.on::after { left: 21px; }
+.toggle-label { font-size: 12.5px; color: var(--text-muted); font-weight: 500; }
+
+/* Input de precio inline editable */
+.price-input {
+    width: 80px; padding: 5px 8px;
+    border: 1.5px solid var(--border); border-radius: 7px;
+    font-size: 13.5px; font-weight: 700; color: var(--primary);
+    background: #fff; text-align: center; font-family: inherit;
+}
+.price-input:focus { outline: none; border-color: var(--primary); }
+
+/* Selector de empleado en tabla de citas */
+.staff-select {
+    padding: 5px 10px; border-radius: 7px;
+    border: 1.5px solid var(--border); background: #fff;
+    font-size: 12.5px; color: var(--text); cursor: pointer;
+    font-family: inherit;
+}
+.staff-select:focus { outline: none; border-color: var(--primary); }
+
+/* Checkbox para selección múltiple */
+.row-check {
+    width: 16px; height: 16px; cursor: pointer;
+    accent-color: var(--primary);
+}
+
+/* Barra de acciones flotante (bulk actions) */
+.bulk-bar {
+    display: none; align-items: center; gap: 12px;
+    background: var(--primary); color: #fff;
+    padding: 10px 20px; border-radius: 10px;
+    margin-bottom: 14px; font-size: 13.5px; font-weight: 600;
+}
+.bulk-bar.visible { display: flex; }
+.bulk-bar-actions { display: flex; gap: 8px; margin-left: auto; }
+.btn-bulk {
+    background: rgba(255,255,255,.2); color: #fff;
+    border: 1px solid rgba(255,255,255,.3);
+    padding: 5px 13px; border-radius: 7px;
+    font-size: 12.5px; font-weight: 600; cursor: pointer;
+}
+.btn-bulk:hover { background: rgba(255,255,255,.32); }
+
+/* Sección de info de negocio en perfil-gerente */
+.biz-info-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+.biz-info-row:last-child { border-bottom: none; }
+.biz-info-icon {
+    width: 34px; height: 34px; border-radius: 9px;
+    background: var(--primary-light); color: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.biz-info-icon svg { width: 16px; height: 16px; }
+.biz-info-label { font-size: 11.5px; color: var(--text-muted); }
+.biz-info-val   { font-size: 13.5px; font-weight: 600; }

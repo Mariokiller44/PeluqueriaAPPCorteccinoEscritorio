@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<!--
+    menu-cliente.html – Dashboard para Cliente Habitual
+    =====================================================
+    Ruta sugerida: GET /menu?id=X&cuenta=Y  (rol = CLIENTE)
+    Diseño: verde corporativo, barra de fidelidad, citas próximas.
+    Requiere en el modelo: ${usuario} (objeto Usuario).
+    =====================================================
+-->
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Panel – Al Corteccino</title>
+    <link rel="stylesheet" th:href="@{/css/styles-cliente.css}">
+</head>
+<body>
+
+<!-- Overlay para cerrar el sidebar en móvil -->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- Barra superior móvil -->
+<div class="mobile-bar">
+    <button class="hamburger" onclick="openSidebar()">
+        <span></span><span></span><span></span>
+    </button>
+    <span style="font-weight:700;font-size:15px;color:#0d3d24">Al Corteccino</span>
+</div>
+
+<div class="app-layout">
+
+    <!-- ── SIDEBAR CLIENTE ──────────────────────────────────── -->
+    <aside class="sidebar" id="sidebar">
+
+        <!-- Logotipo -->
+        <div class="sidebar-brand">
+            <div class="brand-mark">AC</div>
+            <div>
+                <div class="brand-name">Al Corteccino</div>
+                <div class="brand-sub">Tu peluqueria de confianza</div>
+            </div>
+        </div>
+
+        <!-- Navegación principal -->
+        <div class="nav-group">
+            <span class="nav-group-label">Menu</span>
+
+            <a class="nav-item active" th:href="@{/menu(id=${usuario.id},cuenta=${usuario.cuenta})}">
+                <!-- Icono inicio -->
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                Inicio
+            </a>
+
+            <a class="nav-item" th:href="@{/citas(id=${usuario.id},cuenta=${usuario.cuenta})}">
+                <!-- Icono calendario -->
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Mis Citas
+            </a>
+
+            <a class="nav-item" th:href="@{/servicios(id=${usuario.id},cuenta=${usuario.cuenta})}">
+                <!-- Icono tijeras -->
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+                Servicios
+            </a>
+        </div>
+
+        <div class="nav-group">
+            <span class="nav-group-label">Cuenta</span>
+
+            <a class="nav-item" th:href="@{/perfil(id=${usuario.id},cuenta=${usuario.cuenta})}">
+                <!-- Icono persona -->
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Mi Perfil
+            </a>
+
+            <a class="nav-item" href="/logout">
+                <!-- Icono salir -->
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Cerrar sesion
+            </a>
+        </div>
+
+        <!-- Pie: datos del usuario -->
+        <div class="sidebar-footer">
+            <div class="user-row">
+                <!-- Avatar: inicial del nombre -->
+                <div class="u-avatar" th:text="${usuario.nombre.substring(0,1).toUpperCase()}">U</div>
+                <div style="flex:1;min-width:0">
+                    <div class="u-name" th:text="${usuario.nombre + ' ' + usuario.apellidos}">Nombre</div>
+                    <div class="u-role">Cliente habitual</div>
+                </div>
+                <button class="logout-btn" onclick="location.href='/logout'" title="Cerrar sesion">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ── CONTENIDO PRINCIPAL ──────────────────────────────── -->
+    <main class="main-content">
+
+        <!-- Cabecera -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title" th:text="'¡Hola, ' + ${usuario.nombre} + '!'">¡Hola!</h1>
+                <p class="page-sub">Bienvenido de vuelta a tu panel personal</p>
+            </div>
+            <!-- Botón reservar cita -->
+            <a th:href="@{/citas(id=${usuario.id},cuenta=${usuario.cuenta})}" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Reservar cita
+            </a>
+        </div>
+
+        <!-- Banner: recordatorio de próxima cita -->
+        <div class="promo-banner">
+            <div class="promo-icon">
+                <!-- Icono calendario con check -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <div class="promo-body">
+                <h3>Tu proxima cita es el viernes 28 de junio</h3>
+                <p>Corte de cabello · 11:00 h · Mario Garcia — ¡Te esperamos!</p>
+            </div>
+            <button class="btn-promo" onclick="alert('Consultar cita')">Ver detalle</button>
+        </div>
+
+        <!-- ── ESTADÍSTICAS ─────────────────────────────────── -->
+        <div class="stats-row">
+            <!-- Puntos de fidelidad -->
+            <div class="stat-card">
+                <div class="stat-icon icon-green">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <div class="stat-val">240</div>
+                <div class="stat-label">Puntos de fidelidad</div>
+                <div class="stat-trend">+60 esta semana</div>
+            </div>
+            <!-- Visitas totales -->
+            <div class="stat-card">
+                <div class="stat-icon icon-blue">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <div class="stat-val">8</div>
+                <div class="stat-label">Visitas este mes</div>
+                <div class="stat-trend">+2 respecto al anterior</div>
+            </div>
+            <!-- Próxima cita -->
+            <div class="stat-card">
+                <div class="stat-icon icon-amber">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <div class="stat-val">Vie</div>
+                <div class="stat-label">Proxima cita</div>
+                <div class="stat-trend">28 Jun · 11:00</div>
+            </div>
+            <!-- Descuento disponible -->
+            <div class="stat-card">
+                <div class="stat-icon icon-purple">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                </div>
+                <div class="stat-val">5%</div>
+                <div class="stat-label">Descuento disponible</div>
+                <div class="stat-trend">Acumulado por fidelidad</div>
+            </div>
+        </div>
+
+        <!-- ── BARRA DE FIDELIDAD ────────────────────────────── -->
+        <div class="loyalty-card">
+            <div class="loyalty-top">
+                <div>
+                    <div class="loyalty-title">Tu progreso de fidelidad</div>
+                    <div style="font-size:12.5px;color:#6b7280;margin-top:3px">Acumula puntos en cada visita y desbloquea recompensas</div>
+                </div>
+                <div class="loyalty-pts-badge">240 / 500 pts</div>
+            </div>
+
+            <!-- Barra de progreso: 240/500 = 48% -->
+            <div class="loyalty-track">
+                <div class="loyalty-fill" style="width:48%"></div>
+            </div>
+            <div class="loyalty-meta">
+                <span>Nivel actual: <strong>Habitual</strong></span>
+                <span><strong>260 pts</strong> para nivel VIP</span>
+            </div>
+
+            <!-- Hitos intermedios -->
+            <div class="loyalty-milestones">
+                <div class="milestone">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span class="milestone-pts">100 pts</span> <span style="font-size:12px;color:#6b7280">– 5% descuento</span>
+                </div>
+                <div class="milestone">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span class="milestone-pts">250 pts</span> <span style="font-size:12px;color:#6b7280">– Servicio gratis</span>
+                </div>
+                <div class="milestone" style="opacity:.45">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span class="milestone-pts">500 pts</span> <span style="font-size:12px;color:#6b7280">– Nivel VIP</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── GRID 2 COLUMNAS ───────────────────────────────── -->
+        <div class="two-col">
+
+            <!-- Próximas citas -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Proximas citas</span>
+                    <a th:href="@{/citas(id=${usuario.id},cuenta=${usuario.cuenta})}" class="card-link">Ver todas →</a>
+                </div>
+                <div class="card-body">
+
+                    <div class="cita-row">
+                        <div class="date-pill">
+                            <div class="dp-day">28</div>
+                            <div class="dp-mon">Jun</div>
+                        </div>
+                        <div class="cita-info-s">
+                            <div class="cita-svc-n">Corte de cabello</div>
+                            <div class="cita-meta-s">11:00 – 11:30 · Mario Garcia · €14</div>
+                        </div>
+                        <span class="badge badge-blue">Confirmada</span>
+                    </div>
+
+                    <div class="cita-row">
+                        <div class="date-pill">
+                            <div class="dp-day">5</div>
+                            <div class="dp-mon">Jul</div>
+                        </div>
+                        <div class="cita-info-s">
+                            <div class="cita-svc-n">Arreglo de barba</div>
+                            <div class="cita-meta-s">10:30 – 11:00 · Mario Garcia · €10</div>
+                        </div>
+                        <span class="badge badge-amber">Pendiente</span>
+                    </div>
+
+                    <div class="cita-row">
+                        <div class="date-pill">
+                            <div class="dp-day">15</div>
+                            <div class="dp-mon">Jul</div>
+                        </div>
+                        <div class="cita-info-s">
+                            <div class="cita-svc-n">Corte + Arreglo de barba</div>
+                            <div class="cita-meta-s">12:00 – 13:00 · Laura Sanz · €22</div>
+                        </div>
+                        <span class="badge badge-amber">Pendiente</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Acciones rápidas -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Acciones rapidas</span>
+                </div>
+                <div class="card-body">
+                    <div class="quick-grid">
+                        <a th:href="@{/citas(id=${usuario.id},cuenta=${usuario.cuenta})}" class="q-action">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="15" x2="12" y2="19"/><line x1="10" y1="17" x2="14" y2="17"/></svg>
+                            <span class="q-action-label">Nueva cita</span>
+                        </a>
+                        <a th:href="@{/servicios(id=${usuario.id},cuenta=${usuario.cuenta})}" class="q-action">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+                            <span class="q-action-label">Ver servicios</span>
+                        </a>
+                        <a th:href="@{/perfil(id=${usuario.id},cuenta=${usuario.cuenta})}" class="q-action">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            <span class="q-action-label">Mi perfil</span>
+                        </a>
+                        <a href="tel:+34600000000" class="q-action">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.6 19.79 19.79 0 0 1 1.61 5.03 2 2 0 0 1 3.6 2.84h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 10.1a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 17z"/></svg>
+                            <span class="q-action-label">Contactar</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /two-col -->
+    </main>
+</div><!-- /app-layout -->
+
+<script>
+    function openSidebar() {
+        document.getElementById('sidebar').classList.add('on');
+        document.getElementById('overlay').classList.add('on');
+    }
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('on');
+        document.getElementById('overlay').classList.remove('on');
+    }
+</script>
+</body>
+</html>

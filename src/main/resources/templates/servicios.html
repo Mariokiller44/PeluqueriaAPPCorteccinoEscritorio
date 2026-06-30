@@ -16,6 +16,11 @@
     <title>Servicios – Al Corteccino</title>
     <!-- Hoja de estilos global -->
     <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <!--
+        Override VIP: solo se carga cuando la URL contiene ?vip=true.
+        Colorea el sidebar con el tema negro/dorado sin afectar las tarjetas de servicios.
+    -->
+    <link th:if="${param.vip != null}" rel="stylesheet" th:href="@{/css/styles-vip-sidebar.css}">
 </head>
 <body>
 

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<!--
+    menu-personal.html – Dashboard para Personal / Empleados
+    ==========================================================
+    Ruta sugerida: GET /panel?id=X&cuenta=Y  (rol = PERSONAL)
+    Diseño: azul marino operativo, agenda del día, cola de clientes.
+    Requiere en el modelo: ${usuario} (objeto Usuario).
+    ==========================================================
+-->
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Personal – Al Corteccino</title>
+    <link rel="stylesheet" th:href="@{/css/styles-personal.css}">
+</head>
+<body>
+
+<!-- Overlay móvil -->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- Barra superior móvil -->
+<div class="mobile-bar">
+    <button class="hamburger" onclick="openSidebar()">
+        <span></span><span></span><span></span>
+    </button>
+    <span style="font-weight:700;font-size:15px;color:#0f172a">Panel del personal</span>
+</div>
+
+<div class="app-layout">
+
+    <!-- ── SIDEBAR PERSONAL ─────────────────────────────────── -->
+    <aside class="sidebar" id="sidebar">
+
+        <!-- Logotipo -->
+        <div class="sidebar-brand">
+            <div class="brand-mark">AC</div>
+            <div>
+                <div class="brand-name">Al Corteccino</div>
+                <div class="brand-sub">Panel de personal</div>
+            </div>
+        </div>
+
+        <!-- Indicador de estado del empleado -->
+        <div class="status-toggle">
+            <div class="status-dot-wrap">
+                <!-- El punto verde indica disponible; puede ser .busy o .away -->
+                <div class="status-dot" id="statusDot"></div>
+                <span class="status-label" id="statusLabel">Disponible</span>
+            </div>
+            <!-- Botón para rotar el estado -->
+            <button class="status-btn" onclick="toggleStatus()">Cambiar</button>
+        </div>
+
+        <div class="nav-group">
+            <span class="nav-group-label">Panel</span>
+
+            <a class="nav-item active" href="#">
+                <!-- Icono home -->
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                Mi panel
+            </a>
+
+            <a class="nav-item" href="#">
+                <!-- Icono agenda/calendario -->
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Mi agenda
+                <!-- Contador de citas hoy -->
+                <span class="nav-badge">6</span>
+            </a>
+
+            <a class="nav-item" href="#">
+                <!-- Icono personas/clientes -->
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Clientes
+            </a>
+
+            <a class="nav-item" href="#">
+                <!-- Icono tijeras/servicios -->
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+                Servicios
+            </a>
+        </div>
+
+        <div class="nav-group">
+            <span class="nav-group-label">Turno</span>
+
+            <a class="nav-item" href="#">
+                <!-- Icono nota/comentario -->
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Notas del dia
+                <span class="nav-badge">2</span>
+            </a>
+
+            <a class="nav-item" href="#">
+                <!-- Icono salir/logout -->
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Cerrar sesion
+            </a>
+        </div>
+
+        <!-- Pie del sidebar -->
+        <div class="sidebar-footer">
+            <div class="user-row">
+                <div class="u-avatar" th:text="${usuario.nombre.substring(0,1).toUpperCase()}">E</div>
+                <div style="flex:1;min-width:0">
+                    <div class="u-name" th:text="${usuario.nombre + ' ' + usuario.apellidos}">Empleado</div>
+                    <div class="u-role">Barbero / Estilista</div>
+                </div>
+                <button class="logout-btn" onclick="location.href='/logout'">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ── CONTENIDO PRINCIPAL ──────────────────────────────── -->
+    <main class="main-content">
+
+        <!-- Cabecera con fecha actual -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title" th:text="'Buenos dias, ' + ${usuario.nombre} + '!'">¡Buenos dias!</h1>
+                <p class="page-sub">Resumen de tu jornada de hoy</p>
+            </div>
+            <!-- Chip con la fecha de hoy -->
+            <div class="date-chip">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Lunes, 30 Jun 2026
+            </div>
+        </div>
+
+        <!-- ── ESTADÍSTICAS DEL DÍA ──────────────────────────── -->
+        <div class="stats-row">
+            <!-- Total citas asignadas hoy -->
+            <div class="stat-card">
+                <div class="stat-icon icon-blue">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </div>
+                <div class="stat-body">
+                    <div class="stat-val">6</div>
+                    <div class="stat-label">Citas hoy</div>
+                </div>
+            </div>
+            <!-- Clientes ya atendidos -->
+            <div class="stat-card">
+                <div class="stat-icon icon-green">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div class="stat-body">
+                    <div class="stat-val">2</div>
+                    <div class="stat-label">Atendidos</div>
+                </div>
+            </div>
+            <!-- Pendientes por atender -->
+            <div class="stat-card">
+                <div class="stat-icon icon-amber">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <div class="stat-body">
+                    <div class="stat-val">4</div>
+                    <div class="stat-label">Pendientes</div>
+                </div>
+            </div>
+            <!-- Valoración media del mes -->
+            <div class="stat-card">
+                <div class="stat-icon icon-slate">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <div class="stat-body">
+                    <div class="stat-val">4.9</div>
+                    <div class="stat-label">Valoracion media</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── GRID PRINCIPAL ─────────────────────────────────── -->
+        <div class="main-grid">
+
+            <!-- Columna izquierda: agenda del día -->
+            <div style="display:flex;flex-direction:column;gap:16px">
+
+                <!-- Siguiente cliente (destacado) -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Siguiente cliente</span>
+                        <span class="badge badge-blue">En 15 minutos</span>
+                    </div>
+                    <div class="next-client">
+                        <!-- Avatar del cliente -->
+                        <div class="next-av">A</div>
+                        <div class="next-info">
+                            <div class="next-name">Ana Martinez</div>
+                            <div class="next-detail">Corte + Secado · 45 min · €18</div>
+                        </div>
+                        <div class="next-time">
+                            <div class="arriving">Hora</div>
+                            <div class="hhmm">11:00</div>
+                        </div>
+                    </div>
+                    <!-- Acciones sobre el cliente -->
+                    <div style="display:flex;gap:10px;padding:0 18px 16px">
+                        <button class="btn btn-success btn-sm" onclick="alert('Marcar llegada del cliente')">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            Marcar llegada
+                        </button>
+                        <button class="btn btn-outline btn-sm" onclick="alert('Ver ficha del cliente')">Ver ficha</button>
+                    </div>
+                </div>
+
+                <!-- Timeline del día -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Agenda de hoy</span>
+                        <span class="card-link" style="cursor:pointer" onclick="alert('Ver agenda completa')">Ver completa →</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline">
+
+                            <!-- Cita completada -->
+                            <div class="tl-item">
+                                <div class="tl-time">
+                                    <div class="tl-hour">09:00</div>
+                                    <div class="tl-min">30 min</div>
+                                </div>
+                                <div class="tl-line"><div class="tl-dot done"></div></div>
+                                <div class="tl-card done-slot">
+                                    <div class="tl-client">
+                                        <div class="tl-client-name">Carlos Ruiz</div>
+                                        <div class="tl-client-svc">Corte clasico · €14</div>
+                                    </div>
+                                    <span class="badge badge-green">Completado</span>
+                                </div>
+                            </div>
+
+                            <!-- Cita completada -->
+                            <div class="tl-item">
+                                <div class="tl-time">
+                                    <div class="tl-hour">10:00</div>
+                                    <div class="tl-min">45 min</div>
+                                </div>
+                                <div class="tl-line"><div class="tl-dot done"></div></div>
+                                <div class="tl-card done-slot">
+                                    <div class="tl-client">
+                                        <div class="tl-client-name">Luis Fernandez</div>
+                                        <div class="tl-client-svc">Corte + Barba · €22</div>
+                                    </div>
+                                    <span class="badge badge-green">Completado</span>
+                                </div>
+                            </div>
+
+                            <!-- Cita activa (próxima) -->
+                            <div class="tl-item">
+                                <div class="tl-time">
+                                    <div class="tl-hour">11:00</div>
+                                    <div class="tl-min">45 min</div>
+                                </div>
+                                <div class="tl-line"><div class="tl-dot active"></div></div>
+                                <div class="tl-card active-slot">
+                                    <div class="tl-client">
+                                        <div class="tl-client-name">Ana Martinez</div>
+                                        <div class="tl-client-svc">Corte + Secado · €18</div>
+                                    </div>
+                                    <div class="tl-duration">45 min</div>
+                                </div>
+                            </div>
+
+                            <!-- Citas pendientes -->
+                            <div class="tl-item">
+                                <div class="tl-time">
+                                    <div class="tl-hour">12:00</div>
+                                    <div class="tl-min">30 min</div>
+                                </div>
+                                <div class="tl-line"><div class="tl-dot"></div></div>
+                                <div class="tl-card">
+                                    <div class="tl-client">
+                                        <div class="tl-client-name">Pedro Sanchez</div>
+                                        <div class="tl-client-svc">Afeitado clasico · €12</div>
+                                    </div>
+                                    <div class="tl-duration">30 min</div>
+                                </div>
+                            </div>
+
+                            <div class="tl-item">
+                                <div class="tl-time">
+                                    <div class="tl-hour">13:00</div>
+                                    <div class="tl-min">60 min</div>
+                                </div>
+                                <div class="tl-line"><div class="tl-dot"></div></div>
+                                <div class="tl-card">
+                                    <div class="tl-client">
+                                        <div class="tl-client-name">Sofia Torres</div>
+                                        <div class="tl-client-svc">Hidratacion profunda · €22</div>
+                                    </div>
+                                    <div class="tl-duration">60 min</div>
+                                </div>
+                            </div>
+
+                            <div class="tl-item">
+                                <div class="tl-time">
+                                    <div class="tl-hour">16:00</div>
+                                    <div class="tl-min">55 min</div>
+                                </div>
+                                <div class="tl-line"><div class="tl-dot"></div></div>
+                                <div class="tl-card">
+                                    <div class="tl-client">
+                                        <div class="tl-client-name">Javier Lopez</div>
+                                        <div class="tl-client-svc">Pack Corte + Barba · €22</div>
+                                    </div>
+                                    <div class="tl-duration">55 min</div>
+                                </div>
+                            </div>
+
+                        </div><!-- /timeline -->
+                    </div>
+                </div>
+
+            </div><!-- /columna izquierda -->
+
+            <!-- Columna derecha: cola + notas -->
+            <div style="display:flex;flex-direction:column;gap:16px">
+
+                <!-- Cola de clientes pendientes -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Cola de espera</span>
+                        <span class="badge badge-amber">4 pendientes</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="queue-item">
+                            <div class="queue-num">1</div>
+                            <div class="queue-name">Ana Martinez</div>
+                            <div class="queue-time">11:00</div>
+                            <span class="queue-badge">Siguiente</span>
+                        </div>
+                        <div class="queue-item">
+                            <div class="queue-num">2</div>
+                            <div class="queue-name">Pedro Sanchez</div>
+                            <div class="queue-time">12:00</div>
+                        </div>
+                        <div class="queue-item">
+                            <div class="queue-num">3</div>
+                            <div class="queue-name">Sofia Torres</div>
+                            <div class="queue-time">13:00</div>
+                        </div>
+                        <div class="queue-item">
+                            <div class="queue-num">4</div>
+                            <div class="queue-name">Javier Lopez</div>
+                            <div class="queue-time">16:00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notas del día -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Notas del dia</span>
+                        <span class="badge badge-amber">2 notas</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="note-box">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <span>Sofia Torres (13:00) es alergica al amoniaco. Usar solo productos organicos.</span>
+                        </div>
+                        <div class="note-box">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <span>Reunion de equipo al cierre a las 19:30 h. Obligatoria asistencia.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acciones rápidas del turno -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Acciones rapidas</span>
+                    </div>
+                    <div class="card-body">
+                        <div style="display:flex;flex-direction:column;gap:8px">
+                            <button class="btn btn-primary" style="justify-content:center" onclick="alert('Registrar nueva cita')">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                Registrar nueva cita
+                            </button>
+                            <button class="btn btn-outline" style="justify-content:center" onclick="alert('Iniciar descanso')">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                Iniciar descanso
+                            </button>
+                            <button class="btn btn-outline" style="justify-content:center;color:#dc2626;border-color:#fecaca" onclick="alert('Cerrar turno')">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                                Cerrar mi turno
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- /columna derecha -->
+        </div><!-- /main-grid -->
+    </main>
+</div><!-- /app-layout -->
+
+<script>
+    function openSidebar() {
+        document.getElementById('sidebar').classList.add('on');
+        document.getElementById('overlay').classList.add('on');
+    }
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('on');
+        document.getElementById('overlay').classList.remove('on');
+    }
+
+    /* Ciclo de estados: disponible → ocupado → descanso → disponible */
+    const estados = [
+        { label: 'Disponible', dotClass: '' },
+        { label: 'Ocupado',    dotClass: 'busy' },
+        { label: 'Descanso',   dotClass: 'away' }
+    ];
+    let estadoActual = 0;
+
+    function toggleStatus() {
+        estadoActual = (estadoActual + 1) % estados.length;
+        const e = estados[estadoActual];
+        const dot   = document.getElementById('statusDot');
+        const label = document.getElementById('statusLabel');
+        dot.className = 'status-dot ' + e.dotClass;
+        label.textContent = e.label;
+    }
+</script>
+</body>
+</html>

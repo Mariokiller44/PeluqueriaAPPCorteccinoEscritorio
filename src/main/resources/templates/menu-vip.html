@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<!--
+    menu-vip.html – Dashboard para Cliente VIP
+    ============================================
+    Ruta sugerida: GET /menu?id=X&cuenta=Y  (rol = CLIENTE_VIP)
+    Diseño: negro profundo + dorado, sensación premium y exclusividad.
+    Requiere en el modelo: ${usuario} (objeto Usuario).
+    ============================================
+-->
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel VIP – Al Corteccino</title>
+    <link rel="stylesheet" th:href="@{/css/styles-vip.css}">
+</head>
+<body>
+
+<!-- Overlay móvil -->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- Barra superior móvil -->
+<div class="mobile-bar">
+    <button class="hamburger" onclick="openSidebar()">
+        <span></span><span></span><span></span>
+    </button>
+    <span style="font-weight:700;font-size:15px;color:#0f172a">Al Corteccino <span style="color:#d97706">VIP</span></span>
+</div>
+
+<div class="app-layout">
+
+    <!-- ── SIDEBAR VIP ───────────────────────────────────────── -->
+    <aside class="sidebar" id="sidebar">
+
+        <!-- Logotipo dorado -->
+        <div class="sidebar-brand">
+            <div class="brand-mark">AC</div>
+            <div>
+                <div class="brand-name">Al Corteccino</div>
+                <div class="brand-sub" style="color:#f59e0b;font-weight:600">Programa VIP ✦</div>
+            </div>
+        </div>
+
+        <div class="nav-group">
+            <span class="nav-group-label">Mi espacio VIP</span>
+
+            <a class="nav-item active" th:href="@{/menu(id=${usuario.id},cuenta=${usuario.cuenta},vip=true)}">
+                <!-- Icono inicio -->
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                Panel principal
+            </a>
+
+            <a class="nav-item" th:href="@{/citas(id=${usuario.id},cuenta=${usuario.cuenta},vip=true)}">
+                <!-- Icono calendario -->
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Mis Citas VIP
+            </a>
+
+            <a class="nav-item" th:href="@{/servicios(id=${usuario.id},cuenta=${usuario.cuenta},vip=true)}">
+                <!-- Icono tijeras -->
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+                Servicios
+            </a>
+
+            <!-- Ítem exclusivo VIP -->
+            <a class="nav-item vip-item" href="#" onclick="alert('Beneficios VIP – proximamente')">
+                <!-- Icono corona/estrella VIP -->
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                Beneficios VIP
+            </a>
+        </div>
+
+        <div class="nav-group">
+            <span class="nav-group-label">Cuenta</span>
+
+            <a class="nav-item" th:href="@{/perfil(id=${usuario.id},cuenta=${usuario.cuenta},vip=true)}">
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Mi Perfil
+            </a>
+
+            <a class="nav-item" href="/logout">
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Cerrar sesion
+            </a>
+        </div>
+
+        <!-- Pie del sidebar -->
+        <div class="sidebar-footer">
+            <div class="user-row">
+                <div class="u-avatar" th:text="${usuario.nombre.substring(0,1).toUpperCase()}">U</div>
+                <div style="flex:1;min-width:0">
+                    <div class="u-name" th:text="${usuario.nombre + ' ' + usuario.apellidos}">Nombre</div>
+                    <!-- Chip VIP destacado -->
+                    <div class="vip-chip">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        VIP GOLD
+                    </div>
+                </div>
+                <button class="logout-btn" onclick="location.href='/logout'">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ── CONTENIDO PRINCIPAL ──────────────────────────────── -->
+    <main class="main-content">
+
+        <!-- Cabecera -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title" th:text="'Bienvenido, ' + ${usuario.nombre}">Bienvenido</h1>
+                <p class="page-sub">Tu experiencia exclusiva en Al Corteccino</p>
+            </div>
+            <!-- Botón dorado reserva prioritaria -->
+            <button class="btn btn-gold" onclick="alert('Reserva VIP prioritaria – proximamente')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                Reserva prioritaria
+            </button>
+        </div>
+
+        <!-- Banner de estado VIP -->
+        <div class="vip-banner">
+            <!-- Icono corona -->
+            <div class="vip-crown">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5L12 1z"/></svg>
+            </div>
+            <div class="vip-banner-body">
+                <h3>Miembro VIP Gold ✦</h3>
+                <p>Disfrutas de reserva prioritaria, descuento permanente del 15% y estilista dedicado.</p>
+            </div>
+            <!-- Nivel y renovación -->
+            <div class="vip-level">
+                <div class="vip-level-label">Nivel</div>
+                <div class="vip-level-val">GOLD</div>
+                <div style="color:#9a8060;font-size:11px;margin-top:4px">Renueva: Ene 2027</div>
+            </div>
+        </div>
+
+        <!-- ── KPIs VIP ─────────────────────────────────────── -->
+        <div class="stats-row">
+            <!-- Gasto acumulado este año -->
+            <div class="stat-card gold-card">
+                <div class="stat-icon icon-gold">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                </div>
+                <div class="stat-val" style="color:#d97706">€380</div>
+                <div class="stat-label">Gasto acumulado 2026</div>
+                <div class="stat-trend">15% dto. ahorrado: €67</div>
+            </div>
+            <!-- Puntos premium -->
+            <div class="stat-card">
+                <div class="stat-icon icon-purple">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <div class="stat-val">1 240</div>
+                <div class="stat-label">Puntos premium</div>
+                <div class="stat-trend">x2 puntos por visita VIP</div>
+            </div>
+            <!-- Visitas totales -->
+            <div class="stat-card">
+                <div class="stat-icon icon-green">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                </div>
+                <div class="stat-val">24</div>
+                <div class="stat-label">Visitas totales</div>
+                <div class="stat-trend">Cliente desde Jun 2024</div>
+            </div>
+            <!-- Descuento activo -->
+            <div class="stat-card">
+                <div class="stat-icon icon-blue">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                </div>
+                <div class="stat-val">15%</div>
+                <div class="stat-label">Descuento permanente</div>
+                <div class="stat-trend">Aplicado automaticamente</div>
+            </div>
+        </div>
+
+        <!-- ── GRID PRINCIPAL ─────────────────────────────────── -->
+        <div class="main-grid">
+
+            <!-- Columna izquierda: próximas citas + estilista -->
+            <div style="display:flex;flex-direction:column;gap:16px">
+
+                <!-- Próximas citas VIP -->
+                <div class="card gold-border">
+                    <div class="card-header">
+                        <span class="card-title">Proximas citas</span>
+                        <a th:href="@{/citas(id=${usuario.id},cuenta=${usuario.cuenta},vip=true)}" class="card-link">Ver todas →</a>
+                    </div>
+                    <div class="card-body">
+
+                        <div class="cita-vip-row">
+                            <div class="date-pill-gold">
+                                <div class="day">28</div>
+                                <div class="mon">Jun</div>
+                            </div>
+                            <div class="cita-info-s">
+                                <div class="cita-svc-n">Corte premium + Acabado</div>
+                                <div class="cita-meta-s">11:00 – 12:00 · Mario Garcia (tu estilista) · <strong style="color:#d97706">€25 <s style="font-size:11px;color:#9ca3af">€30</s></strong></div>
+                            </div>
+                            <span class="badge badge-gold">VIP Confirmada</span>
+                        </div>
+
+                        <div class="cita-vip-row">
+                            <div class="date-pill-gold">
+                                <div class="day">12</div>
+                                <div class="mon">Jul</div>
+                            </div>
+                            <div class="cita-info-s">
+                                <div class="cita-svc-n">Keratina brasilena</div>
+                                <div class="cita-meta-s">10:00 – 13:00 · Laura Sanz · <strong style="color:#d97706">€51 <s style="font-size:11px;color:#9ca3af">€60</s></strong></div>
+                            </div>
+                            <span class="badge badge-gold">VIP Confirmada</span>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Estilista dedicado -->
+                <div class="card gold-border">
+                    <div class="card-header">
+                        <span class="card-title">Tu estilista dedicado</span>
+                        <span class="badge badge-gold">Exclusivo VIP</span>
+                    </div>
+                    <div class="stylist-card">
+                        <!-- Avatar del estilista -->
+                        <div class="stylist-av">M</div>
+                        <div>
+                            <div class="stylist-name">Mario Garcia</div>
+                            <div class="stylist-role">Maestro barbero · 12 anos de experiencia</div>
+                            <div class="stylist-stars">★★★★★</div>
+                        </div>
+                        <button class="btn-stylist" onclick="alert('Contactar con tu estilista – proximamente')">Contactar</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Columna derecha: beneficios VIP -->
+            <div class="card gold-border" style="align-self:start">
+                <div class="card-header">
+                    <span class="card-title">Tus beneficios VIP</span>
+                </div>
+                <div class="card-body">
+                    <div class="benefits-list">
+
+                        <div class="benefit-item">
+                            <div class="benefit-icon">
+                                <!-- Icono prioridad -->
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                            </div>
+                            <div class="benefit-text">
+                                <h4>Reserva prioritaria</h4>
+                                <p>Acceso a los mejores horarios antes que cualquier otro cliente.</p>
+                            </div>
+                        </div>
+
+                        <div class="benefit-item">
+                            <div class="benefit-icon">
+                                <!-- Icono descuento -->
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                            </div>
+                            <div class="benefit-text">
+                                <h4>15% de descuento permanente</h4>
+                                <p>Aplicado automaticamente en cada visita sin condiciones.</p>
+                            </div>
+                        </div>
+
+                        <div class="benefit-item">
+                            <div class="benefit-icon">
+                                <!-- Icono persona/estilista -->
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            </div>
+                            <div class="benefit-text">
+                                <h4>Estilista dedicado</h4>
+                                <p>Siempre el mismo profesional que conoce tu estilo.</p>
+                            </div>
+                        </div>
+
+                        <div class="benefit-item">
+                            <div class="benefit-icon">
+                                <!-- Icono doble puntos -->
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                            </div>
+                            <div class="benefit-text">
+                                <h4>Doble puntos en cada visita</h4>
+                                <p>Acumulas 2x puntos para canjear por servicios gratuitos.</p>
+                            </div>
+                        </div>
+
+                        <div class="benefit-item">
+                            <div class="benefit-icon">
+                                <!-- Icono regalo -->
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+                            </div>
+                            <div class="benefit-text">
+                                <h4>Regalo de bienvenida anual</h4>
+                                <p>Un servicio gratis por tu aniversario como cliente VIP.</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /main-grid -->
+    </main>
+</div><!-- /app-layout -->
+
+<script>
+    function openSidebar() {
+        document.getElementById('sidebar').classList.add('on');
+        document.getElementById('overlay').classList.add('on');
+    }
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('on');
+        document.getElementById('overlay').classList.remove('on');
+    }
+</script>
+</body>
+</html>

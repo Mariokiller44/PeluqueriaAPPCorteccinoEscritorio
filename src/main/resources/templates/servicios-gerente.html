@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<!--
+    servicios-gerente.html – Gestión de Servicios (Vista Gerente / Encargado)
+    ===========================================================================
+    Ruta sugerida: GET /servicios-gerente?id=X&cuenta=Y  (rol = GERENTE | ENCARGADO)
+
+    Permite: editar precios inline, activar/desactivar servicios, añadir nuevos.
+    Muestra estadísticas de rentabilidad por servicio.
+
+    Diseño: sidebar oscuro violeta, tarjetas editables, toggles activo/inactivo.
+    Requiere en el modelo: ${usuario} (objeto Usuario).
+    ===========================================================================
+-->
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion de Servicios – Al Corteccino Gerencia</title>
+    <!-- Hoja de estilos global: tarjetas, chips, formulario, botones -->
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <!-- Override Gerente: --primary → violeta, sidebar → oscuro. Siempre activo aquí -->
+    <link rel="stylesheet" th:href="@{/css/styles-gerente-sidebar.css}">
+    <style>
+        /* Tarjeta de servicio editable: posición relativa para controles absolutos */
+        .svc-card { position: relative; }
+
+        /* Badge de estado activo/inactivo en la tarjeta -->
+        .svc-status-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 9px;
+            border-radius: 20px;
+        }
+        .svc-status-badge.active   { background: #dcfce7; color: #166534; }
+        .svc-status-badge.inactive { background: #f3f4f6; color: #6b7280; }
+
+        /* Fila de edición de precio inline + toggle activo */
+        .svc-edit-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
+        }
+        /* Input de precio con símbolo € a la izquierda */
+        .price-edit-wrap {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .price-euro { font-size: 14px; font-weight: 700; color: var(--primary); }
+        .price-input-inline {
+            width: 72px;
+            padding: 5px 8px;
+            border: 1.5px solid var(--border);
+            border-radius: 7px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary);
+            background: #fff;
+            text-align: center;
+            font-family: inherit;
+        }
+        .price-input-inline:focus { outline: none; border-color: var(--primary); }
+
+        /* Toggle activo/inactivo personalizado */
+        .svc-toggle {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+        .toggle-switch {
+            width: 40px; height: 22px; border-radius: 11px;
+            background: #d1d5db; border: none; cursor: pointer;
+            position: relative; transition: background .2s; flex-shrink: 0;
+        }
+        .toggle-switch.on { background: var(--primary); }
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 16px; height: 16px; border-radius: 50%;
+            background: #fff; top: 3px; left: 3px;
+            transition: left .2s;
+            box-shadow: 0 1px 4px rgba(0,0,0,.18);
+        }
+        .toggle-switch.on::after { left: 21px; }
+        .toggle-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+
+        /* Botones de acción de tarjeta (editar completo, eliminar) -->
+        .svc-card-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        /* Tarjeta "Añadir nuevo servicio" */
+        .svc-card-add {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border: 2px dashed var(--border);
+            border-radius: 14px;
+            padding: 30px 20px;
+            cursor: pointer;
+            transition: border-color .15s, background .15s;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 13.5px;
+        }
+        .svc-card-add:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+        .svc-card-add svg {
+            width: 28px; height: 28px;
+            stroke: currentColor;
+        }
+
+        /* Stats de rentabilidad en la cabecera */
+        .rentab-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .rentab-stat-val { font-size: 20px; font-weight: 700; color: var(--primary); }
+        .rentab-stat-lbl { font-size: 12px; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+<!-- Overlay móvil para cerrar el sidebar -->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- Barra superior en móvil -->
+<div class="mobile-bar">
+    <button class="hamburger" onclick="openSidebar()">
+        <span></span><span></span><span></span>
+    </button>
+    <span style="font-weight:700;font-size:15px;color:#0f172a">Gestion de Servicios</span>
+</div>
+
+<div class="app-layout">
+
+    <!-- ── SIDEBAR GERENTE ────────────────────────────────────── -->
+    <aside class="sidebar" id="sidebar">
+
+        <div class="sidebar-brand">
+            <a th:href="@{/panel(id=${usuario.id},cuenta=${usuario.cuenta})}" class="brand-logo">
+                <div class="brand-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                         style="width:16px;height:16px">
+                        <path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm1-13h-2v6l5.25 3.15.75-1.23-4-2.42z"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="brand-name">Al Corteccino</div>
+                    <div class="brand-sub">Panel Gerencia ◆</div>
+                </div>
+            </a>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-label">Vision general</div>
+
+            <a th:href="@{/panel(id=${usuario.id},cuenta=${usuario.cuenta})}" class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                Panel principal
+            </a>
+
+            <div class="nav-label">Gestion</div>
+
+            <a th:href="@{/citas-gerente(id=${usuario.id},cuenta=${usuario.cuenta})}" class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                Gestion de citas
+            </a>
+
+            <!-- Gestión de Servicios (activo en esta página) -->
+            <a class="nav-item active">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="6" cy="6" r="3"/>
+                    <circle cx="6" cy="18" r="3"/>
+                    <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+                    <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+                    <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+                </svg>
+                Gestion de servicios
+            </a>
+
+            <div class="nav-label" style="margin-top:10px">Cuenta</div>
+
+            <a th:href="@{/perfil-gerente(id=${usuario.id},cuenta=${usuario.cuenta})}" class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                Mi Perfil
+            </a>
+
+            <a href="#" class="nav-item" onclick="alert('Exportar reporte PDF')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Exportar reportes
+            </a>
+
+            <a href="/logout" class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Cerrar sesion
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-mini">
+                <div class="user-av"
+                     th:text="${usuario.nombre.substring(0,1).toUpperCase()}">G</div>
+                <div style="flex:1;min-width:0">
+                    <div class="user-mini-name"
+                         th:text="${usuario.nombre + ' ' + usuario.apellidos}">Gerente</div>
+                    <div class="user-mini-acct">Gerente / Encargado</div>
+                </div>
+                <button class="logout-btn" onclick="location.href='/logout'" title="Cerrar sesion">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ── CONTENIDO PRINCIPAL ────────────────────────────────── -->
+    <main class="main-content">
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Gestion de Servicios</h1>
+                <p class="page-sub">Catalogo completo · edicion de precios y disponibilidad</p>
+            </div>
+            <!-- Botón para añadir un nuevo servicio -->
+            <button class="btn btn-primary"
+                    onclick="alert('Formulario de nuevo servicio (funcionalidad pendiente)')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Nuevo servicio
+            </button>
+        </div>
+
+        <div class="page-body">
+
+            <!-- ── ESTADÍSTICAS DE RENTABILIDAD ──────────────────── -->
+            <div class="stats-row" style="margin-bottom:22px">
+                <!-- Servicios activos publicados -->
+                <div class="stat-card">
+                    <div class="stat-icon icon-green">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="stat-value">11</div>
+                    <div class="stat-label">Activos</div>
+                </div>
+                <!-- Servicio más reservado del mes -->
+                <div class="stat-card">
+                    <div class="stat-icon icon-blue">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    </div>
+                    <div class="stat-value" style="font-size:14px">Corte</div>
+                    <div class="stat-label">Mas reservado</div>
+                </div>
+                <!-- Precio medio de los servicios activos -->
+                <div class="stat-card">
+                    <div class="stat-icon icon-amber">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                    <div class="stat-value">€19.40</div>
+                    <div class="stat-label">Precio medio</div>
+                </div>
+                <!-- Ingresos totales generados por servicios este mes -->
+                <div class="stat-card">
+                    <div class="stat-icon icon-purple">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    </div>
+                    <div class="stat-value">€4.820</div>
+                    <div class="stat-label">Ingresos mes</div>
+                </div>
+            </div>
+
+            <!-- ── FILTRO POR CATEGORÍA Y ESTADO ─────────────────── -->
+            <!--
+                Chips de categoría + botones de estado (activos/inactivos/todos)
+                permiten al gerente encontrar servicios rápidamente.
+            -->
+            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:20px">
+                <div class="chip-row" style="margin:0">
+                    <span class="chip active" onclick="filtrarCat(this,'todos')">Todos</span>
+                    <span class="chip" onclick="filtrarCat(this,'corte')">Cortes</span>
+                    <span class="chip" onclick="filtrarCat(this,'barba')">Barba</span>
+                    <span class="chip" onclick="filtrarCat(this,'tratamiento')">Tratamientos</span>
+                    <span class="chip" onclick="filtrarCat(this,'coloracion')">Coloracion</span>
+                </div>
+                <!-- Filtros de estado: solo activos / solo inactivos / todos -->
+                <div style="display:flex;gap:6px;margin-left:auto">
+                    <button class="btn btn-sm btn-ghost"
+                            onclick="filtrarEstado('todos')">Todos</button>
+                    <button class="btn btn-sm btn-ghost"
+                            onclick="filtrarEstado('activo')">Solo activos</button>
+                    <button class="btn btn-sm btn-ghost"
+                            onclick="filtrarEstado('inactivo')">Solo inactivos</button>
+                </div>
+            </div>
+
+            <!-- ── REJILLA DE TARJETAS DE SERVICIO EDITABLES ─────── -->
+            <!--
+                Cada tarjeta muestra:
+                - Icono, nombre, descripción, duración (igual que servicios.html)
+                - Badge activo/inactivo (esquina superior derecha)
+                - Input de precio editable + toggle activo/inactivo
+                - Botones "Editar" y "Eliminar"
+            -->
+            <div class="svc-grid">
+
+                <!-- ── CORTES ──────────────────────────────────────── -->
+
+                <!-- Corte de cabello – activo -->
+                <div class="svc-card" data-cat="corte" data-estado="activo">
+                    <span class="svc-status-badge active">Activo</span>
+                    <div class="svc-icon">✂</div>
+                    <div class="svc-name">Corte de cabello</div>
+                    <div class="svc-desc">Corte personalizado con lavado y secado</div>
+                    <div class="svc-dur">30 min</div>
+
+                    <!-- Fila de edición: precio inline + toggle activo -->
+                    <div class="svc-edit-row">
+                        <div class="price-edit-wrap">
+                            <span class="price-euro">€</span>
+                            <!-- Precio editable; onchange llama al endpoint de actualización -->
+                            <input type="number" class="price-input-inline" value="14"
+                                   onchange="actualizarPrecio('corte-cabello', this.value)">
+                        </div>
+                        <div class="svc-toggle">
+                            <!-- Toggle activo: .on = verde/violeta según --primary -->
+                            <button class="toggle-switch on"
+                                    onclick="toggleServicio(this,'corte-cabello')"
+                                    title="Desactivar servicio"></button>
+                            <span class="toggle-label">Activo</span>
+                        </div>
+                    </div>
+                    <div class="svc-card-actions">
+                        <button class="btn btn-sm btn-outline"
+                                onclick="alert('Editar Corte de cabello')">Editar</button>
+                        <button class="btn btn-sm btn-danger-soft"
+                                onclick="confirmarEliminar('Corte de cabello')">Eliminar</button>
+                    </div>
+                </div>
+
+                <!-- Corte + secado – activo -->
+                <div class="svc-card" data-cat="corte" data-estado="activo">
+                    <span class="svc-status-badge active">Activo</span>
+                    <div class="svc-icon">✂</div>
+                    <div class="svc-name">Corte + secado</div>
+                    <div class="svc-desc">Corte adaptado al tipo de cabello con acabado profesional</div>
+                    <div class="svc-dur">45 min</div>
+                    <div class="svc-edit-row">
+                        <div class="price-edit-wrap">
+                            <span class="price-euro">€</span>
+                            <input type="number" class="price-input-inline" value="18"
+                                   onchange="actualizarPrecio('corte-secado', this.value)">
+                        </div>
+                        <div class="svc-toggle">
+                            <button class="toggle-switch on"
+                                    onclick="toggleServicio(this,'corte-secado')"></button>
+                            <span class="toggle-label">Activo</span>
+                        </div>
+                    </div>
+                    <div class="svc-card-actions">
+                        <button class="btn btn-sm btn-outline"
+                                onclick="alert('Editar Corte + secado')">Editar</button>
+                        <button class="btn btn-sm btn-danger-soft"
+                                onclick="confirmarEliminar('Corte + secado')">Eliminar</button>
+                    </div>
+                </div>
+
+                <!-- ── BARBA ──────────────────────────────────────── -->
+
+                <!-- Arreglo de barba – activo -->
+                <div class="svc-card" data-cat="barba" data-estado="activo">
+                    <span class="svc-status-badge active">Activo</span>
+                    <div class="svc-icon">🪒</div>
+                    <div class="svc-name">Arreglo de barba</div>
+                    <div class="svc-desc">Perfilado, relleno y acabado con cera natural</div>
+                    <div class="svc-dur">30 min</div>
+                    <div class="svc-edit-row">
+                        <div class="price-edit-wrap">
+                            <span class="price-euro">€</span>
+                            <input type="number" class="price-input-inline" value="10"
+                                   onchange="actualizarPrecio('arreglo-barba', this.value)">
+                        </div>
+                        <div class="svc-toggle">
+                            <button class="toggle-switch on"
+                                    onclick="toggleServicio(this,'arreglo-barba')"></button>
+                            <span class="toggle-label">Activo</span>
+                        </div>
+                    </div>
+                    <div class="svc-card-actions">
+                        <button class="btn btn-sm btn-outline"
+                                onclick="alert('Editar Arreglo de barba')">Editar</button>
+                        <button class="btn btn-sm btn-danger-soft"
+                                onclick="confirmarEliminar('Arreglo de barba')">Eliminar</button>
+                    </div>
+                </div>
+
+                <!-- ── TRATAMIENTOS ───────────────────────────────── -->
+
+                <!-- Hidratacion profunda – activo -->
+                <div class="svc-card" data-cat="tratamiento" data-estado="activo">
+                    <span class="svc-status-badge active">Activo</span>
+                    <div class="svc-icon">💧</div>
+                    <div class="svc-name">Hidratacion profunda</div>
+                    <div class="svc-desc">Mascarilla nutritiva con vapor para cabello dañado</div>
+                    <div class="svc-dur">45 min</div>
+                    <div class="svc-edit-row">
+                        <div class="price-edit-wrap">
+                            <span class="price-euro">€</span>
+                            <input type="number" class="price-input-inline" value="25"
+                                   onchange="actualizarPrecio('hidratacion', this.value)">
+                        </div>
+                        <div class="svc-toggle">
+                            <button class="toggle-switch on"
+                                    onclick="toggleServicio(this,'hidratacion')"></button>
+                            <span class="toggle-label">Activo</span>
+                        </div>
+                    </div>
+                    <div class="svc-card-actions">
+                        <button class="btn btn-sm btn-outline"
+                                onclick="alert('Editar Hidratacion profunda')">Editar</button>
+                        <button class="btn btn-sm btn-danger-soft"
+                                onclick="confirmarEliminar('Hidratacion profunda')">Eliminar</button>
+                    </div>
+                </div>
+
+                <!-- Tratamiento anti-caida – INACTIVO -->
+                <div class="svc-card" data-cat="tratamiento" data-estado="inactivo"
+                     style="opacity:.6">
+                    <span class="svc-status-badge inactive">Inactivo</span>
+                    <div class="svc-icon" style="filter:grayscale(1)">🌿</div>
+                    <div class="svc-name">Tratamiento anti-caida</div>
+                    <div class="svc-desc">Ampolla capilar + masaje con aceites esenciales</div>
+                    <div class="svc-dur">50 min</div>
+                    <div class="svc-edit-row">
+                        <div class="price-edit-wrap">
+                            <span class="price-euro"
+                                  style="color:var(--text-muted)">€</span>
+                            <input type="number" class="price-input-inline"
+                                   style="color:var(--text-muted);border-color:#d1d5db"
+                                   value="30"
+                                   onchange="actualizarPrecio('anti-caida', this.value)">
+                        </div>
+                        <div class="svc-toggle">
+                            <!-- Toggle OFF: sin clase 'on' -->
+                            <button class="toggle-switch"
+                                    onclick="toggleServicio(this,'anti-caida')"></button>
+                            <span class="toggle-label">Inactivo</span>
+                        </div>
+                    </div>
+                    <div class="svc-card-actions">
+                        <button class="btn btn-sm btn-outline"
+                                onclick="alert('Editar Tratamiento anti-caida')">Editar</button>
+                        <button class="btn btn-sm btn-danger-soft"
+                                onclick="confirmarEliminar('Tratamiento anti-caida')">Eliminar</button>
+                    </div>
+                </div>
+
+                <!-- ── COLORACION ─────────────────────────────────── -->
+
+                <!-- Tinte completo – activo -->
+                <div class="svc-card" data-cat="coloracion" data-estado="activo">
+                    <span class="svc-status-badge active">Activo</span>
+                    <div class="svc-icon">🎨</div>
+                    <div class="svc-name">Tinte completo</div>
+                    <div class="svc-desc">Coloracion uniforme con proteccion del cabello</div>
+                    <div class="svc-dur">90 min</div>
+                    <div class="svc-edit-row">
+                        <div class="price-edit-wrap">
+                            <span class="price-euro">€</span>
+                            <input type="number" class="price-input-inline" value="40"
+                                   onchange="actualizarPrecio('tinte', this.value)">
+                        </div>
+                        <div class="svc-toggle">
+                            <button class="toggle-switch on"
+                                    onclick="toggleServicio(this,'tinte')"></button>
+                            <span class="toggle-label">Activo</span>
+                        </div>
+                    </div>
+                    <div class="svc-card-actions">
+                        <button class="btn btn-sm btn-outline"
+                                onclick="alert('Editar Tinte completo')">Editar</button>
+                        <button class="btn btn-sm btn-danger-soft"
+                                onclick="confirmarEliminar('Tinte completo')">Eliminar</button>
+                    </div>
+                </div>
+
+                <!-- Tarjeta especial para añadir nuevo servicio -->
+                <div class="svc-card-add"
+                     onclick="alert('Formulario de nuevo servicio (funcionalidad pendiente)')">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                         stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="16"/>
+                        <line x1="8" y1="12" x2="16" y2="12"/>
+                    </svg>
+                    <span>Anadir nuevo servicio</span>
+                </div>
+
+            </div><!-- /svc-grid -->
+        </div><!-- /page-body -->
+    </main>
+</div><!-- /app-layout -->
+
+<script>
+    function openSidebar() {
+        document.getElementById('sidebar').classList.add('on');
+        document.getElementById('overlay').classList.add('on');
+    }
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('on');
+        document.getElementById('overlay').classList.remove('on');
+    }
+
+    /**
+     * Filtra tarjetas de servicio por categoría.
+     * @param {HTMLElement} chip - Chip de categoría pulsado
+     * @param {string}      cat  - Valor de data-cat o 'todos'
+     */
+    function filtrarCat(chip, cat) {
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        document.querySelectorAll('.svc-card').forEach(card => {
+            card.style.display = (cat === 'todos' || card.dataset.cat === cat) ? '' : 'none';
+        });
+    }
+
+    /**
+     * Filtra tarjetas por estado activo/inactivo.
+     * @param {string} estado - 'todos' | 'activo' | 'inactivo'
+     */
+    function filtrarEstado(estado) {
+        document.querySelectorAll('.svc-card').forEach(card => {
+            card.style.display = (estado === 'todos' || card.dataset.estado === estado) ? '' : 'none';
+        });
+    }
+
+    /**
+     * Activa/desactiva un servicio cambiando la clase del toggle y el badge.
+     * @param {HTMLButtonElement} btn       - Botón toggle
+     * @param {string}            servicioId - Identificador del servicio
+     */
+    function toggleServicio(btn, servicioId) {
+        const card   = btn.closest('.svc-card');
+        const label  = btn.nextElementSibling;
+        const badge  = card.querySelector('.svc-status-badge');
+        const isOn   = btn.classList.toggle('on');
+
+        label.textContent         = isOn ? 'Activo' : 'Inactivo';
+        badge.textContent         = isOn ? 'Activo' : 'Inactivo';
+        badge.className           = 'svc-status-badge ' + (isOn ? 'active' : 'inactive');
+        card.dataset.estado       = isOn ? 'activo' : 'inactivo';
+        card.style.opacity        = isOn ? '1' : '0.6';
+
+        console.log('Servicio', servicioId, isOn ? 'activado' : 'desactivado');
+        /* TODO: POST /api/servicios/estado?id=...&activo=... */
+    }
+
+    /**
+     * Actualiza el precio de un servicio (placeholder para llamada al backend).
+     * @param {string} servicioId - Identificador del servicio
+     * @param {string} nuevoPrecio - Nuevo precio en euros
+     */
+    function actualizarPrecio(servicioId, nuevoPrecio) {
+        console.log('Precio actualizado:', servicioId, '→ €' + nuevoPrecio);
+        /* TODO: POST /api/servicios/precio?id=...&precio=... */
+    }
+
+    /**
+     * Pide confirmación antes de eliminar un servicio.
+     * @param {string} nombre - Nombre del servicio a eliminar
+     */
+    function confirmarEliminar(nombre) {
+        if (confirm('Eliminar "' + nombre + '"? Esta accion no se puede deshacer.')) {
+            alert('Servicio eliminado (conectar con backend)');
+            /* TODO: DELETE /api/servicios?id=... */
+        }
+    }
+</script>
+</body>
+</html>
