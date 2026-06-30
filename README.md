@@ -222,3 +222,5 @@ Proyecto desarrollado con fines académicos y de aprendizaje para consolidar con
 - JDBC
 - Arquitectura MVC
 - Git y GitHub
+- Spring
+- Spring Boot
