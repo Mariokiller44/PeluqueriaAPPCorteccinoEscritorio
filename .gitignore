@@ -1,0 +1,19 @@
+# Eclipse
+.settings/
+.classpath
+.project
+
+# NetBeans
+nbproject/
+
+# Maven
+target/
+
+# Eclipse compilado
+bin/
+
+# Logs
+*.log
+
+# Archivos temporales
+*.tmp
